@@ -126,8 +126,6 @@ if __name__ == '__main__':
             spec=get_workflow (workflow=args.workflow),
             inputs=wf_args)
         response = executor.execute ()
-        graph_text = json.dumps (response, indent=2)
-        
         if args.ndex_id:
             jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph")
             graph = [ match.value for match in jsonpath_query.find (response) ]

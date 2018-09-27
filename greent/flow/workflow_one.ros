@@ -29,11 +29,11 @@ workflow:
       op: condition_expansion_to_gene_pathway_drug
       graph: $disease_identifiers
 
-  module_3:
-    code: gamma
-    args:
-      op: module_wf1_mod3
-      graph: $condition_to_drug
+#  module_3:
+#    code: gamma
+#    args:
+#      op: module_wf1_mod3
+#      graph: $condition_to_drug
       
   biothings_module_4_and_5:
     doc: |
@@ -47,9 +47,7 @@ workflow:
     code: biothings
     args:
       op: annotate_drugs
-      graph:
-        - $condition_to_drug
-        - $module_3
+      graph: $condition_to_drug
 
   return:
     doc: |
@@ -58,8 +56,7 @@ workflow:
     args:
       elements:
         - biothings_module_4_and_5
-        - module_3
-
+#        - module_3
         
 
 

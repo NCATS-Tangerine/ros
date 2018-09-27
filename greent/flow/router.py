@@ -169,6 +169,11 @@ class Router:
         biothings = Biothings ()
         operator = getattr (biothings, op)
 
+        jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]")
+        compounds = [ match.value for match in jsonpath_query.find (graph_obj) ]
+        drugs = [ val for val in compounds if val['id'].find ("CHEMBL.COMPOUND:") > -1 ]
+        operator (drugs)
+        '''
         if not isinstance(graph_obj, list):
             graph_obj = [ graph_obj ]
         result_graph = None
@@ -185,8 +190,8 @@ class Router:
             if i > 0:
                 for d in drugs:
                     result_graph.append (d)
-            
-        return result_graph #graph_obj
+        '''
+        return graph_obj #result_graph #graph_obj
     
     def ndex (self, context, node, op, key, graph):
         graph_obj = context.resolve_arg (graph)
