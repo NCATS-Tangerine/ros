@@ -1,0 +1,11 @@
+{
+  "annotate": {
+    "common_side_effects": null,
+    "approval": "Yes",
+    "indication": [
+      "Tonic-clonic epilepsy",
+      "Epilepsy characterized by intractable complex partial seizures"
+    ],
+    "EPC": "Anti-epileptic Agent"
+  }
+}

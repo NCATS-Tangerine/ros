@@ -1,0 +1,24 @@
+{
+  "annotate": {
+    "common_side_effects": null,
+    "approval": "Yes",
+    "indication": [
+      "Epilepsy",
+      "Lennox-Gastaut syndrome",
+      "Simple partial seizure",
+      "Epilepsy characterized by intractable complex partial seizures",
+      "Tonic-clonic seizure",
+      "Bipolar disorder in remission"
+    ],
+    "EPC": [
+      {
+        "code": "N0000175753",
+        "description": "Anti-epileptic Agent"
+      },
+      {
+        "code": "N0000175751",
+        "description": "Mood Stabilizer"
+      }
+    ]
+  }
+}

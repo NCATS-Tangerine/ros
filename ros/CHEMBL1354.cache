@@ -1,0 +1,20 @@
+{
+  "annotate": {
+    "common_side_effects": [
+      "Anterior chamber cell",
+      "Post procedural complication",
+      "Corneal oedema",
+      "Endophthalmitis",
+      "Eye inflammation",
+      "Eye pain",
+      "Foreign body in eye",
+      "Hypopyon",
+      "Toxic anterior segment syndrome",
+      "Off label use",
+      "Anterior chamber fibrin"
+    ],
+    "approval": "Yes",
+    "indication": null,
+    "EPC": null
+  }
+}

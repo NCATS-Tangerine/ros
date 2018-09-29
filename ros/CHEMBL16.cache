@@ -1,0 +1,19 @@
+{
+  "annotate": {
+    "common_side_effects": null,
+    "approval": "Yes",
+    "indication": [
+      "Motor cortex epilepsy",
+      "Localization-related epilepsy",
+      "Tonic-clonic seizure",
+      "Lennox-Gastaut syndrome",
+      "Status epilepticus",
+      "Tonic-clonic epilepsy",
+      "Epilepsy",
+      "Bipolar disorder in remission",
+      "Simple partial seizure",
+      "Epilepsy characterized by intractable complex partial seizures"
+    ],
+    "EPC": "Anti-epileptic Agent"
+  }
+}

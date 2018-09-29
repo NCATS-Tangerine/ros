@@ -1,0 +1,105 @@
+
+[
+  {
+    "context": "https://raw.githubusercontent.com/biolink/biolink-model/master/context.jsonld",
+    "datetime": "2018-08-14 22:02:42",
+    "id": "http://rtx.ncats.io/api/rtx/v1/response/322",
+    "message": "50 results found",
+    "original_question_text": "What are some potential treatments for type 2 diabetes mellitus based on knowledge of related rare conditions",
+    "query_type_id": "Q55",
+    "reasoner_id": "RTX",
+    "response_code": "OK",
+    "restated_question_text": "What are some potential treatments for type 2 diabetes mellitus based on knowledge of related rare conditions",
+    "result_list": [
+      {
+        "confidence": 0.6002781567596541,
+        "essence": "sodium acetate",
+        "id": "http://rtx.ncats.io/api/rtx/v1/result/6436",
+        "reasoner_id": "RTX",
+        "result_graph": {
+          "edge_list": [
+            {
+              "is_defined_by": "RTX",
+              "provided_by": "http://identifiers.org/uniprot/Q92908",
+              "source_id": "UniProtKB:Q92908",
+              "target_id": "OMIM:600001",
+              "type": "gene_mutations_contribute_to"
+            },
+            {
+              "is_defined_by": "RTX",
+              "provided_by": "http://identifiers.org/uniprot/Q92908",
+              "source_id": "UniProtKB:Q92908",
+              "target_id": "REACT:R-HSA-5683826",
+              "type": "participates_in"
+            },
+            {
+              "is_defined_by": "RTX",
+              "provided_by": "http://purl.obolibrary.org/obo/DOID_9352",
+              "source_id": "DOID:9352",
+              "target_id": "HP:0011466",
+              "type": "has_phenotype"
+            },
+            {
+              "is_defined_by": "RTX",
+              "provided_by": "http://purl.obolibrary.org/obo/OMIM_600001",
+              "source_id": "OMIM:600001",
+              "target_id": "HP:0011466",
+              "type": "has_phenotype"
+            },
+            {
+              "is_defined_by": "RTX",
+              "provided_by": "https://www.ebi.ac.uk/chembl/compound/inspect/CHEMBL1354",
+              "source_id": "CHEMBL.COMPOUND:CHEMBL1354",
+              "target_id": "UniProtKB:Q01118",
+              "type": "physically_interacts_with"
+            },
+            {
+              "is_defined_by": "RTX",
+              "provided_by": "http://identifiers.org/uniprot/Q01118",
+              "source_id": "UniProtKB:Q01118",
+              "target_id": "REACT:R-HSA-5683826",
+              "type": "participates_in"
+            }
+          ],
+          "node_list": [
+            {
+              "description": "This gene is a member of a small family of zinc finger transcription factors that play an important role in the regulation of cellular differentiation and organogenesis during vertebrate development. This gene is expressed during early embryogenesis and localizes to endo- and mesodermally derived cells during later embryogenesis and thereby plays an important role in gut, lung, and heart development. Mutations in this gene are associated with several congenital defects. [provided by RefSeq, Mar 2012].",
+              "id": "UniProtKB:Q92908",
+              "name": "GATA binding protein 6",
+              "type": "protein",
+              "uri": "http://identifiers.org/uniprot/Q92908"
+            },
+            {
+              "description": "A diabetes mellitus that involves high blood glucose resulting from cells fail to use insulin properly.",
+              "id": "DOID:9352",
+              "name": "type 2 diabetes mellitus",
+              "type": "disease",
+              "uri": "http://purl.obolibrary.org/obo/DOID_9352"
+            },
+            {
+              "description": "Absence or underdevelopment of the gallbladder.",
+              "id": "HP:0011466",
+              "name": "Aplasia/Hypoplasia of the gallbladder",
+              "type": "phenotypic_feature",
+              "uri": "http://purl.obolibrary.org/obo/HP_0011466"
+            },
+            {
+              "description": "None",
+              "id": "CHEMBL.COMPOUND:CHEMBL1354",
+              "name": "sodium acetate",
+              "type": "chemical_substance",
+              "uri": "https://www.ebi.ac.uk/chembl/compound/inspect/CHEMBL1354"
+            },
+            {
+              "description": "None",
+              "id": "OMIM:600001",
+              "name": "HEART DEFECTS, CONGENITAL, AND OTHER CONGENITAL ANOMALIES; HDCA",
+              "type": "disease",
+              "uri": "http://purl.obolibrary.org/obo/OMIM_600001"
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

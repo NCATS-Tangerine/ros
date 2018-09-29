@@ -1,0 +1,51 @@
+workflow:
+
+  disease_identifiers:
+    doc: |
+      Resolve an English disease name to an ontology identifier.
+    code: name2id
+    args:
+      type: disease
+      input: $disease_name
+        
+  xray_module_1_and_2:
+    doc: |
+      Invoke XRay module 1 and 2 given the disease identifier from bionames.
+      The graph argument refers to the entire bionames response.
+      The op argument is an operation XRay defines.
+    code: xray
+    args:
+      op: wf1_mod1_mod2
+      graph: $disease_identifiers
+
+  biothings_module_4_and_5:
+    doc: |
+      Annotate drugs. Uses BioThings to get drug annotations for each drug.
+    code: biothings
+    args:
+      op: annotate_drugs
+      graph: $xray_module_1_and_2
+
+  publish:
+    doc: |
+      Publish the result graph at NDex.
+    code: ndex
+    args:
+      op: publish
+      key: rosetta__workflow_1
+      graph: $biothings_module_4_and_5
+      
+  return:
+    doc: |
+      Union answers.
+    code: union
+    args:
+      elements:
+        - biothings_module_4_and_5
+        
+
+        
+
+
+
+              

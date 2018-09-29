@@ -1,0 +1,11 @@
+{
+  "annotate": {
+    "common_side_effects": null,
+    "approval": "Yes",
+    "indication": [
+      "Postmenopausal osteoporosis",
+      "Menopausal flushing"
+    ],
+    "EPC": "Estrogen Agonist/Antagonist"
+  }
+}

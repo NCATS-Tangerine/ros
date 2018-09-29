@@ -1,0 +1,17 @@
+{
+  "annotate": {
+    "common_side_effects": null,
+    "approval": "Yes",
+    "indication": [
+      "Simple partial seizure",
+      "Epilepsy characterized by intractable complex partial seizures",
+      "Bipolar disorder in remission",
+      "Epilepsy",
+      "Tonic-clonic seizure",
+      "Tonic-clonic epilepsy",
+      "Lennox-Gastaut syndrome",
+      "Localization-related epilepsy"
+    ],
+    "EPC": "Anti-epileptic Agent"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "nodes": [
+    {
+      "name": "drugs",
+      "id": "drugs"
+    },
+    {
+      "name": "diseases",
+      "id": "diseases"
+    },
+    {
+      "name": "http_get_example",
+      "id": "http_get_example"
+    },
+    {
+      "name": "drug_to_phenotypic_feature",
+      "id": "drug_to_phenotypic_feature"
+    },
+    {
+      "name": "disease_to_phenotypic_feature",
+      "id": "disease_to_phenotypic_feature"
+    },
+    {
+      "name": "disease_to_gene",
+      "id": "disease_to_gene"
+    },
+    {
+      "name": "return",
+      "id": "return"
+    }
+  ],
+  "links": [
+    {
+      "source": 3,
+      "target": 0
+    },
+    {
+      "source": 4,
+      "target": 1
+    },
+    {
+      "source": 5,
+      "target": 1
+    },
+    {
+      "source": 6,
+      "target": 3
+    },
+    {
+      "source": 6,
+      "target": 4
+    },
+    {
+      "source": 6,
+      "target": 5
+    }
+  ]
+}
