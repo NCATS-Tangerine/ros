@@ -43,12 +43,12 @@ The system provides the following core operators.
 
 If the community is able to develop common APIs to reasoners, this profile will shift to supporting those common APIs.
 
-* **bionames** Invokes the Bionames API to resolve a natural language string to ontology identifiers.
-* **gamma** Invokes the Gamma reasoner. The example below calls Gamma a few times with different machine questions. It will be updated to use the new Quick API for added flexibility.
-* **biothings** BioThings modules.
-* **get** Invokes an HTTP GET operation on a specified resource.
-* **union** Unions two or more results into one object.
-* **xray** XRay reasoner modules.
+* **bionames**: Invokes the Bionames API to resolve a natural language string to ontology identifiers.
+* **gamma**: Invokes the Gamma reasoner. The example below calls Gamma a few times with different machine questions. It will be updated to use the new Quick API for added flexibility.
+* **biothings**: BioThings modules.
+* **get**: Invokes an HTTP GET operation on a specified resource.
+* **union**: Unions two or more results into one object.
+* **xray**: XRay reasoner modules.
 
 ## Graphs
 
