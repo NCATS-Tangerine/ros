@@ -13,9 +13,14 @@ templates:
     meta:
       main:
         input:
-          type: string
-          required: true
-        type:
-          type: biolink_model
-          required: true
-
+          input:
+            doc: The name of the object to find identifiers for.
+            type: string
+            required: true
+          type:
+            doc: The intended biolink_model type of the resulting identifiers.
+            type: biolink_model
+            required: true
+        output:
+          doc: A Translator standard knowledge graph.
+          type: knowledge_graph_standard

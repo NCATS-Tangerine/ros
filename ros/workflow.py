@@ -45,12 +45,13 @@ class Workflow:
         self.dependencies = {}
         jobs = {} 
         job_index = 0 
+        print ("dependencies")
         for operator in operators: 
             job_index = job_index + 1 
             op_node = operators[operator] 
             op_code = op_node['code'] 
             args = op_node['args'] 
-            self.dag.add_node (operator, attr_dict={ "op_node" : op_node }) 
+            self.dag.add_node (operator, attr_dict={ "op_node" : op_node })
             dependencies = self.get_dependent_job_names (op_node) 
             for d in dependencies: 
                 self.dag.add_edge (operator, d, attr_dict={})
@@ -65,21 +66,22 @@ class Workflow:
         Enforce that input and output types of operators match their definitions.
         Validate the existence of implementations for each module/operator.
         """
+        print ("validating")
         types_config = os.path.join(os.path.dirname(__file__), 'stdlib.yaml')
         with open (types_config, 'r') as stream:
             self.types = yaml.load (stream)['types']
             self.spec['types'] = self.types
             
-        print (json.dumps(self.types, indent=2))
+        #print (json.dumps(self.types, indent=2))
         for job, node in self.spec.get("workflow", {}).items ():
-            actuals = node.get("args", {})
+            actuals = node.get("input", {})
             op = actuals.get("op","main")
-            signature = node.get ("meta", {}).get (op, {})
-            print (f"validating signature {signature} for job {job}.")
-            
+            signature = node.get ("meta", {}).get (op, {}).get ("args", {})
+            print (f"  {job}.")            
             for arg, arg_spec in signature.items ():
                 arg_type = arg_spec.get ("type")
                 arg_required = arg_spec.get ("required")
+                print (f"    arg: type: {arg_type} required: {arg_required}")
                 """ Specified type exists. """
                 if not arg_type in self.types:
                     self.errors.append (f"Error: Unknown type {arg_type} referenced in job {job}.")
@@ -103,6 +105,7 @@ class Workflow:
 
     @staticmethod
     def resolve_imports (spec, library_path=["."]):
+        print ("importing")
         imports = spec.get ("import", [])
         for i in imports:
             for path in library_path:
@@ -110,7 +113,7 @@ class Workflow:
                 if os.path.exists (file_name):
                     with open (file_name, "r") as stream:
                         obj = yaml.load (stream.read ())
-                        print (f"importing module: {i} from {file_name}")
+                        print (f"  module: {i} from {file_name}")
                         Resource.deepupdate (spec, obj, skip=[ "doc" ])
         return spec
     
@@ -142,8 +145,6 @@ class Workflow:
     def resolve_arg (self, name):
         return [ self.resolve_arg_inner (v) for v in name ] if isinstance(name, list) else self.resolve_arg_inner (name)
     def resolve_arg_inner (self, name):
-#        pass
-#    def resolve_arg (self, name):
         ''' Find the value of an argument passed to the workflow. '''
         value = name
         if name.startswith ("$"):
@@ -191,30 +192,7 @@ class Workflow:
         if elements: 
             dependencies = elements
         for d in dependencies:
-            print (f"Added dependency {d}({op_node['code']})")
-
-        return dependencies
-    def get_dependent_job_names0(self, op_node): 
-        dependencies = []
-        try:
-            arg_list = op_node.get("args",{})
-            for arg_name, arg_val in arg_list.items ():
-                if isinstance(arg_val, list):
-                    for i in list:
-                        self.add_step_dependency (i, dependencies)
-                else:
-                    self.add_step_dependency (arg_val, dependencies)
-            inputs = op_node.get("args",{}).get("inputs",{})
-            if isinstance(inputs, dict):
-                from_job = inputs.get("from", None) 
-                if from_job:
-                    dependencies.append (from_job)
-                #from_job = op_node.get("args",{}).get("inputs",{}).get("from", None) 
-        except:
-            traceback.print_exc ()
-        elements = op_node.get("args",{}).get("elements",None) 
-        if elements: 
-            dependencies = elements 
+            print (f"  {op_node['code']}->{d}")
         return dependencies
     def generate_dependent_jobs(self, workflow_model, operator, dag):
         dependencies = []
