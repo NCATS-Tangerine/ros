@@ -2,8 +2,6 @@
 
 ## Workflows
 
-Workflows are widely used to automate highly complex computing tasks.
-
 The Ros workflow engine and API execute graphs of queries to compose knowledge networks answering biomedical questions.
 
 The language provides familiar constructs like variables, modularity, extensibility, templates, a type system, and dependency management. At the same time, it is responsive to the distinctive needs of the Biomedical Translator which seeks to create highly detailed knowledge graps enabling sophisticated biomedical reasoning.
@@ -14,7 +12,9 @@ A workflow is a series of steps.
 Each step can reference a predefined operation via the `code` tag.
 These operations accept a set of arguments specified via the args tag.
 When an operation executes, its result is implicitly stored and can be addressed later by the operator's name.
-Variables
+
+## Variables
+
 Variables passed to the workflow can be resolved dynamically. In this example, $disease_name refers to an argument provided by the execution context to this workflow. The provided value will be substituted at runtime.
 
 ```
@@ -59,6 +59,8 @@ Inputs and outputs can be specified with annotations specifying
 
 * **Type**: Types are currently derived from a standard library but in the future will be extensible and composable.
 * **Required**: Whether or not the argument is required.
+
+The use of metadata is optional.
 
 ## Templates
 
@@ -144,6 +146,10 @@ It further populates the type and input arguments required by the template.
 
 Executing this module will produce a JSON object that can be referenced elsewhere in the workflow as `$disease_identifiers`.
 
+Here's some output from running the workflow above with validation enabled. It shows importing the bionames module, validating each invocation (only disease_identfiers has metadata configured).
+
+It then builds the dependency graph.
+
 ```
 $ ros flow --workflow workflow_one.ros --validate
 importing
@@ -161,6 +167,7 @@ dependencies
   biothings->condition_to_drug
   union->biothings_module_4_and_5
 ```
+
 ## Execution
 
 For all workflows, the engine builds a directed acyclic graph (DAG) of jobs by examining each job to determine its dependencies.
