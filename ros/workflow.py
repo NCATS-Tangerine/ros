@@ -77,7 +77,7 @@ class Workflow:
             actuals = node.get("input", {})
             op = actuals.get("op","main")
             signature = node.get ("meta", {}).get (op, {}).get ("args", {})
-            print (f"  {job}.")            
+            print (f"  {job}")
             for arg, arg_spec in signature.items ():
                 arg_type = arg_spec.get ("type")
                 arg_required = arg_spec.get ("required")
@@ -105,7 +105,7 @@ class Workflow:
 
     @staticmethod
     def resolve_imports (spec, library_path=["."]):
-        print ("importing")
+        print ("importing modules")
         imports = spec.get ("import", [])
         for i in imports:
             for path in library_path:
