@@ -29,11 +29,13 @@ workflow:
       op: condition_expansion_to_gene_pathway_drug
       graph: $disease_identifiers
 
-#  module_3:
-#    code: gamma
-#    args:
-#      op: module_wf1_mod3
-#      graph: $condition_to_drug
+  module_3:
+    doc: |
+      Passes the output of the disease_identifiers operator to Gamma.
+    code: gamma
+    args:
+      op: module_wf1_mod3
+      conditions: $disease_identifiers
       
   biothings_module_4_and_5:
     doc: |

@@ -36,16 +36,18 @@ class TranslatorGraphTools:
         
         """ Serialize node and edge python objects. """
         g = nx.MultiDiGraph()
-        jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]")
+        #print (graph)
+        #print (json.dumps(graph, indent=2))
+        jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]") #.nodes.[*]")
         nodes = [ match.value for match in jsonpath_query.find (graph) ]
         nodes = self.dedup_nodes (nodes)
+        #print (f"nodes: {json.dumps(nodes,indent=2)}")
         #print (f"nodes: {len(nodes)}")
         node_id = { name : i for i, name in enumerate([ n['id'] for n in nodes ]) }
         for n in nodes:
             tmp = n['id']
             n['id'] = node_id[tmp]
             n['name'] = tmp            
-        #print (node_id)
         
         jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.edge_list.[*]")
         edges = [ match.value for match in jsonpath_query.find (graph) ]
@@ -59,37 +61,32 @@ class TranslatorGraphTools:
         for e in edges:
             g.add_edge (e['source_id'], e['target_id'], attr_dict=e)
         return g
-    def to_knowledge_graph (self, in_graph, out_graph):
+    def to_knowledge_graph (self, in_graph, out_graph, graph_label=None):
         ''' Convert a networkx graph to Ros KnowledgeGraph. '''
         id2node = {}
-        print (f"---------> c0")
         for j, n in enumerate(in_graph.nodes (data=True)):
-            print (f"{n}")
+            #print (f"{j}:{n}")
             i = n[0]
             attr = n[1]['attr_dict']
+            #print (f"attr dict: {attr}")
+            if graph_label:
+                attr['subgraph'] = graph_label
             id2node[i] = out_graph.add_node (label=attr['type'], props=attr)
-            if j % 10 == 0:
-                print ("commit")
-                out_graph.commit ()
-        out_graph.commit ()
-        print (f"---------> c1")
         for i, e in enumerate(in_graph.edges (data=True)):
+            #print (f"{i}:{e}")
             attr = e[2]['attr_dict']
             subj = id2node[e[0]]
             pred = attr['type']
             obj = id2node[e[1]]
-            print (f"subj: {subj}")
-            print (f"  pred: {pred}")
-            print (f"    obj: {obj}")
+            if graph_label:
+                attr['subgraph'] = graph_label
+            #print (f"subj: {subj}")
+            #print (f"  pred: {pred}")
+            #print (f"    obj: {obj}")
             out_graph.add_edge (subj=id2node[e[0]],
                                 pred=attr['type'],
                                 obj=id2node[e[1]],
                                 props=attr)
-            if i % 5 == 0:
-                out_graph.commit ()
-        out_graph.commit ()
-        print (f"---------> c2")
-
     def file_to_nx (self, file_name):
         ''' Read answer graph from file and convert to networkx. '''
         return self.to_nx (self.from_file (file_name))
@@ -109,11 +106,21 @@ class TranslatorGraphTools:
         #print (f"node count: {node_count}")
         new_edges = []
         for e in g['links']:
-#            if 'attr_dict' in e:
-#                del e['attr_dict']
             e['weight'] = round(random.uniform(0.2, 0.98), 2)
             del e['key']
             if e['source'] < len(g['nodes']) and e['target'] < len(g['nodes']):
                 new_edges.append (e)
         #g['links'] = new_edges
         return g
+    def standard_graph (self, nodes=[], edges=[]):
+        return [
+            {
+                "result_list": [
+                    {
+                        "result_graph" : {
+                            "node_list" : nodes
+                        }
+                    }
+                ]
+            }
+        ]

@@ -29,6 +29,6 @@ def exec_operator(self, model, job_name):
     op_node = wf.spec.get("workflow",{}).get(job_name,{})
     if op_node:
         router = Router (wf)
-        result = router.route (wf, op_node, job_name, op_node['code'], op_node['args'])
+        result = router.route (wf, job_name, op_node, op_node['code'], op_node['args'])
         wf.set_result (job_name, result)
     return result

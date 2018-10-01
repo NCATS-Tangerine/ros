@@ -13,15 +13,17 @@ from jsonpath_rw import jsonpath, parse
 import networkx as nx
 import uuid
 from networkx.algorithms import lexicographical_topological_sort
+from ros.graph import TranslatorGraphTools
+from ros.kgraph import Neo4JKnowledgeGraph
 
+'''
 # scaffold
 def read_json (f):
     obj = Resource.get_resource_obj(f, format="json")
-    print (f"{obj}")
+    #print (f"{obj}")
     return obj
 
 class Env:
-    ''' Process utilities. '''
     @staticmethod
     def exit (message, status=0):
         print (f"Exiting. {message}")
@@ -36,7 +38,6 @@ class Env:
         print (message)
 
 class Parser:
-    ''' Parsing logic. '''
     def parse (self, f):
         result = None
         with open(f,'r') as stream:
@@ -52,7 +53,7 @@ class Parser:
             else:
                 Env.error (f"Arg must be in format <name>=<value>")
         return result
-
+'''
 class Workflow:
     ''' Execution logic. '''
     def __init__(self, spec, inputs={}):
@@ -61,7 +62,9 @@ class Workflow:
         self.stack = []
         self.spec = spec
         self.uuid = uuid.uuid4 ()
-                        
+        self.graph = Neo4JKnowledgeGraph ()
+        self.graph_tools = TranslatorGraphTools ()
+
         # resolve templates.
         templates = self.spec.get("templates", {})
         workflows = self.spec.get("workflow", {})
@@ -126,7 +129,7 @@ class Workflow:
             op_node = operators[operator]
             op_code = op_node['code']
             args = op_node['args']
-            result = router.route (self, operator, op_node, op_code, args)
+            result = router.route (self, operator, operator, op_node, op_code, args)
             self.persist_result (operator, result)
         return self.get_step(router, "return")["result"]
     def get_step (self, name):
@@ -149,7 +152,7 @@ class Workflow:
             var = name.replace ("$","")
             ''' Is this a job result? '''
             job_result = self.get_result (var)
-            print (f"job result {var}  ==============> {job_result}")
+            #print (f"job result {var}  ==============> {job_result}")
             if var in self.inputs:
                 value = self.inputs[var]
                 if "," in value:
@@ -232,38 +235,43 @@ class Workflow:
             "failed" : {},
             "done" : {}
         }
-                
-class RedisBackedWorkflow(Workflow):
-    def __init__(self, spec, inputs):
-        super(RedisBackedWorkflow, self).__init__(spec, inputs)
-        '''
-        self.redis = redis.Redis(
-            host='hostname',
-            port=port)
-        '''
-        self.redis = Redis (url=Conf.celery_result_backend.replace ("0", "1"))
-    def form_key (self, job_name):
-        return f"{self.uuid}.{job_name}.result",
-    def set_result (self, job_name, value):
-        self.redis.set (
-            name=self.form_key(job_name),
-            value=value)
-    def get_result (self, job_name):
-        return self.redis (name=self.form_key(job_name))
 
-                
-class Neo4JBackedWorkflow(Workflow):
-    def __init__(self, spec, inputs):
-        super(Neo4JBackedWorkflow, self).__init__(spec, inputs)
-        self.redis = Redis (url=Conf.celery_result_backend.replace ("0", "1"))
+    """ Result management. """
     def form_key (self, job_name):
-        return f"{self.uuid}.{job_name}.result",
+        ''' Form the key name. '''
+        #print (f"---> {job_name}")
+        return f"{self.uuid}.{job_name}.res"
     def set_result (self, job_name, value):
-        self.redis.set (
-            name=self.form_key(job_name),
-            value=value)
+        ''' Set the result value. '''
+        #print (f" writing output for job -------------> {job_name}")
+        if not value:
+            raise ValueError (f"Null value set for job_name: {job_name}")
+        self.spec.get("workflow",{}).get(job_name,{})["result"] = value 
+        self.graph_tools.to_knowledge_graph (
+            in_graph = self.graph_tools.to_nx (value),
+            out_graph = self.graph)
+        
+        key = self.form_key (job_name)
+        if not os.path.exists ('cache'):
+            os.mkdir ("cache")
+        #print (f" ************> {key}")
+        fname = os.path.join ("cache", key)
+        with open(fname, "w") as stream:
+            json.dump (value, stream, indent=2)
+        #print (f"-------------------------> graph for {job_name} written.")
     def get_result (self, job_name):
-        return self.redis (name=self.form_key(job_name))
+        ''' Get the result graph. We pass the whole graph for every graph. '''
+        result = None
+        key = self.form_key (job_name)
+        if not os.path.exists ('cache'):
+            os.mkdir ("cache")
+        #print (f" ************> {key}")
+        fname = os.path.join ("cache", key)
+        if os.path.exists (fname):
+            with open(fname, "r") as stream:
+                result = json.load (stream)
+        #print (f"read>>>>> {json.dumps(result, indent=2)}")
+        return result
 
 if __name__ == "__main__":
 
@@ -272,7 +280,7 @@ if __name__ == "__main__":
     arg_parser.add_argument('-a', '--args', help='An argument', action="append")
     args = arg_parser.parse_args ()
 
-    Env.log (f"Running workflow {args.workflow}")
+    #Env.log (f"Running workflow {args.workflow}")
 
     parser = Parser ()
     workflow = Workflow (

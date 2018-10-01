@@ -2,9 +2,9 @@
 
 ROS_HOME=~/dev/ros
 export PYTHONPATH=$ROS_HOME
-cd $ROS_HOME
-source ros/dag/setenv.sh
-source ros/dag/conf.sh
+#cd $ROS_HOME
+source $ROS_HOME/ros/dag/setenv.sh
+source $ROS_HOME/ros/dag/conf.sh
 
 execute_workflow () {
     python dag/run_tasks.py \
@@ -20,7 +20,7 @@ execute_workflow () {
 }
 
 flow () {
-    PYTHONPATH=$ROS_HOME python ros/dag/run_tasks.py \
+    PYTHONPATH=$ROS_HOME python $ROS_HOME/ros/dag/run_tasks.py \
            -s http://localhost \
            -p 5008 \
            --arg disease_name="diabetes mellitus type 2" \

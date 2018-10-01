@@ -11,9 +11,6 @@ from celery.execute import send_task
 from types import SimpleNamespace
 from celery.result import AsyncResult
 from jsonpath_rw import jsonpath, parse
-
-print (os.getcwd ())
-
 from ros.router import Router
 from ros.workflow import Workflow
 from ros.ndex import NDEx

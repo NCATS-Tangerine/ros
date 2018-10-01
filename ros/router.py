@@ -1,4 +1,5 @@
 import argparse
+import copy
 import json
 import namedtupled
 import networkx as nx
@@ -38,6 +39,7 @@ class Template:
         
 class Router:
     req = 0
+
     ''' Route operator invocations through a common interface. '''
     ''' TODO: make this modular so that operators can be defined externally. Consider dynamic invocation. '''
     def __init__(self, workflow):
@@ -53,8 +55,6 @@ class Router:
         }
         self.workflow = workflow
         self.prototyping_count = 0
-        self.redis_graph = True
-        
         return # still working on templates.
         for name, template in self.workflow.spec.get("templates", {}).items ():
             op = template.get ("code", None)
@@ -64,27 +64,35 @@ class Router:
             if method:
                 self.r[op] = lambda context, node, method=method, **kwargs: method(self, context, node, **kwargs)
         
+    def short_text(self, text, max_len=85):
+        return (text[:max_len] + '..') if len(text) > max_len else text
+
     def route (self, context, job_name, op_node, op, args):
         ''' Invoke an operator known to this router. '''
         result = None
         if op in self.r:
             ''' Pass all operators context and the operation node. '''
-            a = {
-                "context" : context,
-                "node"    : op_node
+            node_copy = copy.deepcopy (op_node)
+
+            ''' Resolve all arguments to values. '''
+            node_copy['args'] = { k : context.resolve_arg (v) for k,v in args.items() }
+            print (self.short_text(json.dumps(node_copy, indent=2)))
+            arg_list = {
+                "context"  : context,
+                "job_name" : job_name,
+                "node"     : node_copy                
             }
-            a.update (args)
-            result = self.r[op](**a)
+            args.update (arg_list)
+
+            ''' Invoke the operator. '''
+            result = self.r[op](**args)
             text = self.short_text (str(result))
             print (f"      result: {text}")
         else:
             raise ValueError (f"Unknown operator: {op}")
         return result
 
-    def short_text(self, text, max_len=85):
-        return (text[:max_len] + '..') if len(text) > max_len else text
-
-    def union (self, context, node, elements):
+    def union (self, context, job_name, node, elements):
         return [ context.get_step(e)["result"] for e in elements ]
 
     def http_get(self, context, node, pattern, inputs):
@@ -92,114 +100,40 @@ class Router:
         for input in inputs:
             for k, v in input.items ():
                 input[k] = context.resolve_arg (v)
-
             url = pattern.format (**input)
-            print (f"url ---------> {url}")
             result.append (requests.get(
                 url = url,
                 headers = {
                     'accept': 'application/json'
                 }).json ())
-        '''
-        result = [
-            requests.get(
-                url = pattern.format (**input),
-                headers = {
-                    'accept': 'application/json'
-                }).json () for input in inputs
-        ]
-        '''
-        print (f"------> {json.dumps(result,indent=2)}")
         return result
     
-    def naming_to_id (self, context, node, type, input):
+    def naming_to_id (self, context, job_name, node, input, type):
         ''' An interface to bionames for resolving words to ids. '''
-        bionames_response = None
-        input = context.resolve_arg (input)
-        print (f"    *job(bionames): type: {type} input: {input}")
-        bionames_request = requests.get(
-            url = f'https://bionames.renci.org/lookup/{input}/{type}/',
-            headers = { 'accept': 'application/json' })
-        bionames_response = bionames_request.json ()
-        if self.redis_graph:
-            bionames_response = [
-                {
-                    "answers": [
-                        {
-                            "id": None,
-                            "answerset": None,
-                            "natural_answer": None,
-                            "nodes": bionames_response
-                        }
-                    ]
-                }
-            ]
-        print (f"{bionames_response}")
-        return bionames_response
-    '''
-    def get_ids (self, nodes):
-        return [ val['id'] for val in nodes ]
+        return context.graph_tools.standard_graph (
+            requests.get(
+                url = f'https://bionames.renci.org/lookup/{input}/{type}/',
+                headers = { 'accept': 'application/json' }).json ())
     
-    def get_nodes_by_type (self, graph, target_type):
-        jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]")
-        compounds = [ match.value for match in jsonpath_query.find (graph) ]
-        return [ val for val in compounds if val['type'] == target_type ]
-    '''
-    def xray(self, context, node, op, graph):
+    def xray(self, context, job_name, node, op, graph):
         return XRay ().invoke (
             event=Event (context=context,
                          node=node,
-                         op=op,
-                         graph=context.resolve_arg (graph)))
+                         op=op))
 
-    def gamma(self, context, node, op, graph):
-        graph_obj = context.resolve_arg (graph)
-        diseases = self.get_ids(self.get_nodes_by_type (graph_obj, target_type='disease'))
-        gamma = Gamma ()
-        operator = getattr (gamma, op)
-        disease_id = context.resolve_arg (diseases[0])
-        #response = operator (disease_id)
-        response = {}
-        return response
-
-    def biothings(self, context, node, op, graph):
-        graph_obj = context.resolve_arg (graph)
-        print (f"len graph obj {len(graph_obj)}")
-        biothings = Biothings ()
-        operator = getattr (biothings, op)
-
-        jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]")
-        compounds = [ match.value for match in jsonpath_query.find (graph_obj) ]
-        drugs = [ val for val in compounds if val['id'].find ("CHEMBL.COMPOUND:") > -1 ]
-        operator (drugs)
-        '''
-        if not isinstance(graph_obj, list):
-            graph_obj = [ graph_obj ]
-        result_graph = None
-        if len(graph_obj) > 0:
-            jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]")
-            result_graph = [ match.value for match in jsonpath_query.find (graph_obj[0]) ]
-
-        for i, g in enumerate(graph_obj):
-            #print (f"biothings input graph ({graph}=>{json.dumps(graph_obj, indent=2)}")
-            jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]")
-            compounds = [ match.value for match in jsonpath_query.find (graph_obj) ]
-            drugs = [ val for val in compounds if val['id'].find ("CHEMBL.COMPOUND:") > -1 ]
-            operator (drugs)
-            if i > 0:
-                for d in drugs:
-                    result_graph.append (d)
-        '''
-        return graph_obj #result_graph #graph_obj
+    def gamma(self, context, job_name, node, op, conditions):
+        return Gamma ().invoke (
+            event = Event (context=context,
+                           node=node,
+                           op=op))
     
-    def biothings(self, context, node, op, graph):
+    def biothings(self, context, job_name, node, op, graph):
         return Biothings ().invoke (
             Event (context=context,
                    node=node,
-                   op=op,
-                   graph=context.resolve_arg (graph)))
+                   op=op))
 
-    def ndex (self, context, node, op, key, graph):
+    def ndex (self, context, job_name, node, op, graph):
         graph_obj = context.resolve_arg (graph)
         jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph")
         graph = [ match.value for match in jsonpath_query.find (graph_obj) ]
