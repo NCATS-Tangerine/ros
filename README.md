@@ -191,3 +191,54 @@ There are two basic execution modes.
   Each job is sent, via an AMQP message queue to an execution back end (Celery).
   Job results are stored in Redis.
   Ultimately, other back ends would be good.
+
+## Usage
+
+Clone the repo
+
+```
+git clone git@github.com:NCATS-Tangerine/ros.git
+cd ros
+```
+
+Add ros to the path.
+```
+export PATH=$PWD/bin:$PATH
+```
+
+Change to the workflow directory.
+```
+cd ros
+```
+
+Install requirements:
+```
+pip install -r requirements.txt
+```
+
+Run the workflow.
+```
+ros flow --workflow workflow_one.ros --out output.json
+```
+
+Save a workflow to NDEx:
+
+Create an NDEx account.
+
+Create an ~/.ndex credential file like this:
+
+```
+{
+  "username" : "<username>",
+  "password" : "<password>"
+}
+```
+
+Run the workflow with NDEx output:
+
+```
+ros flow --workflow workflow_one.ros --out output.json --ndex_id wf1
+```
+
+
+
