@@ -27,18 +27,17 @@ Variables passed to the workflow can be resolved dynamically. In this example, $
       input: $disease_name
 ```
 
-## Graphs
-
-Ros provides graphs in two basic modalities:
-
-* **Results**: Results of previous workflow steps can be referenced as variables passed to subsequent steps. This graph can be queried using JSON Path query syntax.
-* **Shared**: A shared graph, accessible with the Cypher query language is available to all operators.
-
-Each operator receives an event object provided by the Ros framework. The event provides framework services including the shared graph, graph manipulation tools, and arguments to the invocation of the operator.
-
-These facilities allow the operator to query the graphs before executing their main logic and to update it as well.
-
 ## Operators
+
+The workflow is organized around components called graph operators.
+
+Each one has access to a shared graph as well as variables and other facilities of the Ros framework.
+
+In general, the elements of a workflow each has a name and the following standard contents:
+
+* **doc**: A documentation string.
+* **code**: The name of a component providing functionality.
+* **args**: Arguments to the operator.
 
 The system provides the following core operators.
 
@@ -50,6 +49,17 @@ If the community is able to develop common APIs to reasoners, this profile will 
 * **get** Invokes an HTTP GET operation on a specified resource.
 * **union** Unions two or more results into one object.
 * **xray** XRay reasoner modules.
+
+## Graphs
+
+Ros provides graphs in two basic modalities:
+
+* **Results**: Results of previous workflow steps can be referenced as variables passed to subsequent steps. This graph can be queried using JSON Path query syntax.
+* **Shared**: A shared graph, accessible with the Cypher query language is available to all operators.
+
+Each operator receives an event object provided by the Ros framework. The event provides framework services including the shared graph, graph manipulation tools, and arguments to the invocation of the operator.
+
+These facilities allow the operator to query the graphs before executing their main logic and to update it as well.
 
 ## Metadata
 
