@@ -144,6 +144,23 @@ It further populates the type and input arguments required by the template.
 
 Executing this module will produce a JSON object that can be referenced elsewhere in the workflow as `$disease_identifiers`.
 
+```
+$ ros flow --workflow workflow_one.ros --validate
+importing
+  module: bionames from ./bionames.ros
+validating
+  validate(disease_identifiers).
+  validate(condition_to_drug).
+  validate(module_3).
+  validate(biothings_module_4_and_5).
+  validate(return).
+Validation successful.
+dependencies
+  xray->disease_identifiers
+  gamma->disease_identifiers
+  biothings->condition_to_drug
+  union->biothings_module_4_and_5
+```
 ## Execution
 
 For all workflows, the engine builds a directed acyclic graph (DAG) of jobs by examining each job to determine its dependencies.
