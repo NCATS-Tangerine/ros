@@ -2,9 +2,9 @@
 
 ## Workflows
 
-The Ros workflow engine and API execute graphs of queries to compose knowledge networks.
+The Ros workflow engine executes query graphs to compose knowledge networks.
 
-While the language provides capabilities similar to other programming languages like variables, modularity, extensibility, templates, a type system, and dependency management, it is targeted at the distinctive challenges of creating highly detailed knowledge graps enabling sophisticated reasoning. The model supposes that this knowledge network construction will occur in the context of federated knowledge sources supplying components of resulting graphs.
+While the language provides capabilities similar to other programming languages like variables, modularity, extensibility, templates, a type system, and dependency management, it is targeted at the distinctive challenges of creating highly detailed knowledge graps enabling sophisticated reasoning and inference. The model supposes that this knowledge network construction will occur in the context of federated knowledge sources supplying components of resulting graphs.
 
 ## Language
 
