@@ -2,9 +2,9 @@
 
 ## Workflows
 
-The Ros workflow engine and API execute graphs of queries to compose knowledge networks answering biomedical questions.
+The Ros workflow engine and API execute graphs of queries to compose knowledge networks.
 
-The language provides familiar constructs like variables, modularity, extensibility, templates, a type system, and dependency management. At the same time, it is responsive to the distinctive needs of the Biomedical Translator which seeks to create highly detailed knowledge graps enabling sophisticated biomedical reasoning.
+While the language provides capabilities similar to other programming languages like variables, modularity, extensibility, templates, a type system, and dependency management, it is targeted at the distinctive challenges of creating highly detailed knowledge graps enabling sophisticated reasoning. The model supposes that this knowledge network construction will occur in the context of federated knowledge sources supplying components of resulting graphs.
 
 ## Language
 
@@ -240,5 +240,9 @@ Run the workflow with NDEx output:
 ros flow --workflow workflow_one.ros --out output.json --ndex_id wf1
 ```
 
+## Next
 
+We're far from done.
 
+* **Parallel / Distributed**: Execute via something capable of parallel, distributed execution. Current likely options include Celery and Kubernetes.
+* **Composability**: Allow workflows to import and reuse other workflows.
