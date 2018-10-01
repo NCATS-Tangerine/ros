@@ -242,7 +242,7 @@ ros flow --workflow workflow_one.ros --out output.json --ndex_id wf1
 
 ## Next
 
-We're far from done.
+We've barely begun.
 
 * **Parallel / Distributed**: Execute via something capable of parallel, distributed execution. Current likely options include Celery and Kubernetes.
 * **Composability**: Allow workflows to import and reuse other workflows.
