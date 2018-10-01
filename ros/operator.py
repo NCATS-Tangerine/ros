@@ -3,14 +3,20 @@ import json
 from jsonpath_rw import jsonpath, parse
 
 class Event:
-    def __init__(self, context, node, op, graph=None):
+    """
+    An event provides context about an operator's invocation.
+    The context object is a Workflow.
+    The node object is the structue of the invocation from the workflow specification.
+    Variable valued arguments (ones prefixed with a dollar sign) are resolved to their values.
+    The names of variables are accessible directly as members of the event object.
+    """
+    def __init__(self, context, node):
         self.context = context
         self.node = node
-        print (json.dumps (self.node, indent=2))
-        self.op = op
-        self.graph = graph
-        #self.args = args
-
+        print (f"event node> {json.dumps (self.node, indent=2)}")
+    def __getattr__ (self, k):
+        return self.__dict__[k] if k in self.__dict__ else self.node.get("args",{}).get(k,None)
+    
 class Operator:
 
     ''' Abstraction of a graph operator. '''

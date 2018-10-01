@@ -1,9 +1,15 @@
+doc: |
+  NCATS Biomedical Translator - Workflow One
+  
+import:
+  - bionames
+  
 workflow:
 
   disease_identifiers:
     doc: |
       Resolve an English disease name to an ontology identifier.
-    code: name2id
+    code: bionames
     args:
       type: disease
       input: $disease_name

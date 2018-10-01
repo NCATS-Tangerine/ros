@@ -112,7 +112,7 @@ class TranslatorGraphTools:
                 new_edges.append (e)
         #g['links'] = new_edges
         return g
-    def standard_graph (self, nodes=[], edges=[]):
+    def kgs (self, nodes=[], edges=[]):
         return [
             {
                 "result_list": [

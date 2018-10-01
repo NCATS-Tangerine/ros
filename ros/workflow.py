@@ -16,44 +16,6 @@ from networkx.algorithms import lexicographical_topological_sort
 from ros.graph import TranslatorGraphTools
 from ros.kgraph import Neo4JKnowledgeGraph
 
-'''
-# scaffold
-def read_json (f):
-    obj = Resource.get_resource_obj(f, format="json")
-    #print (f"{obj}")
-    return obj
-
-class Env:
-    @staticmethod
-    def exit (message, status=0):
-        print (f"Exiting. {message}")
-        sys.exit (status)
-        
-    @staticmethod
-    def error (message):
-        Env.exit (f"Error: {message}", 1)
-
-    @staticmethod
-    def log (message):
-        print (message)
-
-class Parser:
-    def parse (self, f):
-        result = None
-        with open(f,'r') as stream:
-            result = yaml.load (stream.read ())
-        return result #return Resource.get_resource_obj (f)
-    def parse_args (self, args):
-        result = {}
-        for a in args:
-            if '=' in a:
-                k, v = a.split ('=')
-                result[k] = v
-                Env.log (f"Adding workflow arg: {k} = {v}")
-            else:
-                Env.error (f"Arg must be in format <name>=<value>")
-        return result
-'''
 class Workflow:
     ''' Execution logic. '''
     def __init__(self, spec, inputs={}):
@@ -70,12 +32,14 @@ class Workflow:
         workflows = self.spec.get("workflow", {})
         
         for name, job in workflows.items ():
-            extends = job.get ("extends", None)
-            if extends:
+            extends = job.get ("code", None)
+            if extends in templates:
                 Resource.deepupdate (workflows[name], templates[extends], skip=[ "doc" ])
-                #Resource.deepupdate (templates[extends], workflows[name], skip=[ "doc" ])
-                #print (f"{name}=>{json.dumps(workflows[name], indent=2)}")
-                
+
+        """ Validate input and output parameters. """
+        self.errors = []
+        self.validate ()
+       
         self.dag = nx.DiGraph ()
         operators = self.spec.get ("workflow", {}) 
         self.dependencies = {}
@@ -95,6 +59,40 @@ class Workflow:
         self.topsort = [ t for t in reversed([
             t for t in lexicographical_topological_sort (self.dag) ])
         ]
+
+    def validate (self):
+        """
+        Enforce that input and output types of operators match their definitions.
+        Validate the existence of implementations for each module/operator.
+        """
+        types_config = os.path.join(os.path.dirname(__file__), 'stdlib.yaml')
+        with open (types_config, 'r') as stream:
+            self.types = yaml.load (stream)['types']
+            self.spec['types'] = self.types
+            
+        print (json.dumps(self.types, indent=2))
+        for job, node in self.spec.get("workflow", {}).items ():
+            actuals = node.get("args", {})
+            op = actuals.get("op","main")
+            signature = node.get ("meta", {}).get (op, {})
+            print (f"validating signature {signature} for job {job}.")
+            
+            for arg, arg_spec in signature.items ():
+                arg_type = arg_spec.get ("type")
+                arg_required = arg_spec.get ("required")
+                """ Specified type exists. """
+                if not arg_type in self.types:
+                    self.errors.append (f"Error: Unknown type {arg_type} referenced in job {job}.")
+                else:
+                    """ Required arguments are present in the job. """
+                    if arg_required and not arg in actuals:
+                        self.errors.append (f"Error: required argument {arg} not present in job {job}.")
+        if len(self.errors) > 0:
+            for error in self.errors:
+                print (error)
+            raise ValueError ("Errors encountered.")
+        print ("Validation successful.")
+        
 
     @staticmethod
     def get_workflow(workflow="mq2.ros", library_path=["."]):
@@ -168,11 +166,8 @@ class Workflow:
         # with the 'title' method and join them together.
         return components[0] + ''.join(x.title() for x in components[1:])
     def add_step_dependency (self, arg_val, dependencies):
-        print (f" testing {arg_val} as dependency.")
         name = self.get_variable_name (arg_val)
-        print (f"    name => {name}")
         if name and self.get_step (name):
-            print (f"      adding dep: {name}")
             dependencies.append (name)
     def get_dependent_job_names(self, op_node): 
         dependencies = []
@@ -194,7 +189,10 @@ class Workflow:
             traceback.print_exc ()
         elements = op_node.get("args",{}).get("elements",None) 
         if elements: 
-            dependencies = elements 
+            dependencies = elements
+        for d in dependencies:
+            print (f"Added dependency {d}({op_node['code']})")
+
         return dependencies
     def get_dependent_job_names0(self, op_node): 
         dependencies = []

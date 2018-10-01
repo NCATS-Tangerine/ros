@@ -43,8 +43,9 @@ class Gamma(Operator):
         """ Execute module 3 of workflow one. """
         response = None
 
-        print (f"- - - - - - -- > {event.node['args']['conditions']}")
-        
+        #print (f"- - - - - - -- > {event.node['args']['conditions']}")
+        print (f"- - - - - - -- > {event.conditions}")
+
         """ Query the graph for conditions. """
         diseases = event.context.graph.query (
             query = "match (a:disease) return  a",
@@ -61,7 +62,7 @@ class Gamma(Operator):
         #assert status_code == 200
         if not status_code == 200:
             print ("********** * * * GAMMA is broken. **********")
-        return response.json() if status_code == 200 else event.context.graph_tools.standard_graph (nodes=[])
+        return response.json() if status_code == 200 else event.context.graph_tools.kgs (nodes=[])
 
     def blah(self, graph):
         pass #curl -X GET "http://robokop.renci.org/api/wf1mod3a/DOID:9352/?max_results=5" -H "accept: application/json"

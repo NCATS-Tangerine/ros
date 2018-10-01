@@ -1,0 +1,5 @@
+types:
+  string :
+    extends: primitive
+  biolink_model:
+    extends: string

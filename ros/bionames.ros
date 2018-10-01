@@ -4,10 +4,18 @@ doc: |
 
 templates:
 
-  name2id:
+  bionames:
     doc: |
-      This is a template. It can be extended by workflow operators.
-      An extending operator will have all attributes of this template. 
+      This template extends the built in get operator.
     code: get
     args:
       pattern: 'https://bionames.renci.org/lookup/{input}/{type}/'
+    meta:
+      main:
+        input:
+          type: string
+          required: true
+        type:
+          type: biolink_model
+          required: true
+
