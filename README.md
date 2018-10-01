@@ -27,56 +27,67 @@ Variables passed to the workflow can be resolved dynamically. In this example, $
       input: $disease_name
 ```
 
-## Query
+## Graphs
 
-An operation may query the output of a previous step.
-In this way, a "list" of genes can be created by querying a structure produced elsewhere in the workflow.
-The language currently supports a select tag, which, in conjunction with from and where tags is used to target a JSONPath expression at the output of a previous step.
-In the example below, the output of the name2id service is indexed by the drug_to_phenotypic_feature operation using a JSONPath expression. That job is an instance of the gamma job for querying the Gamma (Robokop) reasoner.
+Ros provides graphs in two basic modalities:
+
+* **Results**: Results of previous workflow steps can be referenced as variables passed to subsequent steps. This graph can be queried using JSON Path query syntax.
+* **Shared**: A shared graph, accessible with the Cypher query language is available to all operators.
+
+Each operator receives an event object provided by the Ros framework. The event provides framework services including the shared graph, graph manipulation tools, and arguments to the invocation of the operator.
+
+These facilities allow the operator to query the graphs before executing their main logic and to update it as well.
 
 ## Operators
 
-There are currently four built in operators: name2id, gamma, union, and get
+The system provides the following core operators.
+
+If the community is able to develop common APIs to reasoners, this profile will shift to supporting those common APIs.
 
 * **bionames** Invokes the Bionames API to resolve a natural language string to ontology identifiers.
 * **gamma** Invokes the Gamma reasoner. The example below calls Gamma a few times with different machine questions. It will be updated to use the new Quick API for added flexibility.
-* **union** Unions two or more results into one object.
+* **biothings** BioThings modules.
 * **get** Invokes an HTTP GET operation on a specified resource.
+* **union** Unions two or more results into one object.
+* **xray** XRay reasoner modules.
 
-We expect to grow this capability in two ways:
+## Metadata
 
-## Composing Operators
+The language supports a metadata capability to enable modules to specify their inputs and outputs.
 
-By adding intersection and other common graph operations, we can increase the basic capability.
-Templates The following section describes how users can compose and extend operations to creat their own.
+Inputs and outputs can be specified with annotations specifying
+
+* **Type**: Types are currently derived from a standard library but in the future will be extensible and composable.
+* **Required**: Whether or not the argument is required.
 
 ## Templates
 
-Templates allow the extension and specialization of existing library functions.
-```
-templates:
-  name2id:
-    doc: |
-      This is a template. It can be extended by other templates or by operators. 
-    code: get
-    args:
-      pattern: 'https://bionames.renci.org/lookup/{input}/{type}/'
-workflow:
-  drugs:
-    doc: |
-      This template accepts a $drug_name variable and specifies the biolink model type for chemical substances.
-    extends: name2id
-    args:
-      inputs:
-        - input: $drug_name
-          type: chemical_substance
-```
+Templates allow the extension and specialization of existing library functions into new capabilities through composition.
+
+It's possible to speicify a template that pre-populates arguments of an operation and to register that template as an operator. It can then be invoked by a workflow which includes it.
 
 ## Modules
 
-External modules can be loaded via the import tag.
+External modules can be loaded via the `import` tag.
 
-This module definition,
+A library path like those featured in other high level programming languages governs where libraries are loaded from.
+
+## Putting it All Together
+
+Let's take a closer look at a usage example that puts this all together.
+
+Below, is a template called bionames.
+
+* It is built on the builtin `get` operator and sets the `pattern` argument to a defined value.
+* It's saved to a file called `bionames.ros` in a directory that's on the library path.
+* The `meta` tag describes metadata about the operator.
+* The special `main` operator is used when no sub-operators are specified.
+* Each operator has input and output sections.
+* The **input** section specifies a list of input values.
+* Each may have `doc`, `type`, and `required` tags.
+* The **output** section may contain `doc` and `type` tags.
+* In both cases, values of `type` must (currently) come from the Ros standard library, described elsewhere.
+
 ```
 doc: |
   This module defines a reusable template.
@@ -84,31 +95,54 @@ doc: |
 
 templates:
 
-  name2id:
+  bionames:
     doc: |
-      This is a template. It can be extended by workflow operators.
-      An extending operator will have all attributes of this template. 
+      This template extends the built in get operator.
     code: get
     args:
       pattern: 'https://bionames.renci.org/lookup/{input}/{type}/'
+    meta:
+      main:
+        args:
+          input:
+            doc: The name of the object to find identifiers for.
+            type: string
+            required: true
+          type:
+            doc: The intended biolink_model type of the resulting identifiers.
+            type: biolink_model
+            required: true
+        output:
+          doc: A Translator standard knowledge graph.
+          type: knowledge_graph_standard
 ```
 
-saved to a file called bionames.ros on the module path, can be loaded from another module like this
+Next, we import the templat above into a workflow definition.
 
 ```
+doc: |
+  NCATS Biomedical Translator - Workflow One
+  
 import:
   - bionames
-and its components referenced by the importing workflow like this:
+  
+workflow:
 
-  drugs:
+  disease_identifiers:
     doc: |
-      This template accepts a $drug_name variable and specifies the biolink model type for chemical substances.
-    extends: name2id
+      Resolve an English disease name to an ontology identifier.
+    code: bionames
     args:
-      inputs:
-        - input: $drug_name
-          type: chemical_substance
+      type: disease
+      input: $disease_name
+...
 ```
+
+Within the workflow section, the first operator names the imported bionames template as the job to execute.
+
+It further populates the type and input arguments required by the template.
+
+Executing this module will produce a JSON object that can be referenced elsewhere in the workflow as `$disease_identifiers`.
 
 ## Execution
 
