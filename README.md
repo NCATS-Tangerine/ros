@@ -17,6 +17,7 @@ When an operation executes, its result is implicitly stored and can be addressed
 Variables
 Variables passed to the workflow can be resolved dynamically. In this example, $disease_name refers to an argument provided by the execution context to this workflow. The provided value will be substituted at runtime.
 
+```
   diseases:
     doc: |
       Analogous English to ontological identifier transformation for disease.
@@ -24,6 +25,7 @@ Variables passed to the workflow can be resolved dynamically. In this example, $
     args:
       type: disease
       input: $disease_name
+```
 
 ## Query
 
@@ -36,20 +38,22 @@ In the example below, the output of the name2id service is indexed by the drug_t
 
 There are currently four built in operators: name2id, gamma, union, and get
 
-* name2id Invokes the Bionames API to resolve a natural language string to ontology identifiers.
-* gamma Invokes the Gamma reasoner. The example below calls Gamma a few times with different machine questions. It will be updated to use the new Quick API for added flexibility.
-* union Unions two or more results into one object.
-* get Invokes an HTTP GET operation on a specified resource.
+* **bionames** Invokes the Bionames API to resolve a natural language string to ontology identifiers.
+* **gamma** Invokes the Gamma reasoner. The example below calls Gamma a few times with different machine questions. It will be updated to use the new Quick API for added flexibility.
+* **union** Unions two or more results into one object.
+* **get** Invokes an HTTP GET operation on a specified resource.
 
 We expect to grow this capability in two ways:
 
-Adding Core Operators: By adding intersection and other common graph operations, we can increase the basic capability.
+## Composing Operators
+
+By adding intersection and other common graph operations, we can increase the basic capability.
 Templates The following section describes how users can compose and extend operations to creat their own.
 
 ## Templates
 
 Templates allow the extension and specialization of existing library functions.
-
+```
 templates:
   name2id:
     doc: |
@@ -66,14 +70,14 @@ workflow:
       inputs:
         - input: $drug_name
           type: chemical_substance
-...
+```
 
 ## Modules
 
 External modules can be loaded via the import tag.
 
 This module definition,
-
+```
 doc: |
   This module defines a reusable template.
   It can be imported into other workflows via the import directive.
@@ -87,8 +91,11 @@ templates:
     code: get
     args:
       pattern: 'https://bionames.renci.org/lookup/{input}/{type}/'
+```
+
 saved to a file called bionames.ros on the module path, can be loaded from another module like this
 
+```
 import:
   - bionames
 and its components referenced by the importing workflow like this:
@@ -101,6 +108,7 @@ and its components referenced by the importing workflow like this:
       inputs:
         - input: $drug_name
           type: chemical_substance
+```
 
 ## Execution
 
