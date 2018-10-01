@@ -6,7 +6,7 @@ Workflows are widely used to automate highly complex computing tasks.
 
 The Ros workflow engine and API execute graphs of queries to compose knowledge networks answering biomedical questions.
 
-Ros provide familiar facilities like variables, modularity, extensibility, templates, dependency management, while being responsive to the particular needs of the Translator workflows.
+The language provides familiar constructs like variables, modularity, extensibility, templates, a type system, and dependency management. At the same time, it is responsive to the distinctive needs of the Biomedical Translator which seeks to create highly detailed knowledge graps enabling sophisticated biomedical reasoning.
 
 ## Language
 
@@ -36,10 +36,10 @@ In the example below, the output of the name2id service is indexed by the drug_t
 
 There are currently four built in operators: name2id, gamma, union, and get
 
-    - name2id Invokes the Bionames API to resolve a natural language string to ontology identifiers.
-    - gamma Invokes the Gamma reasoner. The example below calls Gamma a few times with different machine questions. It will be updated to use the new Quick API for added flexibility.
-    - union Unions two or more results into one object.
-    - get Invokes an HTTP GET operation on a specified resource.
+* name2id Invokes the Bionames API to resolve a natural language string to ontology identifiers.
+* gamma Invokes the Gamma reasoner. The example below calls Gamma a few times with different machine questions. It will be updated to use the new Quick API for added flexibility.
+* union Unions two or more results into one object.
+* get Invokes an HTTP GET operation on a specified resource.
 
 We expect to grow this capability in two ways:
 
@@ -104,12 +104,14 @@ and its components referenced by the importing workflow like this:
 
 ## Execution
 
+For all workflows, the engine builds a directed acyclic graph (DAG) of jobs by examining each job to determine its dependencies.
+
+A topological sort of the jobs provides the execution order.
+
 There are two basic execution modes.
 
-    - **Synchronous** The prototype runs jobs synchronously.
-Asynchronous Under development is a task queue based approach.
-The engine builds a directed acyclic graph (DAG) of jobs.
-A topological sort of the jobs provides the execution order.
-Each job is sent, via an AMQP message queue to an execution back end (Celery).
-Job results are stored in Redis.
-Ultimately, other back ends would be good. Currently investigating FireWorks.
+* **Synchronous** The prototype runs jobs synchronously.
+* **Asynchronous** Under development is a task queue based approach.
+  Each job is sent, via an AMQP message queue to an execution back end (Celery).
+  Job results are stored in Redis.
+  Ultimately, other back ends would be good.
