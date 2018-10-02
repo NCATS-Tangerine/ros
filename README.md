@@ -282,7 +282,7 @@ $ ros flow --help
 usage: run_tasks.py [-h] [-a] [-w WORKFLOW] [-s SERVER] [-p PORT] [-i ARG]
                     [-o OUT] [-l LIB_PATH] [-n NDEX_ID] [--validate]
 
-Rosetta Workflow CLI
+Ros Workflow CLI
 
 optional arguments:
   -h, --help                        show this help message and exit
