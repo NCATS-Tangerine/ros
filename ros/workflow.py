@@ -6,13 +6,13 @@ import sys
 import yaml
 import time
 import traceback
-import ros.dag.conf as Conf
-from ros.router import Router
-from ros.util import Resource
 from jsonpath_rw import jsonpath, parse
 import networkx as nx
 import uuid
 from networkx.algorithms import lexicographical_topological_sort
+from ros.router import Router
+from ros.util import Resource
+from ros.config import Config
 from ros.graph import TranslatorGraphTools
 from ros.kgraph import Neo4JKnowledgeGraph
 
@@ -26,7 +26,8 @@ class Workflow:
         self.uuid = uuid.uuid4 ()
         self.graph = Neo4JKnowledgeGraph ()
         self.graph_tools = TranslatorGraphTools ()
-
+        self.config = Config ("ros.yaml")
+        
         # resolve templates.
         templates = self.spec.get("templates", {})
         workflows = self.spec.get("workflow", {})

@@ -4,13 +4,13 @@ import json
 import namedtupled
 import os
 import requests
-import ros.dag.conf as Conf
+#import ros.dag.conf as Conf
 import sys
 import yaml
 import time
 import traceback
 from jsonpath_rw import jsonpath, parse
-
+from ros.config import Config
 from ros.biothings import Biothings
 from ros.xray import XRay
 from ros.ndex import NDEx
@@ -18,16 +18,6 @@ from ros.gamma import Gamma
 from ros.operator import Event
 from ros.operator import Operator
 
-'''
-class Template:
-    def __init__(self, definition, extension, router):
-        self.definition = definition
-        self.extension = extension
-        self.router = router
-    def invoke (self, workflow):
-        template = workflow.spec.get ("templates", {}).get (self.definition, None)
-        method = self.router.r.get (template['code'])
-'''        
 class Router:
     req = 0
 
@@ -35,7 +25,6 @@ class Router:
     ''' TODO: make this modular so that operators can be defined externally. Consider dynamic invocation. '''
     def __init__(self, workflow):
         self.r = {
-#            'name2id'   : self.naming_to_id,
             'biothings' : self.biothings,
             'gamma'     : self.gamma,
             'gamma_q'   : self.gamma_query,
@@ -243,9 +232,9 @@ class Router:
             'Content-Type' : 'application/json'
         }
 
-        print (f"executing builder query: {Conf.robokop_builder_build_url}")
+        print (f"executing builder query: {self.workflow.config.robokop_builder_build_url}")
         builder_task_id = requests.post(
-            url = Conf.robokop_builder_build_url,
+            url = self.workflow.config.robokop_builder_build_url,
             headers = query_headers,
             json = machine_question).json()
         print (f"{json.dumps(builder_task_id,indent=2)}")
@@ -255,13 +244,13 @@ class Router:
         print(f"Waiting for builder to update the Knowledge Graph.")
         while not break_loop:
           time.sleep(1)
-          url = f"{Conf.robokop_builder_task_status_url}{task_id}"
+          url = f"{self.workflow.config.robokop_builder_task_status_url}{task_id}"
           builder_status = requests.get(url).json ()
           print (f"{builder_status} {url}")
           if isinstance(builder_status, dict) and builder_status['status'] == 'SUCCESS':
               break_loop = True
         
-        ranker_url = f"{Conf.robokop_ranker_now_url}"
+        ranker_url = f"{self.workflow.config.robokop_ranker_now_url}"
         print (f"ranker url: {ranker_url}")
         answer = requests.post (
             url = ranker_url,

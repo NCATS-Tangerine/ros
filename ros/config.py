@@ -2,7 +2,7 @@ import os
 import yaml
 import traceback
 import re
-from greent.util import Resource
+from ros.util import Resource
 
 class Config(dict):
     def __init__(self, config, prefix=''):
