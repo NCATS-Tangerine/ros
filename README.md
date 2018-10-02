@@ -11,6 +11,7 @@ The engine conducts interactions with modules, some of which will be web APIs, a
 
 * A **machine question**: A specification of a query.
 * An **input graph**: A knowledge-graph-standard graph or (or reference to one).
+* **Additional options**: Other options speicific to an operator. 
 
 and reuturn:
 
