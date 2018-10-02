@@ -9,14 +9,14 @@ While the language provides common programming language constructs supporting va
 
 ## Language
 
-### High Level Overview
+### Overview
 A workflow is a series of steps.
 Each step can reference an executable component via the `code` tag.
 These workflow steps accept a set of arguments specified via the `args` tag.
 These executable components can, in some cases, be further qualified via the `op` tag to specify a more granular component.
 When an operation executes, its result is implicitly stored and can be addressed later by the operator's name.
 
-## Variables
+### Variables
 
 Variables passed to the workflow at the command line or via the API can be resolved dynamically. In this example, $disease_name refers to an argument provided by the execution context to this workflow. The provided value will be substituted at runtime.
 
@@ -30,7 +30,7 @@ Variables passed to the workflow at the command line or via the API can be resol
       input: $disease_name
 ```
 
-## Operators
+### Operators
 
 The workflow is organized around graph operator components.
 
@@ -53,7 +53,7 @@ If the community is able to develop common APIs to reasoners, this profile will 
 * **union**: Unions two or more results into one object.
 * **xray**: XRay reasoner modules.
 
-## Graphs
+### Graphs
 
 Ros provides graphs in two basic modalities:
 
@@ -64,7 +64,7 @@ Each operator receives an event object provided by the Ros framework. The event 
 
 These facilities allow the operator to query the graphs before executing their main logic and to update it as well.
 
-## Metadata
+### Metadata
 
 The language supports a metadata capability to enable modules to specify their inputs and outputs.
 
@@ -80,11 +80,11 @@ Outputs support these tags:
 
 The use of metadata is optional.
 
-## Templates
+### Templates
 
 Templates allow extension of the language by specializing existing library functions into new capabilities through composition. Templates are defined in a template section separate from the workflow proper. They can also be defined in separate, reusable modules.
 
-## Modules
+### Modules
 
 External modules can be loaded via the `import` tag.
 
@@ -229,7 +229,9 @@ There are two basic execution modes.
   Job results are stored in Redis.
   Ultimately, other back ends would be good.
 
-## Usage
+## Getting Started
+
+Usage is very basic but we'll be adding more here soon.
 
 Clone the repo
 
