@@ -98,7 +98,7 @@ class CeleryDAGExecutor:
         return model.done['return']
                 
 if __name__ == '__main__':
-    arg_parser = argparse.ArgumentParser(description='Rosetta Workflow CLI',
+    arg_parser = argparse.ArgumentParser(description='Ros Workflow CLI',
                                          formatter_class=lambda prog: argparse.HelpFormatter(prog,max_help_position=57))
     arg_parser.add_argument('-a', '--api', help="Execute via API instead of locally.", action="store_true")
     arg_parser.add_argument('-w', '--workflow', help="Workflow to execute.", default="mq2.ros")
