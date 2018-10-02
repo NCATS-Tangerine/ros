@@ -302,5 +302,6 @@ optional arguments:
 
 We've barely begun.
 
+* **Polymorphism**: It would be really helpful if multiple entities implementing a capability could implement the same OpenAPI interface to enable polymorphic invocation. This would also help with parallelism.
 * **Parallel / Distributed**: Execute via something capable of parallel, distributed execution. Current likely options include Celery and Kubernetes.
 * **Composability**: Allow workflows to import and reuse other workflows.
