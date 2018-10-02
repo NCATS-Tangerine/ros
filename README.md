@@ -9,7 +9,7 @@ While the language provides common programming language constructs supporting va
 
 ## Language
 
-### Very High Level Overview
+### High Level Overview
 A workflow is a series of steps.
 Each step can reference an executable component via the `code` tag.
 These workflow steps accept a set of arguments specified via the `args` tag.
