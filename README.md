@@ -1,7 +1,7 @@
 # Ros
 
 ![ros](https://github.com/NCATS-Tangerine/ros/blob/sharedgraph/media/ros.png =400x500)
-
+<img src="https://github.com/NCATS-Tangerine/ros/blob/sharedgraph/media/ros.png" width="40%"></src>
 ## Workflows
 
 The Ros workflow engine executes query graphs to compose knowledge networks.
