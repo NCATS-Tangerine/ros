@@ -5,15 +5,16 @@ from time import sleep
 requests.packages.urllib3.disable_warnings()
 
 cq4 = {
-    "MaxDailyPM2.5Exposure" : {
-        "operator" : ">",
-        "value" : 1
+    "AvgDailyPM2.5Exposure" : {
+        "operator" : "<",
+        "value" : 3
     },
     "TotalEDInpatientVisits" : {
-        "operator" : ">",
-        "value" : 1
+        "operator" : "<",
+        "value" : 2
     }
 }
+cq4 = {}
 
 response = requests.post (
     url='https://icees.renci.org/1.0.0/patient/2010/cohort',
@@ -27,19 +28,20 @@ print(json.dumps(response, indent=2))
 
 query = {
     "feature_a" : {
-        "MaxDailyPM2.5Exposure" : {
-            "operator" : ">",
-            "value" : 2
+        "AvgDailyPM2.5Exposure" : {
+            "operator" : "<",
+            "value" : 3
         }
     },
     "feature_b":{
         "TotalEDInpatientVisits" : {
-            "operator" : ">",
-            "value" : 1
+            "operator" : "<",
+            "value" : 2
         }
     }
 }
 cohort = response['return value']['cohort_id']
+#cohort = "COHORT:22"
 
 print (f"https://icees.renci.org/1.0.0/patient/2010/cohort/{cohort}/feature_association ")
 
