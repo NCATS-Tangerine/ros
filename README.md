@@ -3,7 +3,7 @@
 
 ## Workflows
 
-The Ros workflow engine executes query graphs to compose knowledge networks.
+The Ros engine executes query graphs to compose knowledge networks.
 
 While the language provides common programming language constructs supporting variables, modularity, extensibility, templates, a type system, and dependency management, it is targeted at the distinctive challenges of creating **highly detailed knowledge graps enabling reasoning and inference**. The model supposes that this knowledge network construction will occur in the context of federated knowledge sources (like web APIs) supplying components of resulting graphs.
 
@@ -303,8 +303,14 @@ optional arguments:
   
 ## Next
 
-We've barely begun.
+We've just begun.
 
+* **Information Architecture**: Ros is a basis for a knowledge network workflow interpreter. Next we need a layer of:
+  * **Controlled vocabulary**: Especially regarding what the modules are and how they relate
+  * **Input and Output Signatures**: For the modules
+  * **Provenance**: Both in terms of workflow provenance (which user, how long, etc) and metadata about sources.
+* **KGX**: Pretty sure KGX should be the shared graph. Just need to built that connection.
 * **Polymorphism**: It would be really helpful if multiple entities implementing a capability could implement the same OpenAPI interface to enable polymorphic invocation. This would also help with parallelism.
 * **Parallel / Distributed**: Execute via something capable of parallel, distributed execution. Current likely options include Celery and Kubernetes.
 * **Composability**: Allow workflows to import and reuse other workflows.
+
