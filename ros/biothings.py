@@ -91,50 +91,34 @@ def annotate_drugs_std_results(input_json_doc):
     return data
 
 class Biothings (Operator):
+    """ Collection of modules provided by BioThings. """
     def __init__(self):
+        """ Initialize the operator. """
         super(Biothings, self).__init__("biothings")
-    def annotate_drugs (self, drugs):
-        for drug in drugs:
-            #print (f"{json.dumps (drug, indent=2)}")
-            compound_id = drug['id'].split (":")[1]
-            cache_name = f"{compound_id}.cache"
-            annotations = None
-            if os.path.exists (cache_name):
-                #print (f" opening {cache_name}")
-                with open (cache_name, "r") as stream:
-                    annotations = json.loads (stream.read ())
-            else:
-                annotations = annotate_drug (compound_id)
-                with open (cache_name, "w") as stream:
-                    stream.write (json.dumps (annotations, indent=2))
-            drug['node_attributes'] = annotations
-
-
-    def annotate_drugs (self, event):
-#        a = self.get_nodes_by_type (
-#            graph = event.graph,
-#            target_type = "chemical_substance",
-#            query = "$.[*].answers.[*].nodes.[*]")
-        print (json.dumps (event.graph, indent=2))
-        b = self.get_nodes_by_type (
-            graph = event.graph,
-            target_type = "chemical_substance",
-            query = "$.[*].result_list.[*].[*].result_graph.node_list.[*]")
         
-        drugs = b #a + b
+    def annotate_drugs (self, event):
+        """ Query the shared graph for chemical substances. """
+        drugs = event.context.graph.query (
+            query = "match (c:chemical_substance) return  c",
+            nodes = [ "c" ])
 
+        """ Annotate each drug node. """
         for drug in drugs:
-            #print (f"{json.dumps (drug, indent=2)}")
+            annotations = None
             compound_id = drug['id'].split (":")[1]
             cache_name = f"{compound_id}.cache"
-            annotations = None
             if os.path.exists (cache_name):
                 #print (f" opening {cache_name}")
                 with open (cache_name, "r") as stream:
-                    annotations = json.loads (stream.read ())
+                    annotations = json.load (stream)
             else:
                 annotations = annotate_drug (compound_id)
                 with open (cache_name, "w") as stream:
-                    stream.write (json.dumps (annotations, indent=2))
+                    json.dump (annotations, stream, indent=2)
             drug['node_attributes'] = annotations
-            
+
+        """ Return the results to be merged into the result graph. """
+        event.context.graph.update (drugs)
+        
+        return event.context.graph_tools.kgs (nodes=drugs)
+

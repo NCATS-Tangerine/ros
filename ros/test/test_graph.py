@@ -33,8 +33,8 @@ def test_file_to_d3_json(graph_tools):
     return g
 
 def test_to_knowledge_graph (graph_tools):
-    knowledge = KnowledgeGraph (graph=None, graph_name="test")
-    knowledge = Neo4JKnowledgeGraph (graph=None, graph_name="test")
+    #knowledge = KnowledgeGraph (graph=None, graph_name="test")
+    knowledge = Neo4JKnowledgeGraph () #graph=None, graph_name="test")
     graph_tools.to_knowledge_graph (
         in_graph = graph_tools.file_to_nx ("test_graph.json"),
         out_graph = knowledge)

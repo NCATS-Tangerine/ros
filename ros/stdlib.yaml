@@ -1,0 +1,10 @@
+types:
+  string :
+    doc: A primitive string of characters.
+    extends: primitive
+  biolink_model:
+    doc: An element from the Biolink-model 
+    extends: string
+  knowledge_graph_standard:
+    doc: A Translator knowledge graph standard (KGS) knowledge graph.
+    extends: primitive

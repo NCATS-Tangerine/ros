@@ -11,15 +11,15 @@ class XRay (Operator):
 
     def condition_expansion_to_gene_pathway_drug (self, event):
         response = None
-
-        ''' Query the graph for items of interest. disease ids. '''
-        disease_ids = self.get_ids (self.get_nodes_by_type (
-            graph = event.graph,
-            target_type = "disease",
-            query = "$.[*].answers.[*].nodes.[*]"))
-
+        diseases = event.context.graph.query (
+            query = "match (a:disease) return  a",
+            nodes = [ "a" ])
+        #print (diseases)
+        assert len(diseases) > 0, "Found no diseases"
+        
         ''' Execute the module. '''
-        if len(disease_ids) > 0:
+        if len(diseases) > 0:
+            #print (f"------------> {diseases}")
             response = requests.post(
                 url = self.url_str,
                 json = {

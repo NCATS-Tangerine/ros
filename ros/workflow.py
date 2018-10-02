@@ -13,45 +13,8 @@ from jsonpath_rw import jsonpath, parse
 import networkx as nx
 import uuid
 from networkx.algorithms import lexicographical_topological_sort
-
-# scaffold
-def read_json (f):
-    obj = Resource.get_resource_obj(f, format="json")
-    print (f"{obj}")
-    return obj
-
-class Env:
-    ''' Process utilities. '''
-    @staticmethod
-    def exit (message, status=0):
-        print (f"Exiting. {message}")
-        sys.exit (status)
-        
-    @staticmethod
-    def error (message):
-        Env.exit (f"Error: {message}", 1)
-
-    @staticmethod
-    def log (message):
-        print (message)
-
-class Parser:
-    ''' Parsing logic. '''
-    def parse (self, f):
-        result = None
-        with open(f,'r') as stream:
-            result = yaml.load (stream.read ())
-        return result #return Resource.get_resource_obj (f)
-    def parse_args (self, args):
-        result = {}
-        for a in args:
-            if '=' in a:
-                k, v = a.split ('=')
-                result[k] = v
-                Env.log (f"Adding workflow arg: {k} = {v}")
-            else:
-                Env.error (f"Arg must be in format <name>=<value>")
-        return result
+from ros.graph import TranslatorGraphTools
+from ros.kgraph import Neo4JKnowledgeGraph
 
 class Workflow:
     ''' Execution logic. '''
@@ -61,29 +24,34 @@ class Workflow:
         self.stack = []
         self.spec = spec
         self.uuid = uuid.uuid4 ()
-                        
+        self.graph = Neo4JKnowledgeGraph ()
+        self.graph_tools = TranslatorGraphTools ()
+
         # resolve templates.
         templates = self.spec.get("templates", {})
         workflows = self.spec.get("workflow", {})
         
         for name, job in workflows.items ():
-            extends = job.get ("extends", None)
-            if extends:
+            extends = job.get ("code", None)
+            if extends in templates:
                 Resource.deepupdate (workflows[name], templates[extends], skip=[ "doc" ])
-                #Resource.deepupdate (templates[extends], workflows[name], skip=[ "doc" ])
-                #print (f"{name}=>{json.dumps(workflows[name], indent=2)}")
-                
+
+        """ Validate input and output parameters. """
+        self.errors = []
+        self.validate ()
+       
         self.dag = nx.DiGraph ()
         operators = self.spec.get ("workflow", {}) 
         self.dependencies = {}
         jobs = {} 
         job_index = 0 
+        print ("dependencies")
         for operator in operators: 
             job_index = job_index + 1 
             op_node = operators[operator] 
             op_code = op_node['code'] 
             args = op_node['args'] 
-            self.dag.add_node (operator, attr_dict={ "op_node" : op_node }) 
+            self.dag.add_node (operator, attr_dict={ "op_node" : op_node })
             dependencies = self.get_dependent_job_names (op_node) 
             for d in dependencies: 
                 self.dag.add_edge (operator, d, attr_dict={})
@@ -92,6 +60,41 @@ class Workflow:
         self.topsort = [ t for t in reversed([
             t for t in lexicographical_topological_sort (self.dag) ])
         ]
+
+    def validate (self):
+        """
+        Enforce that input and output types of operators match their definitions.
+        Validate the existence of implementations for each module/operator.
+        """
+        print ("validating")
+        types_config = os.path.join(os.path.dirname(__file__), 'stdlib.yaml')
+        with open (types_config, 'r') as stream:
+            self.types = yaml.load (stream)['types']
+            self.spec['types'] = self.types
+            
+        #print (json.dumps(self.types, indent=2))
+        for job, node in self.spec.get("workflow", {}).items ():
+            actuals = node.get("input", {})
+            op = actuals.get("op","main")
+            signature = node.get ("meta", {}).get (op, {}).get ("args", {})
+            print (f"  {job}")
+            for arg, arg_spec in signature.items ():
+                arg_type = arg_spec.get ("type")
+                arg_required = arg_spec.get ("required")
+                print (f"    arg: type: {arg_type} required: {arg_required}")
+                """ Specified type exists. """
+                if not arg_type in self.types:
+                    self.errors.append (f"Error: Unknown type {arg_type} referenced in job {job}.")
+                else:
+                    """ Required arguments are present in the job. """
+                    if arg_required and not arg in actuals:
+                        self.errors.append (f"Error: required argument {arg} not present in job {job}.")
+        if len(self.errors) > 0:
+            for error in self.errors:
+                print (error)
+            raise ValueError ("Errors encountered.")
+        print ("Validation successful.")
+        
 
     @staticmethod
     def get_workflow(workflow="mq2.ros", library_path=["."]):
@@ -102,6 +105,7 @@ class Workflow:
 
     @staticmethod
     def resolve_imports (spec, library_path=["."]):
+        print ("importing modules")
         imports = spec.get ("import", [])
         for i in imports:
             for path in library_path:
@@ -109,7 +113,7 @@ class Workflow:
                 if os.path.exists (file_name):
                     with open (file_name, "r") as stream:
                         obj = yaml.load (stream.read ())
-                        print (f"importing module: {i} from {file_name}")
+                        print (f"  module: {i} from {file_name}")
                         Resource.deepupdate (spec, obj, skip=[ "doc" ])
         return spec
     
@@ -126,7 +130,7 @@ class Workflow:
             op_node = operators[operator]
             op_code = op_node['code']
             args = op_node['args']
-            result = router.route (self, operator, op_node, op_code, args)
+            result = router.route (self, operator, operator, op_node, op_code, args)
             self.persist_result (operator, result)
         return self.get_step(router, "return")["result"]
     def get_step (self, name):
@@ -141,15 +145,13 @@ class Workflow:
     def resolve_arg (self, name):
         return [ self.resolve_arg_inner (v) for v in name ] if isinstance(name, list) else self.resolve_arg_inner (name)
     def resolve_arg_inner (self, name):
-#        pass
-#    def resolve_arg (self, name):
         ''' Find the value of an argument passed to the workflow. '''
         value = name
         if name.startswith ("$"):
             var = name.replace ("$","")
             ''' Is this a job result? '''
             job_result = self.get_result (var)
-            print (f"job result {var}  ==============> {job_result}")
+            #print (f"job result {var}  ==============> {job_result}")
             if var in self.inputs:
                 value = self.inputs[var]
                 if "," in value:
@@ -165,11 +167,8 @@ class Workflow:
         # with the 'title' method and join them together.
         return components[0] + ''.join(x.title() for x in components[1:])
     def add_step_dependency (self, arg_val, dependencies):
-        print (f" testing {arg_val} as dependency.")
         name = self.get_variable_name (arg_val)
-        print (f"    name => {name}")
         if name and self.get_step (name):
-            print (f"      adding dep: {name}")
             dependencies.append (name)
     def get_dependent_job_names(self, op_node): 
         dependencies = []
@@ -191,29 +190,9 @@ class Workflow:
             traceback.print_exc ()
         elements = op_node.get("args",{}).get("elements",None) 
         if elements: 
-            dependencies = elements 
-        return dependencies
-    def get_dependent_job_names0(self, op_node): 
-        dependencies = []
-        try:
-            arg_list = op_node.get("args",{})
-            for arg_name, arg_val in arg_list.items ():
-                if isinstance(arg_val, list):
-                    for i in list:
-                        self.add_step_dependency (i, dependencies)
-                else:
-                    self.add_step_dependency (arg_val, dependencies)
-            inputs = op_node.get("args",{}).get("inputs",{})
-            if isinstance(inputs, dict):
-                from_job = inputs.get("from", None) 
-                if from_job:
-                    dependencies.append (from_job)
-                #from_job = op_node.get("args",{}).get("inputs",{}).get("from", None) 
-        except:
-            traceback.print_exc ()
-        elements = op_node.get("args",{}).get("elements",None) 
-        if elements: 
-            dependencies = elements 
+            dependencies = elements
+        for d in dependencies:
+            print (f"  {op_node['code']}->{d}")
         return dependencies
     def generate_dependent_jobs(self, workflow_model, operator, dag):
         dependencies = []
@@ -232,38 +211,43 @@ class Workflow:
             "failed" : {},
             "done" : {}
         }
-                
-class RedisBackedWorkflow(Workflow):
-    def __init__(self, spec, inputs):
-        super(RedisBackedWorkflow, self).__init__(spec, inputs)
-        '''
-        self.redis = redis.Redis(
-            host='hostname',
-            port=port)
-        '''
-        self.redis = Redis (url=Conf.celery_result_backend.replace ("0", "1"))
-    def form_key (self, job_name):
-        return f"{self.uuid}.{job_name}.result",
-    def set_result (self, job_name, value):
-        self.redis.set (
-            name=self.form_key(job_name),
-            value=value)
-    def get_result (self, job_name):
-        return self.redis (name=self.form_key(job_name))
 
-                
-class Neo4JBackedWorkflow(Workflow):
-    def __init__(self, spec, inputs):
-        super(Neo4JBackedWorkflow, self).__init__(spec, inputs)
-        self.redis = Redis (url=Conf.celery_result_backend.replace ("0", "1"))
+    """ Result management. """
     def form_key (self, job_name):
-        return f"{self.uuid}.{job_name}.result",
+        ''' Form the key name. '''
+        #print (f"---> {job_name}")
+        return f"{self.uuid}.{job_name}.res"
     def set_result (self, job_name, value):
-        self.redis.set (
-            name=self.form_key(job_name),
-            value=value)
+        ''' Set the result value. '''
+        #print (f" writing output for job -------------> {job_name}")
+        if not value:
+            raise ValueError (f"Null value set for job_name: {job_name}")
+        self.spec.get("workflow",{}).get(job_name,{})["result"] = value 
+        self.graph_tools.to_knowledge_graph (
+            in_graph = self.graph_tools.to_nx (value),
+            out_graph = self.graph)
+        
+        key = self.form_key (job_name)
+        if not os.path.exists ('cache'):
+            os.mkdir ("cache")
+        #print (f" ************> {key}")
+        fname = os.path.join ("cache", key)
+        with open(fname, "w") as stream:
+            json.dump (value, stream, indent=2)
+        #print (f"-------------------------> graph for {job_name} written.")
     def get_result (self, job_name):
-        return self.redis (name=self.form_key(job_name))
+        ''' Get the result graph. We pass the whole graph for every graph. '''
+        result = None
+        key = self.form_key (job_name)
+        if not os.path.exists ('cache'):
+            os.mkdir ("cache")
+        #print (f" ************> {key}")
+        fname = os.path.join ("cache", key)
+        if os.path.exists (fname):
+            with open(fname, "r") as stream:
+                result = json.load (stream)
+        #print (f"read>>>>> {json.dumps(result, indent=2)}")
+        return result
 
 if __name__ == "__main__":
 
@@ -272,7 +256,7 @@ if __name__ == "__main__":
     arg_parser.add_argument('-a', '--args', help='An argument', action="append")
     args = arg_parser.parse_args ()
 
-    Env.log (f"Running workflow {args.workflow}")
+    #Env.log (f"Running workflow {args.workflow}")
 
     parser = Parser ()
     workflow = Workflow (
