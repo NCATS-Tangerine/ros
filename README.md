@@ -5,26 +5,44 @@
 
 The Ros engine executes query graphs to compose knowledge networks.
 
-While the language provides common programming language constructs supporting variables, modularity, extensibility, templates, a type system, and dependency management, it is targeted at the distinctive challenges of creating **highly detailed knowledge graps enabling reasoning and inference**. The model supposes that this knowledge network construction will occur in the context of federated knowledge sources (like web APIs) supplying components of resulting graphs.
+While the language provides common programming language constructs supporting variables, modularity, extensibility, templates, a type system, and dependency management, it is targeted at the distinctive challenges of creating **highly detailed knowledge graphs enabling reasoning and inference**. 
+
+The engine conducts interactions with modules, some of which will be web APIs, able to receive:
+
+* A **machine question**: A specification of a query.
+* An **input graph**: A knowledge-graph-standard graph or (or reference to one).
+* **Additional options**: Other options speicific to an operator. 
+
+and reuturn:
+
+* A **knowledge graph**: A knowledge-graph-standard graph.
+
 
 ## Language
 
 ### Overview
+
 A workflow is a series of steps.
-Each step can reference an executable component via the `code` tag.
-These workflow steps accept a set of arguments specified via the `args` tag.
-These executable components can, in some cases, be further qualified via the `op` tag to specify a more granular component.
-When an operation executes, its result is implicitly stored and can be addressed later by the operator's name.
+Steps can reference the output of previous steps.
+In general they have access to a shared graph.
+They can also exchange sub-graphs.
+Steps can have associated metadata describing allowed input types and their output.
+
+When the engine loads a workflow, it computes a directed acyclic graph modeling job dependencies. It then executes jobs in the indicated order.
 
 ### Variables
 
-Variables passed to the workflow at the command line or via the API can be resolved dynamically. In this example, $disease_name refers to an argument provided by the execution context to this workflow. The provided value will be substituted at runtime.
+Variables passed to the workflow at the command line or via the API can be resolved dynamically. In this example, $disease_name refers to an argument provided by the execution context to this workflow. The provided value will be substituted at runtime. The name `disease_identifiers` is the job's name. When it completes, the knowledg graph standard graph it produces will be saved as the value of the job's name. The graph is also written to the shared graph.
+
+The `code` tag tells the engine which block of functionality to execute.
+
+The `args` section lists inputs to this operator.
 
 ```
-  diseases:
+  disease_identifiers:
     doc: |
-      Analogous English to ontological identifier transformation for disease.
-    code: name2id
+      Resolve an English disease name to an ontology identifier.
+    code: bionames
     args:
       type: disease
       input: $disease_name
@@ -32,9 +50,7 @@ Variables passed to the workflow at the command line or via the API can be resol
 
 ### Operators
 
-The workflow is organized around graph operator components.
-
-Each one has access to a shared graph and other facilities of the Ros framework.
+The workflow is organized around graph operators. Each has access to all facilities of the Ros framework including the shared graph.
 
 In general, each element of a workflow has the following standard contents:
 
@@ -46,12 +62,11 @@ The system provides the following core operators.
 
 If the community is able to develop common APIs to reasoners, this profile will shift to supporting those common APIs.
 
-* **bionames**: Invokes the Bionames API to resolve a natural language string to ontology identifiers.
+* **biothings**: BioThings modules. Currently modules 4 and 5 of workflow 1.
 * **gamma**: Invokes the Gamma reasoner. The example below calls Gamma a few times with different machine questions. It will be updated to use the new Quick API for added flexibility.
-* **biothings**: BioThings modules.
 * **get**: Invokes an HTTP GET operation on a specified resource.
 * **union**: Unions two or more results into one object.
-* **xray**: XRay reasoner modules.
+* **xray**: XRay reasoner modules. Currently modules 1 and 2 of workflow 1.
 
 ### Graphs
 
@@ -99,7 +114,7 @@ To begin with, here is a template called bionames.
 * It extends the builtin `get` operator and sets the `pattern` argument to a defined value.
 * It's saved to a file called `bionames.ros` in a directory that's on the library path.
 * The `meta` tag describes metadata about the operator.
-* The special `main` operator is used when no sub-operators are specified.
+* The `main` operator is used when no sub-operators are specified.
 * Each operator has input and output sections.
 * The **input** section specifies a list of input values.
 * Each may have `doc`, `type`, and `required` tags.
@@ -135,7 +150,7 @@ templates:
           type: knowledge_graph_standard
 ```
 
-Next, we import the templat above into a workflow definition.
+Next, we import the template above into a workflow definition.
 
 ```
 doc: |
