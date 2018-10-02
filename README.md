@@ -1,6 +1,6 @@
 # Ros
 
-![ros](https://github.com/NCATS-Tangerine/ros/blob/sharedgraph/media/ros.png)
+![ros](https://github.com/NCATS-Tangerine/ros/blob/sharedgraph/media/ros.png | =400x500)
 
 ## Workflows
 
