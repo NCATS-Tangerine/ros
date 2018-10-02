@@ -86,7 +86,7 @@ A library path like those featured in other high level programming languages gov
 
 ## Putting it All Together
 
-Here's a usage example putting this all together.
+Here's a usage example to put all of this in context.
 
 To begin with, here is a template called bionames.
 
@@ -152,9 +152,40 @@ workflow:
 
 Within the workflow section, the first operator names the imported bionames template as the job to execute.
 
-It further populates the type and input arguments required by the template.
+It also populates the type and input arguments required by the template.
 
 Executing this module will produce a JSON object that can be referenced elsewhere in the workflow as `$disease_identifiers`.
+
+The next step in the workflow executes the first modules of workflow one via the XRay reasoner:
+
+```
+  condition_to_drug:
+    doc: |
+      Module 1
+        * What are the defining symptoms / phenotypes of [condition x]?
+        * What conditions present [symptoms]?
+        * Filter [conditions] to only keep ones with defined genetic causes.
+        * What subset of conditions are most representative of [conditions]? (find archetypes)
+      Module 2
+        * What genes are implicated in [condition]?
+        * What subset of genes are most representative of [conditions]?  (find archetypes)
+        * What pathways/processes are [genes] involved in?
+        * What genes are involved in [pathway/process]?
+        * What drugs/compounds target gene products of [gene]?
+      Invoke XRay module 1 and 2 given the disease identifier from bionames.
+      The graph argument references the entire bionames response.
+      The op argument specifies the XRay operation to execute.
+    code: xray
+    args:
+      op: condition_expansion_to_gene_pathway_drug
+      graph: $disease_identifiers
+```
+
+The graph argument references the output from our bionames command above as an input via a variable.
+
+For more details, see the whole [workflow](https://github.com/NCATS-Tangerine/ros/blob/sharedgraph/ros/workflow_one.ros).
+
+## Output
 
 Here's some output from running the workflow above with validation enabled. It shows importing the bionames module, validating each invocation (only disease_identfiers has metadata configured).
 
