@@ -86,11 +86,11 @@ A library path like those featured in other high level programming languages gov
 
 ## Putting it All Together
 
-Let's take a closer look at a usage example that puts this all together.
+Here's a usage example putting this all together.
 
-Below, is a template called bionames.
+To begin with, here is a template called bionames.
 
-* It is built on the builtin `get` operator and sets the `pattern` argument to a defined value.
+* It extends the builtin `get` operator and sets the `pattern` argument to a defined value.
 * It's saved to a file called `bionames.ros` in a directory that's on the library path.
 * The `meta` tag describes metadata about the operator.
 * The special `main` operator is used when no sub-operators are specified.
