@@ -74,9 +74,7 @@ The use of metadata is optional.
 
 ## Templates
 
-Templates allow the extension and specialization of existing library functions into new capabilities through composition.
-
-It's possible to speicify a template that pre-populates arguments of an operation and to register that template as an operator. It can then be invoked by a workflow which includes it.
+Templates allow extension of the language by specializing existing library functions into new capabilities through composition. Templates are defined in a template section separate from the workflow proper. They can also be defined in separate, reusable modules.
 
 ## Modules
 
