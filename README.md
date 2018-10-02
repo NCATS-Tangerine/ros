@@ -1,5 +1,7 @@
 # Ros
 
+![ros](https://github.com/NCATS-Tangerine/ros/blob/sharedgraph/media/ros.png)
+
 ## Workflows
 
 The Ros workflow engine executes query graphs to compose knowledge networks.
