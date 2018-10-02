@@ -4,18 +4,20 @@
 
 The Ros workflow engine executes query graphs to compose knowledge networks.
 
-While the language provides capabilities similar to other programming languages like variables, modularity, extensibility, templates, a type system, and dependency management, it is targeted at the distinctive challenges of creating highly detailed knowledge graps enabling sophisticated reasoning and inference. The model supposes that this knowledge network construction will occur in the context of federated knowledge sources supplying components of resulting graphs.
+While the language provides common programming language constructs including variables, modularity, extensibility, templates, a type system, and dependency management, it is targeted at the distinctive challenges of creating **highly detailed knowledge graps enabling sophisticated reasoning and inference**. The model supposes that this knowledge network construction will occur in the context of federated knowledge sources (like web APIs) supplying components of resulting graphs.
 
 ## Language
 
+### Very High Level Overview
 A workflow is a series of steps.
-Each step can reference a predefined operation via the `code` tag.
-These operations accept a set of arguments specified via the args tag.
+Each step can reference an executable component via the `code` tag.
+These workflow steps accept a set of arguments specified via the `args` tag.
+These executable components can, in some cases, be further qualified via the `op` tag to specify a more granular component.
 When an operation executes, its result is implicitly stored and can be addressed later by the operator's name.
 
 ## Variables
 
-Variables passed to the workflow can be resolved dynamically. In this example, $disease_name refers to an argument provided by the execution context to this workflow. The provided value will be substituted at runtime.
+Variables passed to the workflow at the command line or via the API can be resolved dynamically. In this example, $disease_name refers to an argument provided by the execution context to this workflow. The provided value will be substituted at runtime.
 
 ```
   diseases:
@@ -29,15 +31,15 @@ Variables passed to the workflow can be resolved dynamically. In this example, $
 
 ## Operators
 
-The workflow is organized around components called graph operators.
+The workflow is organized around graph operator components.
 
-Each one has access to a shared graph as well as variables and other facilities of the Ros framework.
+Each one has access to a shared graph and other facilities of the Ros framework.
 
-In general, the elements of a workflow each has a name and the following standard contents:
+In general, each element of a workflow has the following standard contents:
 
-* **doc**: A documentation string.
-* **code**: The name of a component providing functionality.
-* **args**: Arguments to the operator.
+  * **doc**: A documentation string.
+  * **code**: The name of a component providing functionality.
+  * **args**: Arguments to the operator.
 
 The system provides the following core operators.
 
