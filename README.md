@@ -32,10 +32,10 @@ When an operation executes, its result is implicitly stored and can be addressed
 Variables passed to the workflow at the command line or via the API can be resolved dynamically. In this example, $disease_name refers to an argument provided by the execution context to this workflow. The provided value will be substituted at runtime.
 
 ```
-  diseases:
+  disease_identifiers:
     doc: |
-      Analogous English to ontological identifier transformation for disease.
-    code: name2id
+      Resolve an English disease name to an ontology identifier.
+    code: bionames
     args:
       type: disease
       input: $disease_name
