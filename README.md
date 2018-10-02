@@ -67,10 +67,15 @@ These facilities allow the operator to query the graphs before executing their m
 
 The language supports a metadata capability to enable modules to specify their inputs and outputs.
 
-Inputs and outputs can be specified with annotations specifying
+Inputs support these tags:
 
-* **Type**: Types are currently derived from a standard library but in the future will be extensible and composable.
-* **Required**: Whether or not the argument is required.
+* **doc**: Documentation
+* **type**: Types are currently derived from a standard library but in the future will be extensible and composable.
+* **required**: Whether or not the argument is required.
+
+Outputs support these tags:
+* **doc**: Documentation.
+* **type**: Type of the returned object.
 
 The use of metadata is optional.
 
@@ -271,6 +276,28 @@ Run the workflow with NDEx output:
 ros flow --workflow workflow_one.ros --out output.json --ndex_id wf1
 ```
 
+Help:
+```
+$ ros flow --help
+usage: run_tasks.py [-h] [-a] [-w WORKFLOW] [-s SERVER] [-p PORT] [-i ARG]
+                    [-o OUT] [-l LIB_PATH] [-n NDEX_ID] [--validate]
+
+Rosetta Workflow CLI
+
+optional arguments:
+  -h, --help                        show this help message and exit
+  -a, --api                         Execute via API instead of locally.
+  -w WORKFLOW, --workflow WORKFLOW  Workflow to execute.
+  -s SERVER, --server SERVER        Hostname of api server
+  -p PORT, --port PORT              Port of the server
+  -i ARG, --arg ARG                 Add an argument expressed as key=val
+  -o OUT, --out OUT                 Output the workflow result graph to a
+                                    file. Use 'stdout' to print to terminal.
+  -l LIB_PATH, --lib_path LIB_PATH  A directory containing workflow modules.
+  -n NDEX_ID, --ndex_id NDEX_ID     Publish the graph to NDEx
+  --validate                        Validate inputs and outputs
+  ```
+  
 ## Next
 
 We've barely begun.
