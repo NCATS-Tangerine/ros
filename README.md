@@ -150,6 +150,20 @@ templates:
           type: knowledge_graph_standard
 ```
 
+The `biolink_model` and `knowledge_graph_standard` types are currently modeled directly in the Ros standard library:
+```
+types:
+  string :
+    doc: A primitive string of characters.
+    extends: primitive
+  biolink_model:
+    doc: An element from the Biolink-model 
+    extends: string
+  knowledge_graph_standard:
+    doc: A Translator knowledge graph standard (KGS) knowledge graph.
+    extends: primitive
+```
+
 Next, we import the template above into a workflow definition.
 
 ```
