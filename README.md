@@ -1,11 +1,9 @@
 
 <img src="https://github.com/NCATS-Tangerine/ros/blob/sharedgraph/media/ros.png" width="40%"></src>
 
-## Workflows
-
 The Ros engine executes query graphs to compose knowledge networks.
 
-While the language provides common programming language constructs supporting variables, modularity, extensibility, templates, a type system, and dependency management, it is targeted at the distinctive challenges of creating **highly detailed knowledge graphs enabling reasoning and inference**. 
+While the language provides common constructs supporting variables, modularity, extensibility, templates, a type system, and dependency management, it is targeted at the distinctive challenges of creating **highly detailed knowledge graphs enabling reasoning and inference**. 
 
 The engine conducts interactions with modules, some of which will be web APIs, able to receive:
 
@@ -13,7 +11,7 @@ The engine conducts interactions with modules, some of which will be web APIs, a
 * An **input graph**: A knowledge-graph-standard graph or (or reference to one).
 * **Additional options**: Other options speicific to an operator. 
 
-and reuturn:
+and return:
 
 * A **knowledge graph**: A knowledge-graph-standard graph.
 
@@ -150,6 +148,20 @@ templates:
           type: knowledge_graph_standard
 ```
 
+The `biolink_model` and `knowledge_graph_standard` types are currently modeled directly in the Ros [standard library](https://github.com/NCATS-Tangerine/ros/blob/master/ros/stdlib.yaml):
+```
+types:
+  string :
+    doc: A primitive string of characters.
+    extends: primitive
+  biolink_model:
+    doc: An element from the Biolink-model 
+    extends: string
+  knowledge_graph_standard:
+    doc: A Translator knowledge graph standard (KGS) knowledge graph.
+    extends: primitive
+```
+
 Next, we import the template above into a workflow definition.
 
 ```
@@ -246,34 +258,19 @@ There are two basic execution modes.
 
 ## Getting Started
 
-Usage is very basic but we'll be adding more here soon.
+### Install
 
-Clone the repo
+These steps install the package, print help text, and execute  workflow one. To run this, you'll need workflow_one.ros and bionames.ros from the repo.
 
 ```
-git clone git@github.com:NCATS-Tangerine/ros.git
-cd ros
-```
-
-Add ros to the path.
-```
-export PATH=$PWD/bin:$PATH
+$ pip install ros
+$ ros --help
+$ ros --workflow workflow_one.ros --arg disease_name="diabetes mellitus type 2"
 ```
 
-Change to the workflow directory.
-```
-cd ros
-```
+**Note**: Currently, the Python ndex2 client depends on an old version of NetworkX that's incompatible with Ros. A new version is expected soon. They can be used together but the install process is a bit more complicated than above.
 
-Install requirements:
-```
-pip install -r requirements.txt
-```
-
-Run the workflow.
-```
-ros flow --workflow workflow_one.ros --out output.json
-```
+### NDEx
 
 Save a workflow to NDEx:
 
@@ -318,14 +315,12 @@ optional arguments:
   
 ## Next
 
-We've just begun.
-
-* **Information Architecture**: Ros is a basis for a knowledge network workflow interpreter. Next we need a layer of:
+* **Information Architecture**: Develop:
   * **Controlled vocabulary**: Especially regarding what the modules are and how they relate
   * **Input and Output Signatures**: For the modules
-  * **Provenance**: Both in terms of workflow provenance (which user, how long, etc) and metadata about sources.
-* **KGX**: Pretty sure KGX should be the shared graph. Just need to built that connection.
+  * **Provenance**: Both in terms of workflow provenance (which user, how long, etc) and metadata about sources (SCEPIO?).
 * **Polymorphism**: It would be really helpful if multiple entities implementing a capability could implement the same OpenAPI interface to enable polymorphic invocation. This would also help with parallelism.
+* **[KGX](https://github.com/NCATS-Tangerine/kgx)**: Maybe KGX should be the shared graph, at least optionally. Just need to design that connection.
 * **Parallel / Distributed**: Execute via something capable of parallel, distributed execution. Current likely options include Celery and Kubernetes.
 * **Composability**: Allow workflows to import and reuse other workflows.
 
