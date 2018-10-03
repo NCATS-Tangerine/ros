@@ -1,8 +1,6 @@
 
 <img src="https://github.com/NCATS-Tangerine/ros/blob/sharedgraph/media/ros.png" width="40%"></src>
 
-## Workflows
-
 The Ros engine executes query graphs to compose knowledge networks.
 
 While the language provides common programming language constructs supporting variables, modularity, extensibility, templates, a type system, and dependency management, it is targeted at the distinctive challenges of creating **highly detailed knowledge graphs enabling reasoning and inference**. 
