@@ -150,7 +150,7 @@ templates:
           type: knowledge_graph_standard
 ```
 
-The `biolink_model` and `knowledge_graph_standard` types are currently modeled directly in the Ros standard library:
+The `biolink_model` and `knowledge_graph_standard` types are currently modeled directly in the Ros [standard library](https://github.com/NCATS-Tangerine/ros/blob/master/ros/stdlib.yaml):
 ```
 types:
   string :
