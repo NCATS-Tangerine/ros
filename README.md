@@ -246,34 +246,19 @@ There are two basic execution modes.
 
 ## Getting Started
 
-Usage is very basic but we'll be adding more here soon.
+### Install
 
-Clone the repo
+These steps install the package, print help text, and execute  workflow one. To run this, you'll need workflow_one.ros and bionames.ros from the repo.
 
 ```
-git clone git@github.com:NCATS-Tangerine/ros.git
-cd ros
-```
-
-Add ros to the path.
-```
-export PATH=$PWD/bin:$PATH
+$ pip install ros
+$ ros --help
+$ ros --workflow workflow_one.ros --arg disease_name=diabetes
 ```
 
-Change to the workflow directory.
-```
-cd ros
-```
+**Note**: Currently, the Python ndex2 client depends on an old version of NetworkX that's incompatible with Ros. A new version is expected soon. They can be used together but the install process is a bit more complicated than above.
 
-Install requirements:
-```
-pip install -r requirements.txt
-```
-
-Run the workflow.
-```
-ros flow --workflow workflow_one.ros --out output.json
-```
+### NDEx
 
 Save a workflow to NDEx:
 
