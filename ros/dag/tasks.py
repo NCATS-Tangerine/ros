@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import json
 import time
-from ros.dag.celery_app import app
+#from ros.dag.celery_app import app
 from ros.workflow import Workflow
 from ros.router import Router
 
@@ -16,7 +16,7 @@ def json2model(json):
     model.failed = json['failed']
     model.done = json['done']
     return model
-
+'''
 @app.task(bind=True, queue="rosetta")
 def calc_dag (self, workflow_spec, inputs):
     return Workflow (workflow_spec, inputs=inputs).json ()
@@ -28,7 +28,20 @@ def exec_operator(self, model, job_name):
     op_node = wf.spec.get("workflow",{}).get(job_name,{})
     if op_node:
         router = Router (wf)
-#        result = router.route (wf, job_name, op_node, op_node['code'], op_node['args'])
+        result = router.route (wf, job_name, op_node, op_node['code'], op_node['args'])
+        wf.set_result (job_name, result)
+    return result
+'''
+
+def calc_dag (workflow_spec, inputs):
+    return Workflow (workflow_spec, inputs=inputs).json ()
+
+def exec_operator(model, job_name):
+    result = None
+    wf = json2model (model)
+    op_node = wf.spec.get("workflow",{}).get(job_name,{})
+    if op_node:
+        router = Router (wf)
         result = router.route (wf, job_name, op_node, op_node['code'], op_node['args'])
         wf.set_result (job_name, result)
     return result

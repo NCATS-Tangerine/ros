@@ -109,13 +109,18 @@ class Workflow:
         print ("importing modules")
         imports = spec.get ("import", [])
         for i in imports:
+            imported = False
             for path in library_path:
                 file_name = os.path.join (path, f"{i}.ros")
+                print (f"  module: {i} from {file_name}")
                 if os.path.exists (file_name):
                     with open (file_name, "r") as stream:
                         obj = yaml.load (stream.read ())
                         print (f"  module: {i} from {file_name}")
                         Resource.deepupdate (spec, obj, skip=[ "doc" ])
+                        imported = True
+            if not imported:
+                raise ValueError (f"Unable to find resource: {i}")
         return spec
     
     def set_result(self, job_name, value):

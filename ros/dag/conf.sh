@@ -1,9 +1,9 @@
-# Rosetta Global.
-export APP_NAME=rosetta
+# Ros Global.
+export APP_NAME=ros
 export PYTHONPATH=$APP_ROOT
 
-# Rosetta API.
-export ROSETTA_WF_PORT=5008
+# Ros API.
+export ROS_WF_PORT=5008
 
 # AMQP server.
 export RABBITMQ_DEFAULT_VHOST=$APP_NAME
@@ -21,7 +21,7 @@ export RESULTS_PORT=6345
 export RESULTS_DB=0
 export CELERY_BROKER_URL="amqp://$RABBITMQ_DEFAULT_USER:$RABBITMQ_DEFAULT_PASS@$BROKER_HOST:$BROKER_PORT/$RABBITMQ_DEFAULT_VHOST"
 export CELERY_RESULT_BACKEND="redis://$RESULTS_HOST:$RESULTS_PORT/$RESULTS_DB"
-export CELERY_APP_PACKAGE="greent.flow.dag"
+export CELERY_APP_PACKAGE="ros.dag"
 
 # Gamma config.
 export GAMMA_HOST=${BUILDER_HOST:-robokop.renci.org}

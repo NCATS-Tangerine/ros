@@ -12,7 +12,7 @@ from flask_restful import Resource
 from ros.dag.api_setup import api, app
 from ros.dag.run_tasks import CeleryDAGExecutor
 
-logger = logging.getLogger("rosetta")
+logger = logging.getLogger("ros")
 
 class ExecuteWorkflow(Resource):
     def post(self):
@@ -20,7 +20,7 @@ class ExecuteWorkflow(Resource):
         ExecuteWorkflow
         ---
         tags: [executeWorkflow]
-        summary: "Execute a Rosetta workflow."
+        summary: "Execute a Ros workflow."
         description: ""
         operationId: "executeWorkflow"
         consumes:
@@ -56,8 +56,8 @@ api.add_resource(ExecuteWorkflow, '/executeWorkflow')
 if __name__ == '__main__':
     # Get host and port from environment variables
     server_host = '0.0.0.0'
-    server_port = int(os.environ['ROSETTA_WF_PORT'])
-    print (f"Serving Rosettta WF on port: {server_port}")
+    server_port = int(os.environ['ROS_WF_PORT'])
+    print (f"Serving Ros WF on port: {server_port}")
     app.run(host=server_host,\
         port=server_port,\
         debug=False,\

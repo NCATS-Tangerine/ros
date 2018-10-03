@@ -23,7 +23,7 @@ def get_workflow(workflow="mq2.ros", library_path=["."]):
         workflow_spec = yaml.load (stream.read ())
     return Workflow.resolve_imports (workflow_spec, library_path)
 
-def call_api(workflow="mq2.ros", host="localhost", port=os.environ["ROSETTA_WF_PORT"], args={}, library_path=["."]):
+def call_api(workflow="mq2.ros", host="localhost", port=8080, args={}, library_path=["."]):
     workflow_spec = get_workflow (workflow, library_path)
     return requests.post (
         url = f"{host}:{port}/api/executeWorkflow",
@@ -97,7 +97,7 @@ class CeleryDAGExecutor:
                 del model.running[c]
         return model.done['return']
                 
-if __name__ == '__main__':
+def main ():
     arg_parser = argparse.ArgumentParser(description='Ros Workflow CLI',
                                          formatter_class=lambda prog: argparse.HelpFormatter(prog,max_help_position=57))
     arg_parser.add_argument('-a', '--api', help="Execute via API instead of locally.", action="store_true")
@@ -110,7 +110,8 @@ if __name__ == '__main__':
     arg_parser.add_argument('-n', '--ndex_id', help="Publish the graph to NDEx")
     arg_parser.add_argument('--validate', help="Validate inputs and outputs", action="store_true")
     args = arg_parser.parse_args ()
-
+    print (args)
+    
     """ Parse input arguments. """
     #wf_args = { k : v.replace('_', '') for k, v in [ arg.split("=") for arg in args.arg ] }
     wf_args = { k : v for k, v in [ arg.split("=") for arg in args.arg ] }
@@ -124,7 +125,7 @@ if __name__ == '__main__':
     else:
         """ Execute the workflow in process. """
         executor = CeleryDAGExecutor (
-            spec=get_workflow (workflow=args.workflow),
+            spec=get_workflow (workflow=args.workflow, library_path=args.lib_path),
             inputs=wf_args)
         response = executor.execute ()
         if args.ndex_id:
@@ -140,3 +141,5 @@ if __name__ == '__main__':
             with open(args.out, "w") as stream:
                 stream.write (json.dumps(response, indent=2))
             
+if __name__ == '__main__':
+    main (sys.argv)
