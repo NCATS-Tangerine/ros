@@ -303,14 +303,12 @@ optional arguments:
   
 ## Next
 
-We've just begun.
-
-* **Information Architecture**: Ros is a basis for a knowledge network workflow interpreter. Next we need a layer of:
+* **Information Architecture**: Develop:
   * **Controlled vocabulary**: Especially regarding what the modules are and how they relate
   * **Input and Output Signatures**: For the modules
-  * **Provenance**: Both in terms of workflow provenance (which user, how long, etc) and metadata about sources.
-* **KGX**: Pretty sure KGX should be the shared graph. Just need to built that connection.
+  * **Provenance**: Both in terms of workflow provenance (which user, how long, etc) and metadata about sources (SCEPIO?).
 * **Polymorphism**: It would be really helpful if multiple entities implementing a capability could implement the same OpenAPI interface to enable polymorphic invocation. This would also help with parallelism.
+* **KGX**: Pretty sure KGX should be the shared graph, at least optionally. Just need to design that connection.
 * **Parallel / Distributed**: Execute via something capable of parallel, distributed execution. Current likely options include Celery and Kubernetes.
 * **Composability**: Allow workflows to import and reuse other workflows.
 
