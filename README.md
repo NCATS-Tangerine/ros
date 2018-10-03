@@ -253,7 +253,7 @@ These steps install the package, print help text, and execute  workflow one. To 
 ```
 $ pip install ros
 $ ros --help
-$ ros --workflow workflow_one.ros --arg disease_name=diabetes
+$ ros --workflow workflow_one.ros --arg disease_name="diabetes mellitus type 2"
 ```
 
 **Note**: Currently, the Python ndex2 client depends on an old version of NetworkX that's incompatible with Ros. A new version is expected soon. They can be used together but the install process is a bit more complicated than above.
