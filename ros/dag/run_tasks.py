@@ -106,7 +106,7 @@ def main ():
     arg_parser.add_argument('-p', '--port', help="Port of the server", default="80")
     arg_parser.add_argument('-i', '--arg', help="Add an argument expressed as key=val", action='append')
     arg_parser.add_argument('-o', '--out', help="Output the workflow result graph to a file. Use 'stdout' to print to terminal.")
-    arg_parser.add_argument('-l', '--lib_path', help="A directory containing workflow modules.", action='append')
+    arg_parser.add_argument('-l', '--lib_path', help="A directory containing workflow modules.", action='append', default=["."])
     arg_parser.add_argument('-n', '--ndex_id', help="Publish the graph to NDEx")
     arg_parser.add_argument('--validate', help="Validate inputs and outputs", action="store_true")
     args = arg_parser.parse_args ()
