@@ -33,6 +33,7 @@ class Workflow:
 
         if isinstance(spec, str):
             if os.path.exists (spec):
+                logger.info (f"Loading workflow: {spec}")
                 with open (spec, "r") as stream:
                     spec = yaml.load (stream.read ())
                     
@@ -87,6 +88,7 @@ class Workflow:
             for path in self.libpath:
                 file_name = os.path.join (path, f"{i}.ros")
                 logger.debug (f"  module: {i} from {file_name}")
+                print (f"  module: {i} from {file_name}")
                 if os.path.exists (file_name):
                     with open (file_name, "r") as stream:
                         obj = yaml.load (stream.read ())
@@ -153,15 +155,15 @@ class Workflow:
     
     def execute (self, router):
         ''' Execute this workflow. '''
-        operators = router.workflow.get ("workflow", {})
+        operators = self.spec.get ("workflow", {})
         for operator in operators:
             logger.debug (f"Executing operator: {operator}")
             op_node = operators[operator]
             op_code = op_node['code']
             args = op_node['args']
-            result = router.route (self, operator, operator, op_node, op_code, args)
-            self.persist_result (operator, result)
-        return self.get_step(router, "return")["result"]
+            result = router.route (self, operator, op_node, op_code, args)
+            self.set_result (operator, result)
+        return self.get_step("return")["result"]
     
     def get_step (self, name):
         return self.spec.get("workflow",{}).get (name)
