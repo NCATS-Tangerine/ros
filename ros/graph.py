@@ -68,24 +68,25 @@ class TranslatorGraphTools:
             #print (f"{j}:{n}")
             i = n[0]
             attr = n[1]['attr_dict']
-            #print (f"attr dict: {attr}")
-            if graph_label:
-                attr['subgraph'] = graph_label
+            #print (f"   attr dict: {attr}")
+            #if graph_label:
+            #    attr['subgraph'] = graph_label
+            attr['nid'] = attr['name']
             id2node[i] = out_graph.add_node (label=attr['type'], props=attr)
+            #print (id2node[i])
         for i, e in enumerate(in_graph.edges (data=True)):
             #print (f"{i}:{e}")
             attr = e[2]['attr_dict']
-            subj = id2node[e[0]]
+            subj = id2node[e[0]]['id']
             pred = attr['type']
-            obj = id2node[e[1]]
+            obj = id2node[e[1]]['id']
             if graph_label:
                 attr['subgraph'] = graph_label
-            #print (f"subj: {subj}")
-            #print (f"  pred: {pred}")
-            #print (f"    obj: {obj}")
-            out_graph.add_edge (subj=id2node[e[0]],
-                                pred=attr['type'],
-                                obj=id2node[e[1]],
+            #print (f"({subj}-{pred}->{obj}")
+
+            out_graph.add_edge (subj=subj,
+                                pred=pred,
+                                obj=obj,
                                 props=attr)
     def file_to_nx (self, file_name):
         ''' Read answer graph from file and convert to networkx. '''

@@ -13,7 +13,7 @@ from celery.result import AsyncResult
 from jsonpath_rw import jsonpath, parse
 from ros.router import Router
 from ros.workflow import Workflow
-from ros.ndex import NDEx
+from ros.lib.ndex import NDEx
 from ros.dag.tasks import exec_operator
 from ros.dag.tasks import calc_dag
 
@@ -98,13 +98,14 @@ class CeleryDAGExecutor:
         return model.done['return']
                 
 def main ():
-    arg_parser = argparse.ArgumentParser(description='Ros Workflow CLI',
-                                         formatter_class=lambda prog: argparse.HelpFormatter(prog,max_help_position=57))
+    arg_parser = argparse.ArgumentParser(
+        description='Ros Workflow CLI',
+        formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=60))
     arg_parser.add_argument('-a', '--api', help="Execute via API instead of locally.", action="store_true")
     arg_parser.add_argument('-w', '--workflow', help="Workflow to execute.", default="mq2.ros")
     arg_parser.add_argument('-s', '--server', help="Hostname of api server", default="localhost")
     arg_parser.add_argument('-p', '--port', help="Port of the server", default="80")
-    arg_parser.add_argument('-i', '--arg', help="Add an argument expressed as key=val", action='append')
+    arg_parser.add_argument('-i', '--arg', help="Add an argument expressed as key=val", action='append', default={})
     arg_parser.add_argument('-o', '--out', help="Output the workflow result graph to a file. Use 'stdout' to print to terminal.")
     arg_parser.add_argument('-l', '--lib_path', help="A directory containing workflow modules.", action='append', default=["."])
     arg_parser.add_argument('-n', '--ndex_id', help="Publish the graph to NDEx")
@@ -113,7 +114,6 @@ def main ():
     print (args)
     
     """ Parse input arguments. """
-    #wf_args = { k : v.replace('_', '') for k, v in [ arg.split("=") for arg in args.arg ] }
     wf_args = { k : v for k, v in [ arg.split("=") for arg in args.arg ] }
     response = None
     if args.api:
@@ -142,4 +142,7 @@ def main ():
                 stream.write (json.dumps(response, indent=2))
             
 if __name__ == '__main__':
-    main (sys.argv)
+    main ()
+
+
+# PYTHONPATH=$PWD/.. python dag/run_tasks.py --workflow workflows/workflow_one.ros -l workflows --arg disease_name="diabetest mellitus type 2"

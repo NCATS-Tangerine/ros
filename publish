@@ -23,6 +23,8 @@ setup(
         '*.ros',
         '*.yaml',
         'bin/*',
+        'lib/*',
+        'workflow/*',
         'dag/*'
     ]},
     version = '${version}',

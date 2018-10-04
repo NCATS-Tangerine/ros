@@ -17,6 +17,7 @@ from ros.graph import TranslatorGraphTools
 from ros.kgraph import Neo4JKnowledgeGraph
 
 class Workflow:
+    
     ''' Execution logic. '''
     def __init__(self, spec, inputs={}):
         assert spec, "Could not find workflow."
@@ -96,7 +97,6 @@ class Workflow:
             raise ValueError ("Errors encountered.")
         print ("Validation successful.")
         
-
     @staticmethod
     def get_workflow(workflow="mq2.ros", library_path=["."]):
         workflow_spec = None
@@ -124,9 +124,11 @@ class Workflow:
         return spec
     
     def set_result(self, job_name, value):
-        self.spec.get("workflow",{}).get(job_name,{})["result"] = value 
+        self.spec.get("workflow",{}).get(job_name,{})["result"] = value
+        
     def get_result(self, job_name): #, value):
         return self.spec.get("workflow",{}).get(job_name,{}).get("result", None)
+    
     def execute (self, router):
         ''' Execute this workflow. '''
         operators = router.workflow.get ("workflow", {})
@@ -139,8 +141,10 @@ class Workflow:
             result = router.route (self, operator, operator, op_node, op_code, args)
             self.persist_result (operator, result)
         return self.get_step(router, "return")["result"]
+    
     def get_step (self, name):
         return self.spec.get("workflow",{}).get (name)
+    
     def get_variable_name(self, name):
         result = None
         if isinstance(name, list):
@@ -148,8 +152,10 @@ class Workflow:
         elif isinstance(name, str):
             result = name.replace("$","") if name.startswith ("$") else None
         return result
+    
     def resolve_arg (self, name):
         return [ self.resolve_arg_inner (v) for v in name ] if isinstance(name, list) else self.resolve_arg_inner (name)
+    
     def resolve_arg_inner (self, name):
         ''' Find the value of an argument passed to the workflow. '''
         value = name
@@ -167,15 +173,18 @@ class Workflow:
             else:
                 raise ValueError (f"Referenced undefined variable: {var}")
         return value
+    
     def to_camel_case(self, snake_str):
         components = snake_str.split('_') 
         # We capitalize the first letter of each component except the first one
         # with the 'title' method and join them together.
         return components[0] + ''.join(x.title() for x in components[1:])
+    
     def add_step_dependency (self, arg_val, dependencies):
         name = self.get_variable_name (arg_val)
         if name and self.get_step (name):
             dependencies.append (name)
+            
     def get_dependent_job_names(self, op_node): 
         dependencies = []
         try:
@@ -191,7 +200,6 @@ class Workflow:
                 from_job = inputs.get("from", None) 
                 if from_job:
                     dependencies.append (from_job)
-                #from_job = op_node.get("args",{}).get("inputs",{}).get("from", None) 
         except:
             traceback.print_exc ()
         elements = op_node.get("args",{}).get("elements",None) 
@@ -221,11 +229,10 @@ class Workflow:
     """ Result management. """
     def form_key (self, job_name):
         ''' Form the key name. '''
-        #print (f"---> {job_name}")
         return f"{self.uuid}.{job_name}.res"
+    
     def set_result (self, job_name, value):
         ''' Set the result value. '''
-        #print (f" writing output for job -------------> {job_name}")
         if not value:
             raise ValueError (f"Null value set for job_name: {job_name}")
         self.spec.get("workflow",{}).get(job_name,{})["result"] = value 
@@ -236,41 +243,18 @@ class Workflow:
         key = self.form_key (job_name)
         if not os.path.exists ('cache'):
             os.mkdir ("cache")
-        #print (f" ************> {key}")
         fname = os.path.join ("cache", key)
         with open(fname, "w") as stream:
             json.dump (value, stream, indent=2)
-        #print (f"-------------------------> graph for {job_name} written.")
+
     def get_result (self, job_name):
         ''' Get the result graph. We pass the whole graph for every graph. '''
         result = None
         key = self.form_key (job_name)
         if not os.path.exists ('cache'):
             os.mkdir ("cache")
-        #print (f" ************> {key}")
         fname = os.path.join ("cache", key)
         if os.path.exists (fname):
             with open(fname, "r") as stream:
                 result = json.load (stream)
-        #print (f"read>>>>> {json.dumps(result, indent=2)}")
         return result
-
-if __name__ == "__main__":
-
-    arg_parser = argparse.ArgumentParser(description='Rosetta Workflow')
-    arg_parser.add_argument('-w', '--workflow', help='Workflow to run', default="wf.yaml")
-    arg_parser.add_argument('-a', '--args', help='An argument', action="append")
-    args = arg_parser.parse_args ()
-
-    #Env.log (f"Running workflow {args.workflow}")
-
-    parser = Parser ()
-    workflow = Workflow (
-        spec = parser.parse (args.workflow),
-        inputs = parser.parse_args (args.args))
-
-    router = Router (workflow=workflow.spec)
-    result = workflow.execute (router)
-    print (f"result> {json.dumps(result,indent=2)}")
-    
-    # python parser.py -w mq2.yaml -a drug_name=imatinib

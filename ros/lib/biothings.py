@@ -107,6 +107,9 @@ class Biothings (Operator):
             annotations = None
             compound_id = drug['id'].split (":")[1]
             cache_name = f"{compound_id}.cache"
+            if not os.path.exists ('cache'):
+                os.mkdir ("cache")
+            cache_name = os.path.join ("cache", cache_name)
             if os.path.exists (cache_name):
                 #print (f" opening {cache_name}")
                 with open (cache_name, "r") as stream:

@@ -4,19 +4,18 @@ import json
 import namedtupled
 import os
 import requests
-#import ros.dag.conf as Conf
 import sys
 import yaml
 import time
 import traceback
 from jsonpath_rw import jsonpath, parse
 from ros.config import Config
-from ros.biothings import Biothings
-from ros.xray import XRay
-from ros.ndex import NDEx
-from ros.gamma import Gamma
 from ros.operator import Event
 from ros.operator import Operator
+from ros.lib.biothings import Biothings
+from ros.lib.xray import XRay
+from ros.lib.ndex import NDEx
+from ros.lib.gamma import Gamma
 
 class Router:
     req = 0
