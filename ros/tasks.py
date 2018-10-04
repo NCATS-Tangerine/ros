@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import json
 import time
-#from ros.dag.celery_app import app
+from ros.celery_app import app
 from ros.workflow import Workflow
 from ros.router import Router
 

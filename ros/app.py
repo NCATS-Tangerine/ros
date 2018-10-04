@@ -16,8 +16,8 @@ from jsonpath_rw import jsonpath, parse
 from ros.router import Router
 from ros.workflow import Workflow
 from ros.lib.ndex import NDEx
-from ros.dag.tasks import exec_operator
-from ros.dag.tasks import calc_dag
+from ros.tasks import exec_operator
+#from ros.tasks import calc_dag
 from ros.celery_tools import CeleryManager
 
 logger = logging.getLogger("runner")
@@ -96,7 +96,7 @@ class CeleryDAGExecutor:
         return model.done['return']
     
 def setup_logging(
-        default_path=os.path.join(os.path.dirname(__file__), '..', 'logging.yaml'),
+        default_path=os.path.join(os.path.dirname(__file__), 'logging.yaml'),
         default_level=logging.INFO,
         env_key='LOG_CFG'):
     """Setup logging configuration
@@ -118,7 +118,7 @@ def start_task_queue ():
     Use a separate process eventually.
     In the meantime, this will let us do parallel operations, the majority of which are I/O bound in any case.
     """
-    code_path = os.path.join (os.path.dirname (__file__), "..")
+    code_path = os.path.join (os.path.dirname (__file__))
     celery_manager = CeleryManager (
         code_dir_to_monitor = code_path,
         celery_working_dir = code_path,

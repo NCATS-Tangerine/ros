@@ -75,7 +75,7 @@ class Router:
             """ Call the operator. """
             result = self.r[op](**arg_list)
             text = self.short_text (str(result))
-            logger.debug (f"      *** result> {text}")
+            logger.debug (f"      *** {job_name}>> {text}")
         else:
             raise ValueError (f"Unknown operator: {op}")
         return result

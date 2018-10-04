@@ -47,6 +47,10 @@ loggers:
         level: WARNING
         handlers: [console]
         propagate: no
+    app:
+        level: DEBUG
+        handlers: [console]
+        propagate: no
 
 root:
     level: INFO
