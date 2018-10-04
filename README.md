@@ -8,14 +8,13 @@ While the language provides common constructs supporting variables, modularity, 
 The engine conducts interactions with modules, some of which will be web APIs, able to receive:
 
 * A **machine question**: A specification of a query.
-* An **input graph**: A knowledge-graph-standard graph or (or reference to one).
-* **Additional options**: Other options speicific to an operator. 
+* An **input graph**: A graph representing the output of previous steps.
+* **Additional options**: Other options specific to an operator.
 
 and return:
 
-* A **knowledge graph**: A knowledge-graph-standard graph.
-
-
+* A **knowledge graph**: A graph.
+ 
 ## Language
 
 ### Overview
@@ -50,20 +49,20 @@ The `args` section lists inputs to this operator.
 
 The workflow is organized around graph operators. Each has access to all facilities of the Ros framework including the shared graph.
 
-In general, each element of a workflow has the following standard contents:
+In general, workflow jobs have the following fields:
 
   * **doc**: A documentation string.
   * **code**: The name of a component providing functionality.
   * **args**: Arguments to the operator.
 
-The system provides the following core operators.
+Ros currently provides the following core operators:
 
-If the community is able to develop common APIs to reasoners, this profile will shift to supporting those common APIs.
-
-* **biothings**: BioThings modules. Currently modules 4 and 5 of workflow 1.
-* **gamma**: Invokes the Gamma reasoner. The example below calls Gamma a few times with different machine questions. It will be updated to use the new Quick API for added flexibility.
 * **get**: Invokes an HTTP GET operation on a specified resource.
 * **union**: Unions two or more results into one object.
+
+It also includes certain Translator specific modules. In the future, these will be implemented as Ros plugin: 
+* **biothings**: BioThings modules. Currently modules 4 and 5 of workflow 1.
+* **gamma**: Invokes the Gamma reasoner. The example below calls Gamma a few times with different machine questions. It will be updated to use the new Quick API for added flexibility.
 * **xray**: XRay reasoner modules. Currently modules 1 and 2 of workflow 1.
 
 ### Graphs
