@@ -8,7 +8,7 @@ logger.setLevel(logging.WARNING)
 
 class Gamma(Operator):
     def __init__(self):
-        self.robokop_url = 'http://robokop.renci.org/api/'
+        self.robokop_url = 'http://robokop.renci.org/api'
         self.max_results = 50
         
     def quick(self, question):
@@ -57,12 +57,14 @@ class Gamma(Operator):
 
         """ Invoke the API. """
         disease = diseases [0]['id'] # TODO - multiplicity.
-        api_call = f"{self.robokop_url}/wf1mod3/{disease}/?max_results={self.max_results}"
+        api_call = f"{self.robokop_url}/wf1mod3a/{disease}/?max_results={self.max_results}"
+        logger.debug (api_call)
         response = requests.get(api_call, json={}, headers={'accept': 'application/json'})
 
         """ Process the response. """
         status_code = response.status_code
         #assert status_code == 200
+
         if not status_code == 200:
             logger.debug ("********** * * * GAMMA is broken. **********")
         return response.json() if status_code == 200 else event.context.graph_tools.kgs (nodes=[])

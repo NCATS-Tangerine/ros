@@ -4,5 +4,5 @@ system:
   num_workers: 3
   
 celery_app_package: ros.dag
-  
+celery_broker_url: "amqp://$RABBITMQ_DEFAULT_USER:$RABBITMQ_DEFAULT_PASS@$BROKER_HOST:$BROKER_PORT/$RABBITMQ_DEFAULT_VHOST"
   

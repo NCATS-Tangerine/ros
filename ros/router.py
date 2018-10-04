@@ -75,7 +75,7 @@ class Router:
             """ Call the operator. """
             result = self.r[op](**arg_list)
             text = self.short_text (str(result))
-            logger.debug (f"      *** {job_name}>> {text}")
+            logger.debug (f"  --({job_name})>> {text}")
         else:
             raise ValueError (f"Unknown operator: {op}")
         return result
@@ -94,16 +94,6 @@ class Router:
                 headers = {
                     'accept': 'application/json'
                 }).json ())
-    '''
-    def naming_to_id (self, context, job_name, node, op, args):        
-        """ An interface to bionames for resolving words to ids. """
-        input = args['input']
-        type = args['type']
-        return context.graph_tools.kgs (
-            requests.get(
-                url = f'https://bionames.renci.org/lookup/{input}/{type}/',
-                headers = { 'accept': 'application/json' }).json ())
-    '''
     
     def xray(self, context, job_name, node, op, args):
         return XRay ().invoke (
