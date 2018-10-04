@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import requests
 import os
 import sys
@@ -16,38 +17,49 @@ from ros.config import Config
 from ros.graph import TranslatorGraphTools
 from ros.kgraph import Neo4JKnowledgeGraph
 
+logger = logging.getLogger("ros")
+logger.setLevel(logging.WARNING)
+
 class Workflow:
-    
-    ''' Execution logic. '''
-    def __init__(self, spec, inputs={}):
-        assert spec, "Could not find workflow."
+    """
+    Abstracts a directed acyclic graph (DAG) of interdependent jobs modeled in the Ros language.
+    Provides a framework including:
+    * A shared graph accessible via the Cypher query language.
+    * Variables, templates, separate modules, a type system for input and output parameters.
+    * An event model for passing context and parameters to graph operators.
+    """
+    def __init__(self, spec, inputs={}, config="ros.yaml", libpath=["."]):
+        assert spec, "Workflow specification is required."
+
         self.inputs = inputs
-        self.stack = []
+        self.libpath = libpath
         self.spec = spec
         self.uuid = uuid.uuid4 ()
         self.graph = Neo4JKnowledgeGraph ()
         self.graph_tools = TranslatorGraphTools ()
-        self.config = Config ("ros.yaml")
-        
-        # resolve templates.
-        templates = self.spec.get("templates", {})
-        workflows = self.spec.get("workflow", {})
-        
-        for name, job in workflows.items ():
-            extends = job.get ("code", None)
-            if extends in templates:
-                Resource.deepupdate (workflows[name], templates[extends], skip=[ "doc" ])
-
-        """ Validate input and output parameters. """
+        self.config = Config (config)
         self.errors = []
+        
+        """ Resolve imports. """
+        self.resolve_imports ()
+        
+        """ Resolve template references in workflow jobs. """
+        self.resolve_templates ()
+        
+        """ Validate input and output parameters. """
         self.validate ()
-       
+
+        """ Create the directed acyclic graph of the workflow. """
+        self.create_dag ()
+
+    def create_dag (self):
+        """ Examine job dependencies and create a directed acyclic graph of jobs in the workflow. """
         self.dag = nx.DiGraph ()
         operators = self.spec.get ("workflow", {}) 
         self.dependencies = {}
         jobs = {} 
         job_index = 0 
-        print ("dependencies")
+        logger.debug ("dependencies")
         for operator in operators: 
             job_index = job_index + 1 
             op_node = operators[operator] 
@@ -63,27 +75,53 @@ class Workflow:
             t for t in lexicographical_topological_sort (self.dag) ])
         ]
 
+    def resolve_imports (self):
+        """ Import separately developed workflow modules into this workflow. """
+        logger.debug ("importing modules")
+        imports = self.spec.get ("import", [])
+        for i in imports:
+            imported = False
+            for path in self.libpath:
+                file_name = os.path.join (path, f"{i}.ros")
+                logger.debug (f"  module: {i} from {file_name}")
+                if os.path.exists (file_name):
+                    with open (file_name, "r") as stream:
+                        obj = yaml.load (stream.read ())
+                        logger.debug (f"  module: {i} from {file_name}")
+                        Resource.deepupdate (self.spec, obj, skip=[ "doc" ])
+                        imported = True
+            if not imported:
+                raise ValueError (f"Unable to find resource: {i}")
+    
+    def resolve_templates (self):
+        """ Map template objects into the jobs referencing them within the workflow. """
+        templates = self.spec.get("templates", {})
+        workflow = self.spec.get("workflow", {})
+        for name, job in workflow.items ():
+            extends = job.get ("code", None)
+            if extends in templates:
+                Resource.deepupdate (workflow[name], templates[extends], skip=[ "doc" ])
+
     def validate (self):
         """
         Enforce that input and output types of operators match their definitions.
         Validate the existence of implementations for each module/operator.
         """
-        print ("validating")
+        logger.debug ("validating")
         types_config = os.path.join(os.path.dirname(__file__), 'stdlib.yaml')
         with open (types_config, 'r') as stream:
             self.types = yaml.load (stream)['types']
             self.spec['types'] = self.types
             
-        #print (json.dumps(self.types, indent=2))
         for job, node in self.spec.get("workflow", {}).items ():
             actuals = node.get("input", {})
             op = actuals.get("op","main")
             signature = node.get ("meta", {}).get (op, {}).get ("args", {})
-            print (f"  {job}")
+            logger.debug (f"  {job}")
             for arg, arg_spec in signature.items ():
                 arg_type = arg_spec.get ("type")
                 arg_required = arg_spec.get ("required")
-                print (f"    arg: type: {arg_type} required: {arg_required}")
+                logger.debug (f"    arg: type: {arg_type} required: {arg_required}")
                 """ Specified type exists. """
                 if not arg_type in self.types:
                     self.errors.append (f"Error: Unknown type {arg_type} referenced in job {job}.")
@@ -93,19 +131,20 @@ class Workflow:
                         self.errors.append (f"Error: required argument {arg} not present in job {job}.")
         if len(self.errors) > 0:
             for error in self.errors:
-                print (error)
+                logger.debug (error)
             raise ValueError ("Errors encountered.")
-        print ("Validation successful.")
+        logger.debug ("Validation successful.")
         
     @staticmethod
-    def get_workflow(workflow="mq2.ros", library_path=["."]):
+    def get_workflow(workflow="mq2.ros", inputs={}, library_path=["."]):
         workflow_spec = None
         with open(workflow, "r") as stream:
             workflow_spec = yaml.load (stream.read ())
-        return Workflow (Workflow.resolve_imports (workflow_spec, library_path))
+        return Workflow (workflow_spec, inputs=inputs, libpath=library_path)
 
+    '''
     @staticmethod
-    def resolve_imports (spec, library_path=["."]):
+    def resolve_imports0 (spec, library_path=["."]):
         print ("importing modules")
         imports = spec.get ("import", [])
         for i in imports:
@@ -122,6 +161,7 @@ class Workflow:
             if not imported:
                 raise ValueError (f"Unable to find resource: {i}")
         return spec
+    '''
     
     def set_result(self, job_name, value):
         self.spec.get("workflow",{}).get(job_name,{})["result"] = value
@@ -133,8 +173,7 @@ class Workflow:
         ''' Execute this workflow. '''
         operators = router.workflow.get ("workflow", {})
         for operator in operators:
-            print("")
-            print (f"Executing operator: {operator}")
+            logger.debug (f"Executing operator: {operator}")
             op_node = operators[operator]
             op_code = op_node['code']
             args = op_node['args']
@@ -163,7 +202,6 @@ class Workflow:
             var = name.replace ("$","")
             ''' Is this a job result? '''
             job_result = self.get_result (var)
-            #print (f"job result {var}  ==============> {job_result}")
             if var in self.inputs:
                 value = self.inputs[var]
                 if "," in value:
@@ -206,7 +244,7 @@ class Workflow:
         if elements: 
             dependencies = elements
         for d in dependencies:
-            print (f"  {op_node['code']}->{d}")
+            logger.debug (f"  dependency: {op_node['code']}->{d}")
         return dependencies
     def generate_dependent_jobs(self, workflow_model, operator, dag):
         dependencies = []

@@ -2,6 +2,8 @@ import argparse
 import json
 import os
 import requests
+import logging
+import logging.config
 import sys
 import time
 import yaml
@@ -17,14 +19,18 @@ from ros.lib.ndex import NDEx
 from ros.dag.tasks import exec_operator
 from ros.dag.tasks import calc_dag
 
+logger = logging.getLogger("runner")
+logger.setLevel(logging.WARNING)
+
+'''
 def get_workflow(workflow="mq2.ros", library_path=["."]):
     workflow_spec = None
     with open(workflow, "r") as stream:
         workflow_spec = yaml.load (stream.read ())
     return Workflow.resolve_imports (workflow_spec, library_path)
-
+'''
 def call_api(workflow="mq2.ros", host="localhost", port=8080, args={}, library_path=["."]):
-    workflow_spec = get_workflow (workflow, library_path)
+    workflow_spec = Workflow.get_workflow (workflow, library_path)
     return requests.post (
         url = f"{host}:{port}/api/executeWorkflow",
         json = {
@@ -34,9 +40,9 @@ def call_api(workflow="mq2.ros", host="localhost", port=8080, args={}, library_p
 
 def run_job(j, wf_model, asynchronous=False):
     wf_model.topsort.remove (j)
-    print (f"  run: {j}")
-#    print (f"    sort> {wf_model.topsort}")
-#    print (f"    done> {wf_model.done.keys()}")
+    logger.debug (f"  run: {j}")
+    logger.debug (f"    sort> {wf_model.topsort}")
+    logger.debug (f"    done> {wf_model.done.keys()}")
     if asynchronous:
         wf_model.running[j] = exec_operator.delay (model2json(wf_model), j)
     else:
@@ -57,19 +63,16 @@ def model2json(model):
     }
 
 class CeleryDAGExecutor:
-    def __init__(self, spec, inputs):
+    def __init__(self, spec):
         self.spec = spec
-        self.inputs = inputs
     def execute (self, async=False):
         ''' Dispatch a task to create the DAG for this workflow. '''
-        model_dict = calc_dag(self.spec, inputs=self.inputs)
-        #print (json.dumps (model_dict, indent=2))
+        model_dict = self.spec.json () #calc_dag(self.spec, inputs=self.inputs)
         model = json2model (model_dict)
         total_jobs = len(model.topsort)
         ''' Iterate over topologically sorted job names. '''
         while len(model.topsort) > 0:
             for j in model.topsort:
-                #print (f"test: {j}")
                 if j in model.done:
                     break
                 dependencies = model.dependencies[j]
@@ -83,7 +86,7 @@ class CeleryDAGExecutor:
             completed = []
             ''' Manage our list of asynchronous jobs. '''
             for job_name, promise in model.running.items ():
-                print (f"job {job_name} is ready:{promise.ready()} failed:{promise.failed()}")
+                logger.debug (f"job {job_name} is ready:{promise.ready()} failed:{promise.failed()}")
                 if promise.ready ():
                     completed.append (job_name)
                     model.done[job_name] = promise.get ()
@@ -93,10 +96,28 @@ class CeleryDAGExecutor:
                     completed.append (job_name)
                     model.failed[job_name] = promise.get ()
             for c in completed:
-                print (f"removing {job_name} from running.")
+                logger.debug (f"removing {job_name} from running.")
                 del model.running[c]
         return model.done['return']
-                
+    
+def setup_logging(
+        default_path=os.path.join(os.path.dirname(__file__), '..', 'logging.yaml'),
+        default_level=logging.INFO,
+        env_key='LOG_CFG'):
+    """Setup logging configuration
+
+    """
+    path = default_path
+    value = os.getenv(env_key, None)
+    if value:
+        path = value
+    if os.path.exists(path):
+        with open(path, 'rt') as f:
+            config = yaml.safe_load(f.read())
+        logging.config.dictConfig(config)
+    else:
+        logging.basicConfig(level=default_level)
+        
 def main ():
     arg_parser = argparse.ArgumentParser(
         description='Ros Workflow CLI',
@@ -105,14 +126,16 @@ def main ():
     arg_parser.add_argument('-w', '--workflow', help="Workflow to execute.", default="mq2.ros")
     arg_parser.add_argument('-s', '--server', help="Hostname of api server", default="localhost")
     arg_parser.add_argument('-p', '--port', help="Port of the server", default="80")
-    arg_parser.add_argument('-i', '--arg', help="Add an argument expressed as key=val", action='append', default={})
+    arg_parser.add_argument('-i', '--arg', help="Add an argument expressed as key=val", action='append', default=[])
     arg_parser.add_argument('-o', '--out', help="Output the workflow result graph to a file. Use 'stdout' to print to terminal.")
     arg_parser.add_argument('-l', '--lib_path', help="A directory containing workflow modules.", action='append', default=["."])
     arg_parser.add_argument('-n', '--ndex_id', help="Publish the graph to NDEx")
     arg_parser.add_argument('--validate', help="Validate inputs and outputs", action="store_true")
     args = arg_parser.parse_args ()
-    print (args)
-    
+
+    setup_logging ()
+#    logging.basicConfig (level=logging.DEBUG, disable_existing_loggers=True)
+
     """ Parse input arguments. """
     wf_args = { k : v for k, v in [ arg.split("=") for arg in args.arg ] }
     response = None
@@ -125,18 +148,19 @@ def main ():
     else:
         """ Execute the workflow in process. """
         executor = CeleryDAGExecutor (
-            spec=get_workflow (workflow=args.workflow, library_path=args.lib_path),
-            inputs=wf_args)
+            spec=Workflow.get_workflow (workflow=args.workflow,
+                                        inputs=wf_args,
+                                        library_path=args.lib_path))
         response = executor.execute ()
         if args.ndex_id:
             jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph")
             graph = [ match.value for match in jsonpath_query.find (response) ]
-            print (f"{args.ndex_id} => {json.dumps(graph, indent=2)}")
+            logger.debug (f"{args.ndex_id} => {json.dumps(graph, indent=2)}")
             ndex = NDEx ()
             ndex.publish (args.ndex_id, graph)
     if args.out:
         if args.out == "stdout":
-            print (f"{graph_text}")
+            logger.debug (f"{graph_text}")
         else:
             with open(args.out, "w") as stream:
                 stream.write (json.dumps(response, indent=2))

@@ -1,9 +1,13 @@
 import json
+import logging
 import redis
 from redisgraph import Node, Edge, Graph
 from neo4j.v1 import GraphDatabase
 from neo4j.v1.types.graph import Node
 from neo4j.v1.types.graph import Relationship
+
+logger = logging.getLogger("kgraph")
+logger.setLevel(logging.WARNING)
 
 class KnowledgeGraph:
     ''' Encapsulates a knowledge graph. '''
@@ -46,7 +50,7 @@ class Neo4JKnowledgeGraph:
     def add_edge (self, subj, pred, obj, props):
         ''' Add an edge. '''
         props['pred'] = pred
-        #print (f"({subj}->{props}->{obj})")
+        logger.debug (f"({subj}->{props}->{obj})")
         return self.create_relationship (subj, props, obj)
 
     def commit (self):
@@ -68,9 +72,7 @@ class Neo4JKnowledgeGraph:
         """ Execute a cypher command returning the result. """
         return self.session.run(command)
     def node2json (self, rec):
-        print (f"process node: {rec}")
-        print (f"process node: {rec['nid']}")
-        print (f"process node: {rec['type']}")
+        logger.debug (f"process node: {rec}")
         return {
             "id"          : rec.get("nid", None),
             "name"        : rec.get("nid", None),
@@ -87,14 +89,13 @@ class Neo4JKnowledgeGraph:
         response = []
         result = self.exec (query)
         for row in result:
-            print (f" row:--> {row}")
-            print (f" row:--> {row.keys()}")
+            logger.debug (f" row:--> {row}")
             for k, v in row.items ():
                 if isinstance (v, Node):
                     response.append (self.node2json (v))
                 elif isinstance (v, Relationship):
                     response.append (self.edge2json (v))
-        print (f"=========> kgraph response: {response}")
+        logger.debug (f"response: {response}")
         return response
     def get_node(self, properties, node_type=None):
         """ Get a ndoe given a set of properties and a node type to match on. """
@@ -108,11 +109,9 @@ class Neo4JKnowledgeGraph:
         properties = ",".join([f""" {k} : "{v}" """ for k, v in properties.items()])
         statement = f"""CREATE (n{ntype} {{ {properties} }}) RETURN n"""
         result = self.exec (statement)
-        #print (f"--> {result}")
         n = [ n for n in result ][0]
-        #print (f".......> {n}")
         n = self.node2json(n['n'])
-        #print (f"________> {n}")
+        logger.debug (f"create_node: {n}")
         return n
     
     def create_relationship(self, id_a, properties, id_b):
@@ -134,7 +133,6 @@ class Neo4JKnowledgeGraph:
     def update (self, nodes=[], edges=[]):
         """ Update nodes and edges in the graph with properties from the inputs. """
         for n in nodes:
-            #print (json.dumps (n, indent=2))
             props = ",".join([
                 f""" s.{k} = "{v}" """
                 for k, v in n.items()

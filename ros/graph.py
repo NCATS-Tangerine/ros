@@ -1,8 +1,12 @@
 import json
+import logging
 import random
 import networkx as nx
 from jsonpath_rw import jsonpath, parse
 from networkx.readwrite import json_graph
+
+logger = logging.getLogger("kgraph")
+logger.setLevel(logging.WARNING)
 
 class TranslatorGraphTools:
     ''' Tools for working with graphs generally. '''

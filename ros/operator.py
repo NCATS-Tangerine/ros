@@ -1,6 +1,10 @@
 #import namedtupled
 import json
+import logging
 from jsonpath_rw import jsonpath, parse
+
+logger = logging.getLogger("operator")
+logger.setLevel(logging.WARNING)
 
 class Event:
     """
@@ -13,7 +17,7 @@ class Event:
     def __init__(self, context, node):
         self.context = context
         self.node = node
-        print (f"event node> {json.dumps (self.node, indent=2)}")
+        logger.debug (f"event node> {json.dumps (self.node, indent=2)}")
     def __getattr__ (self, k):
         return self.__dict__[k] if k in self.__dict__ else self.node.get("args",{}).get(k,None)
     
