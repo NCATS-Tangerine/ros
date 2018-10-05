@@ -105,6 +105,8 @@ class Biothings (Operator):
         """ Annotate each drug node. """
         for drug in drugs:
             annotations = None
+            if not ':' in drug:
+                continue
             compound_id = drug['id'].split (":")[1]
             cache_name = f"{compound_id}.cache"
             if not os.path.exists ('cache'):

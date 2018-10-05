@@ -64,7 +64,7 @@ workflow:
     args:
       elements:
         - biothings_module_4_and_5
-#        - module_3
+        - module_3
         
 
 

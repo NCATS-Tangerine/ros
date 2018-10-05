@@ -1,4 +1,5 @@
 import argparse
+import contextlib
 import json
 import os
 import requests
@@ -17,8 +18,12 @@ from ros.router import Router
 from ros.workflow import Workflow
 from ros.lib.ndex import NDEx
 from ros.tasks import exec_operator
-#from ros.tasks import calc_dag
+#from ros.tasks import exec_async
 from ros.celery_tools import CeleryManager
+
+import asyncio
+import uvloop
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 logger = logging.getLogger("runner")
 logger.setLevel(logging.WARNING)
@@ -57,9 +62,53 @@ def model2json(model):
         "done" : {}
     }
 
+async def exec_async (workflow, job_name):
+    result = None
+    op_node = workflow.get_step (job_name)
+    if op_node:
+        logger.debug (f"   => exec: {job_name}")
+        router = Router (workflow)
+        workflow.set_result (
+            job_name,
+            router.route (workflow, job_name, op_node, op_node['code'], op_node['args']))
+    return result
+
+class AsyncioExecutor:
+    def __init__(self, workflow):
+        self.workflow = workflow
+    async def execute (self):
+        while len(self.workflow.topsort) > len(self.workflow.execution.done):
+            logger.debug ("event loop...")
+            for j in self.workflow.topsort:
+                logger.debug (f" -eval: {j}")
+                if j in self.workflow.execution.done or j in self.workflow.execution.running:
+                    logger.debug (f"  -skip: {j}")
+                    break
+                dependencies = self.workflow.dependencies[j]
+                if len(dependencies) == 0 or all ([ d in self.workflow.execution.done for d in dependencies ]):
+                    logger.debug (f"  -run: {j}")
+                    self.workflow.execution.done[j] = await exec_async(self.workflow, j)
+            completed = []
+            for job_name, promise in self.workflow.execution.running.items ():
+                logger.debug (f"job {job_name} is ready:{promise.done()}") # failed:{promise.exception() is not None}")
+                if promise.done ():
+                    logger.debug (" -done: {job_name}")
+                    completed.append (job_name)
+                    self.workflow.set_result (job_name, promise.result ())
+                    self.workflow.execution.done[job_name] = self.workflow.get_result (job_name)
+                    if promise.exception ():
+                        completed.append (job_name)
+                        self.workflow.execution.failed[job_name] = promise.get ()
+                        raise promise.exception ()
+            for c in completed:
+                logger.debug (f"removing {job_name} from running.")
+                del self.workflow.execution.running[c]
+            #time.sleep (2)
+        return self.workflow.execution.done['return']
+
 class CeleryDAGExecutor:
     def __init__(self, spec):
-        self.spec = spec
+        self.spec = spec        
     def execute (self, async=False):
         ''' Dispatch a task to create the DAG for this workflow. '''
         model_dict = self.spec.json () #calc_dag(self.spec, inputs=self.inputs)
@@ -155,11 +204,20 @@ def main ():
                                   args=wf_args)
     else:
         """ Execute the workflow in process. """
-        executor = CeleryDAGExecutor (
-            spec=Workflow.get_workflow (workflow=args.workflow,
+#        executor = CeleryDAGExecutor (
+        executor = AsyncioExecutor (
+            workflow=Workflow.get_workflow (workflow=args.workflow,
                                         inputs=wf_args,
                                         library_path=args.lib_path))
-        response = executor.execute ()
+        #response = executor.execute ()
+        
+        tasks = [
+            asyncio.ensure_future (executor.execute ())
+        ]
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(asyncio.wait(tasks))
+    
+        #asyncio.ensure_future (executor.execute ())
         if args.ndex_id:
             jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph")
             graph = [ match.value for match in jsonpath_query.find (response) ]

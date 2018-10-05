@@ -20,6 +20,12 @@ from ros.kgraph import Neo4JKnowledgeGraph
 logger = logging.getLogger("ros")
 logger.setLevel(logging.WARNING)
 
+class Execution:
+    def __init__(self):
+        self.done = {}
+        self.running = {}
+        self.failed = {}
+        
 class Workflow:
     """
     Abstracts a directed acyclic graph (DAG) of interdependent jobs modeled in the Ros language.
@@ -45,6 +51,8 @@ class Workflow:
         self.graph_tools = TranslatorGraphTools ()
         self.config = Config (config)
         self.errors = []
+
+        self.execution = Execution ()
         
         """ Resolve imports. """
         self.resolve_imports ()
