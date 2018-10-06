@@ -217,11 +217,11 @@ It then builds the dependency graph.
 
 Next, it executes jobs in dependency order.
 
-<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/run.png" width="340%"></src>
+<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/run.png" width="100%"></src>
 
 Here's a portion of the knowledge graph created by executing the workflow:
 
-<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/wf1_output.png" width="40%"></src>
+<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/wf1_output.png" width="100%"></src>
 
 ## Execution
 
