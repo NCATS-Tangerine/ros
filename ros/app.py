@@ -61,6 +61,7 @@ def model2json(model):
     }
 
 async def call_op (workflow, router, job_name, op_node):
+    logger.debug (f"     call_op: {job_name}")
     return workflow.set_result (
         job_name,
         router.route (workflow, job_name, op_node, op_node['code'], op_node['args']))
@@ -69,48 +70,66 @@ async def exec_async (workflow, job_name):
     result = None
     op_node = workflow.get_step (job_name)
     if op_node:
-        logger.debug (f"   => exec: {job_name}")
+        logger.debug (f"    -exec: {job_name}")
         router = Router (workflow)
-        await call_op (workflow, router, job_name, op_node)
+        '''
+        result = workflow.set_result (
+            job_name,
+            router.route (workflow, job_name, op_node, op_node['code'], op_node['args']))
+        '''
+        result = await call_op (workflow, router, job_name, op_node)
     return result
 
 class AsyncioExecutor:
+    """ Execute the workflow concurrently using Python async. """
+    
     def __init__(self, workflow):
+        """ Manage workflow execution. """
         self.workflow = workflow
+        
     async def execute (self):
+        """ A workflow execution coroutine. """
         while len(self.workflow.topsort) > len(self.workflow.execution.done):
-            logger.debug ("loop...")
-            for j in self.workflow.topsort:
-                logger.debug (f" -eval: {j}")
+            logger.debug ("scheduler")
+            topsort = self.workflow.topsort.copy ()
+            topsort_rec = topsort.copy ()
+            for j in topsort:
+                logger.debug (f" -sched: {j}")
+                
                 if j in self.workflow.execution.done or j in self.workflow.execution.running:
-                    logger.debug (f"  -skip: {j}")
-                    break
+                    """ If running or done, it doesn't need further scheduling. """
+                    continue
+                
                 dependencies = self.workflow.dependencies[j]
+                logger.debug (f"   done: {self.workflow.execution.done.keys ()} deps: {dependencies}")                
                 if len(dependencies) == 0 or all ([ d in self.workflow.execution.done for d in dependencies ]):
-                    logger.debug (f"  -run: {j}")
-                    self.workflow.execution.done[j] = await exec_async(self.workflow, j)
+                    """ Has no dependencies or they're all completed. Execute this task. """
+                    task = asyncio.ensure_future (exec_async (self.workflow, j))
+                    self.workflow.execution.running[j] = task
+                    topsort_rec.remove (j)
+                    await task
+
             completed = []
             for job_name, promise in self.workflow.execution.running.items ():
-                logger.debug (f"job {job_name} is ready:{promise.done()}") # failed:{promise.exception() is not None}")
+                logger.debug (f"running job: {job_name} done:{promise.done()}")
                 if promise.done ():
-                    logger.debug (" -done: {job_name}")
                     completed.append (job_name)
-                    self.workflow.set_result (job_name, promise.result ())
-                    self.workflow.execution.done[job_name] = self.workflow.get_result (job_name)
                     if promise.exception ():
                         completed.append (job_name)
                         self.workflow.execution.failed[job_name] = promise.get ()
                         raise promise.exception ()
+                    else:
+                        self.workflow.execution.done[job_name] = self.workflow.get_result (job_name)
             for c in completed:
                 logger.debug (f"removing {job_name} from running.")
                 del self.workflow.execution.running[c]
-            #time.sleep (2)
+            time.sleep (1)
         return self.workflow.execution.done['return']
 
 class CeleryDAGExecutor:
     def __init__(self, spec):
         self.spec = spec        
-    def execute (self, async=False):
+    def execute (self):
         ''' Dispatch a task to create the DAG for this workflow. '''
         model_dict = self.spec.json () #calc_dag(self.spec, inputs=self.inputs)
         model = json2model (model_dict)
@@ -123,11 +142,11 @@ class CeleryDAGExecutor:
                 dependencies = model.dependencies[j]
                 if len(dependencies) == 0:
                     ''' Jobs with no dependencies can be run w/o further delay. '''
-                    run_job (j, model, asynchronous=async)
+                    run_job (j, model, asynchronous=False)
                 else:
                     ''' Iff all of this jobs dependencies are complete, run it. '''
                     if all ([ d in model.done for d in dependencies ]):
-                        run_job (j, model, asynchronous=async)
+                        run_job (j, model, asynchronous=False)
             completed = []
             ''' Manage our list of asynchronous jobs. '''
             for job_name, promise in model.running.items ():

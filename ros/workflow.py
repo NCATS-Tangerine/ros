@@ -235,7 +235,9 @@ class Workflow:
         if elements: 
             dependencies = elements
         for d in dependencies:
-            logger.debug (f"  dependency: {op_node['code']}->{d}")
+            op = op_node['args'].get('op','')
+            op = f".{op}" if len(op) > 0 else ''
+            logger.debug (f"  dependency: {op_node['code']}{op}->{d}")
         return dependencies
     def generate_dependent_jobs(self, workflow_model, operator, dag):
         dependencies = []

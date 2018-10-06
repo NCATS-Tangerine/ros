@@ -116,12 +116,20 @@ class Router:
         """ Do an HTTP GET. """
         event = Event (context, node)
         url = event.pattern.format (**event.node['args'])
-        return context.graph_tools.kgs (
-            nodes=requests.get(
+        response = nodes=requests.get(
                 url = url,
                 headers = {
                     'accept': 'application/json'
-                }).json ())
+                }).json ()
+
+        # need a general fix for cases like the bionames response.
+        print (response)
+        for n in response:
+            if not 'name' in n and 'label' in n:
+                n['name'] = n['label']
+                del n['label']
+                
+        return context.graph_tools.kgs (response)
 
     def requests (self, context, job_name, node, op, args):
         event = Event (context, node)
