@@ -40,7 +40,7 @@ loggers:
     handlers: [console]
     propagate: no
   router:
-    level: DEBUG
+    level: WARNING
     handlers: [console]
     propagate: no
   kgraph:

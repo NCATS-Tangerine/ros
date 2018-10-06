@@ -122,13 +122,17 @@ class Router:
                     'accept': 'application/json'
                 }).json ()
 
-        # need a general fix for cases like the bionames response.
-        print (response)
-        for n in response:
-            if not 'name' in n and 'label' in n:
-                n['name'] = n['label']
-                del n['label']
-                
+        """ generic method for renaming fields. """
+        for v in event.rename:
+            foreach = v['foreach']
+            old = v['old']
+            new = v['new']
+            targets = event.context.jsonquery (query = foreach, obj = response)
+            for r in response:
+                if not new in r and old in r:
+                    r[new] = r[old]
+                    del r[old]
+
         return context.graph_tools.kgs (response)
 
     def requests (self, context, job_name, node, op, args):

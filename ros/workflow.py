@@ -68,7 +68,7 @@ class Workflow:
 
     def create_dag (self):
         """ Examine job dependencies and create a directed acyclic graph of jobs in the workflow. """
-        logger.debug ("calculate dependencies")        
+        logger.debug ("dag")        
         self.dag = nx.DiGraph ()
         operators = self.spec.get ("workflow", {})
         self.dependencies = {}
@@ -92,6 +92,7 @@ class Workflow:
     def resolve_imports (self):
         """ Import separately developed workflow modules into this workflow. """
         imports = self.spec.get ("import", [])
+        logger.debug ("import")
         for i in imports:
             imported = False
             for path in self.libpath:
@@ -119,7 +120,7 @@ class Workflow:
         Enforce that input and output types of operators match their definitions.
         Validate the existence of implementations for each module/operator.
         """
-        logger.debug ("validating")
+        logger.debug ("validate")
         types_config = os.path.join(os.path.dirname(__file__), 'stdlib.yaml')
         with open (types_config, 'r') as stream:
             self.types = yaml.load (stream)['types']
@@ -145,7 +146,7 @@ class Workflow:
             for error in self.errors:
                 logger.debug (error)
             raise ValueError ("Errors encountered.")
-        logger.debug ("validation successful.")
+        logger.debug ("valid.")
         
     @staticmethod
     def get_workflow(workflow="mq2.ros", inputs={}, library_path=["."]):
@@ -178,9 +179,9 @@ class Workflow:
     def get_variable_name(self, name):
         result = None
         if isinstance(name, list):
-            result = [ n.replace("$","") for n in name if n.startswith ("$") ]
+            result = [ n.replace("$","") for n in name if isinstance(n,str) and n.startswith ("$") ]
         elif isinstance(name, str):
-            result = name.replace("$","") if name.startswith ("$") else None
+            result = name.replace("$","") if isinstance(name,str) and name.startswith ("$") else None
         return result
     
     def resolve_arg (self, name):
@@ -189,7 +190,7 @@ class Workflow:
     def resolve_arg_inner (self, name):
         ''' Find the value of an argument passed to the workflow. '''
         value = name
-        if name.startswith ("$"):
+        if isinstance(name,str) and name.startswith ("$"):
             var = name.replace ("$","")
             ''' Is this a job result? '''
             job_result = self.get_result (var)

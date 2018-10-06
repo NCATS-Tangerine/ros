@@ -10,6 +10,10 @@ templates:
     code: get
     args:
       pattern: 'https://bionames.renci.org/lookup/{input}/{type}/'
+      rename:
+        - foreach: "$.[*]"
+          old: "label"
+          new: "name"
     meta:
       main:
         input:
