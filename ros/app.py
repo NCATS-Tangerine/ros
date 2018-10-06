@@ -62,15 +62,18 @@ def model2json(model):
         "done" : {}
     }
 
+async def call_op (workflow, router, job_name, op_node):
+    return workflow.set_result (
+        job_name,
+        router.route (workflow, job_name, op_node, op_node['code'], op_node['args']))
+    
 async def exec_async (workflow, job_name):
     result = None
     op_node = workflow.get_step (job_name)
     if op_node:
         logger.debug (f"   => exec: {job_name}")
         router = Router (workflow)
-        workflow.set_result (
-            job_name,
-            router.route (workflow, job_name, op_node, op_node['code'], op_node['args']))
+        await call_op (workflow, router, job_name, op_node)
     return result
 
 class AsyncioExecutor:
@@ -78,7 +81,7 @@ class AsyncioExecutor:
         self.workflow = workflow
     async def execute (self):
         while len(self.workflow.topsort) > len(self.workflow.execution.done):
-            logger.debug ("event loop...")
+            logger.debug ("loop...")
             for j in self.workflow.topsort:
                 logger.debug (f" -eval: {j}")
                 if j in self.workflow.execution.done or j in self.workflow.execution.running:
@@ -204,26 +207,35 @@ def main ():
                                   args=wf_args)
     else:
         """ Execute the workflow in process. """
-#        executor = CeleryDAGExecutor (
-        executor = AsyncioExecutor (
-            workflow=Workflow.get_workflow (workflow=args.workflow,
-                                        inputs=wf_args,
-                                        library_path=args.lib_path))
-        #response = executor.execute ()
-        
-        tasks = [
-            asyncio.ensure_future (executor.execute ())
-        ]
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(asyncio.wait(tasks))
-    
-        #asyncio.ensure_future (executor.execute ())
+        celery = False
+        if celery:
+            """ Execute with celery. """
+            executor = CeleryDAGExecutor (
+                workflow=Workflow.get_workflow (workflow=args.workflow,
+                                                inputs=wf_args,
+                                                library_path=args.lib_path))
+            response = executor.execute ()
+        else:
+            """ Execute via python async. """
+            executor = AsyncioExecutor (
+                workflow=Workflow.get_workflow (workflow=args.workflow,
+                                                inputs=wf_args,
+                                                library_path=args.lib_path))
+            tasks = [
+                asyncio.ensure_future (executor.execute ())
+            ]
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(asyncio.wait(tasks))
+            
+        """ NDEx output support. """
         if args.ndex_id:
             jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph")
             graph = [ match.value for match in jsonpath_query.find (response) ]
             logger.debug (f"{args.ndex_id} => {json.dumps(graph, indent=2)}")
             ndex = NDEx ()
             ndex.publish (args.ndex_id, graph)
+
+    """ Output file. """
     if args.out:
         if args.out == "stdout":
             logger.debug (f"{graph_text}")

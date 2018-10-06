@@ -2,30 +2,35 @@ import requests
 import json
 import sys
 from ros.operator import Operator
+from ros.lib.gamma import Gamma
 
 class XRay (Operator):
     ''' Interact with the XRay reasoner. '''
 
     def __init__(self):
         self.url_str = "https://rtx.ncats.io/api/rtx/v1/query"
-
+        self.gamma = Gamma ()
+        
     def condition_expansion_to_gene_pathway_drug (self, event):
         response = None
-        diseases = event.context.graph.query (
-            query = "match (a:disease) return  a",
-            nodes = [ "a" ])
-        #print (diseases)
+        diseases = event.context.graph.query ("match (a:disease) return  a")
         assert len(diseases) > 0, "Found no diseases"
+
+        
+        synonyms = self.gamma.synonymize ('disease', diseases[0]['id'])
+        #print (synonyms)
+        
+        # TODO: synonymize mondo to doid and map to rtx.
+        disease_id = "DOID:9352"
         
         ''' Execute the module. '''
         if len(diseases) > 0:
-            #print (f"------------> {diseases}")
             response = requests.post(
                 url = self.url_str,
                 json = {
                     "query_type_id": "Q55",
                     "terms": {
-                        "disease": "DOID:9352" #disease_ids[0] #"DOID:9352"
+                        "disease": disease_id #[0]['id'] #"DOID:9352" #disease_ids[0] #"DOID:9352"
                     }
                 }, 
                 headers = { "accept": "application/json" })

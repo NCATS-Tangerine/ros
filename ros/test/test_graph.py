@@ -10,6 +10,7 @@ from ros.kgraph import Neo4JKnowledgeGraph
 def graph_tools():
     return TranslatorGraphTools ()
 
+'''
 def test_from_file(graph_tools):
     graph = graph_tools.from_file ("test_graph.json")
 
@@ -37,15 +38,6 @@ def test_file_to_d3_json(graph_tools):
     g = graph_tools.file_to_d3_json ("test_graph.json")
     assert g['nodes'][0]['name'] == 'DOID:9352'
 #    assert len(g['nodes']) == 988
-
-def test_to_knowledge_graph (graph_tools):
-    knowledge = Neo4JKnowledgeGraph ()
-    graph_tools.to_knowledge_graph (
-        in_graph = graph_tools.file_to_nx ("test_graph.json"),
-        out_graph = knowledge)
-    result = knowledge.query ("""MATCH (a) RETURN a""", nodes = [ "a" ])
-    print (result)
-    assert any([ r['id'] == 'CHEMBL.COMPOUND:CHEMBL2107774' for r in result ])
 
 def test_create_node (graph_tools):
     knowledge = Neo4JKnowledgeGraph ()
@@ -85,3 +77,12 @@ def test_create_edge (graph_tools):
     assert response[0]['description'] == 'great'
     assert response[0]['type'] == 'test_type'
     
+'''
+def test_to_knowledge_graph (graph_tools):
+    knowledge = Neo4JKnowledgeGraph ()
+    graph_tools.to_knowledge_graph (
+        in_graph = graph_tools.file_to_nx ("test_graph.json"),
+        out_graph = knowledge)
+    result = knowledge.query ("""MATCH (a) RETURN a""", nodes = [ "a" ])
+    assert any([ r['id'] == 'CHEMBL.COMPOUND:CHEMBL2107774' for r in result ])
+

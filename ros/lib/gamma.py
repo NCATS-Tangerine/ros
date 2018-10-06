@@ -43,30 +43,39 @@ class Gamma(Operator):
         ]
         return pd.DataFrame(nodes)
 
+    def synonymize(self, nodetype,identifier):
+        url=f'{self.robokop_url}/synonymize/{identifier}/{nodetype}/'
+        #print (url)
+        
+        response = requests.post(url)
+        #print( f'Return Status: {response.status_code}' )
+        if response.status_code == 200:
+            return response.json()
+        return []
+
     def module_wf1_mod3 (self, event):
         """ Execute module 3 of workflow one. """
         response = None
-
-        logger.debug (f"- - - - - - -- > {event.conditions}")
-
+        
         """ Query the graph for conditions. """
-        diseases = event.context.graph.query (
-            query = "match (a:disease) return  a",
-            nodes = [ "a" ])
+        #diseases = event.context.graph.query ("match (a:disease) return  a")
+        diseases = event.context.jsonquery (
+            query = "$.[*].result_list.[*].[*].result_graph.node_list.[*]",
+            obj = event.conditions)
         assert len(diseases) > 0, "Found no diseases"
 
         """ Invoke the API. """
-        disease = diseases [0]['id'] # TODO - multiplicity.
+        disease = diseases[0]['name']
         api_call = f"{self.robokop_url}/wf1mod3a/{disease}/?max_results={self.max_results}"
         logger.debug (api_call)
         response = requests.get(api_call, json={}, headers={'accept': 'application/json'})
-
+        
         """ Process the response. """
         status_code = response.status_code
-        #assert status_code == 200
-
+        
         if not status_code == 200:
             logger.debug ("********** * * * GAMMA is broken. **********")
+            
         return response.json() if status_code == 200 else event.context.graph_tools.kgs (nodes=[])
 
     def wf1_module3 (self, graph):

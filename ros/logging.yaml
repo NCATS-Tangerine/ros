@@ -48,7 +48,7 @@ loggers:
     handlers: [console]
     propagate: no
   graph:
-    level: WARNING
+    level: DEBUG
     handlers: [console]
     propagate: no
   runner:
@@ -59,7 +59,13 @@ loggers:
     level: DEBUG
     handlers: [console]
     propagate: no
-    
+
+  # modules
+  gamma:
+    level: WARNING
+    handlers: [console]
+    propagate: no
+
 root:
     level: INFO
     handlers: [console, info_file_handler, error_file_handler]

@@ -1,7 +1,25 @@
-from kgx import Transformer, NeoTransformer, PandasTransformer
+from kgx import Transformer, NeoTransformer, PandasTransformer, NeoTransformer
 
+class KGraph:
+
+    def __init__(self):
+        self.ports = ports = {'bolt_port': 7687}
+        self.xform = NeoTransformer (self.ports)
+        
+    def transform (self):
+        self.xform.save_node ({
+            "id"       : "AWESOME:23534",
+            "name"     : "Really Great",
+            "category" : "bioentity"
+        })
+
+if __name__ == '__main__':
+    k = KGraph ()
+    k.transform ()
+    
 # Monarch-Lite
 
+'''
 # Credentials can be found from 'Registry of Biolink-compatible Neo4 instances' spreadsheet
 monarch_host = ''
 ports = {'bolt': 7687}
@@ -35,3 +53,4 @@ pandas_transformer = PandasTransformer(monarch_lite_transformer.graph)
 pandas_transformer.save("monarch_lite_data.csv")
 
 # You should see monarch_lite_data.csv.tar in your current folder.
+'''

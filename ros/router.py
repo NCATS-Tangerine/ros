@@ -22,12 +22,12 @@ logger = logging.getLogger("router")
 logger.setLevel(logging.WARNING)
 
 class Router:
-    req = 0
 
     """ Route operator invocations through a common interface. """
     """ TODO: Plugin framework to allow a profile of domain specific modules to be imported (e.g. Translator, M2M, etc) """
     def __init__(self, workflow):
         self.r = {
+            'requests'  : self.requests,
             'biothings' : self.biothings,
             'gamma'     : self.gamma,
             'xray'      : self.xray,
@@ -36,7 +36,6 @@ class Router:
             'get'       : self.http_get
         }
         self.workflow = workflow
-        self.prototyping_count = 0
         self.create_template_adapters ()
         
     def create_template_adapters (self):
@@ -75,7 +74,7 @@ class Router:
             """ Call the operator. """
             result = self.r[op](**arg_list)
             text = self.short_text (str(result))
-            logger.debug (f"  --({job_name})>> {text}")
+            logger.debug (f"    --({job_name}[{op_node['code']}.{op_node['args'].get('op','')}])>> {text}")
         else:
             raise ValueError (f"Unknown operator: {op}")
         return result
@@ -94,7 +93,23 @@ class Router:
                 headers = {
                     'accept': 'application/json'
                 }).json ())
-    
+
+    def requests (self, context, job_name, node, op, args):
+        event = Event (context, node)
+        url = event.pattern.format (**event.node['args'])
+        return context.graph_tools.kgs (
+            nodes=requests.post(
+                url = url,
+                data = event.body,
+                headers = {
+                    'accept': 'application/json'
+                }).json ()) if event.body else context.graph_tools.kgs (
+                    nodes=requests.get(
+                        url = url,
+                        headers = {
+                            'accept': 'application/json'
+                        }).json ())
+        
     def xray(self, context, job_name, node, op, args):
         return XRay ().invoke (
             event=Event (context=context,

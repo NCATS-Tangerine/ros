@@ -6,8 +6,6 @@ from ros.config import Config
 import json
 
 config = Config ("ros.yaml")
-print (f"{type(config)}")
-print (json.dumps(config, indent=2))
 app = Celery(config["celery_app_package"])
 app.conf.update(
     broker_url=config['celery_broker_url'],

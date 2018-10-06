@@ -105,14 +105,21 @@ class Neo4JKnowledgeGraph:
 
     def create_node(self, properties, node_type=None):
         """ Create a generic node given a set of properties and a node type. """
+        id = properties['id']
         ntype = f":{node_type}" if node_type else ""
-        properties = ",".join([f""" {k} : "{v}" """ for k, v in properties.items()])
-        statement = f"""CREATE (n{ntype} {{ {properties} }}) RETURN n"""
+        #properties = ",".join([f""" {k} : "{v}" """ for k, v in properties.items()])
+        #statement = f"""CREATE (n{ntype} {{ {properties} }}) RETURN n"""
+        props = ",".join([f""" n.{k}="{v}" """ for k, v in properties.items() if not k == 'id'])
+        statement = f"""MERGE (n{ntype} {{ id : {id} }}) SET {props}"""
+        #print (statement)
         result = self.exec (statement)
+        '''
         n = [ n for n in result ][0]
         n = self.node2json(n['n'])
         logger.debug (f"create_node: {n}")
         return n
+        '''
+        return properties
     
     def create_relationship(self, id_a, properties, id_b):
         """ Create a relationship between two nodes given id and type for each end of the relationship and

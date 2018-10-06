@@ -2,22 +2,32 @@ import json
 import logging
 import random
 import networkx as nx
+import yaml
+from flatdict import FlatDict
 from jsonpath_rw import jsonpath, parse
 from networkx.readwrite import json_graph
+#from kgx import Transformer, NeoTransformer, PandasTransformer, NeoTransformer
 
 logger = logging.getLogger("kgraph")
 logger.setLevel(logging.WARNING)
 
 class TranslatorGraphTools:
-    ''' Tools for working with graphs generally. '''
+    """ Tools for working with graphs generally. """
+
+    """ Migrate applicable pieces to KGX. """
+    
+    def __init__(self, name=None):
+        self.name = name
+        
     def from_file (self, file_name):
-        ''' Get an answer graph from disk. '''
+        """ Get an answer graph from disk. """
         result = None
         with open (file_name, "r") as stream:
             result = json.load (stream)
         return result
+    
     def coalesce_node (self, node, all_nodes, seen):
-        ''' Merge all_nodes into node. '''
+        """ Merge all_nodes into node. """
         result = None
         n_id = node['id']
         if not n_id in seen:
@@ -27,8 +37,9 @@ class TranslatorGraphTools:
                     node.update (n)
                     result = node
         return result
+    
     def dedup_nodes(self, nodes):
-        ''' Get rid of duplicates. '''
+        """ Get rid of duplicates. """
         seen = {}
         return [
             nn for nn in [
@@ -36,17 +47,14 @@ class TranslatorGraphTools:
             ] if nn is not None
         ]
     def to_nx (self, graph):
-        ''' Convert answer graph to NetworkX. '''
+        """ Convert answer graph to NetworkX. """
         
         """ Serialize node and edge python objects. """
         g = nx.MultiDiGraph()
-        #print (graph)
-        #print (json.dumps(graph, indent=2))
+        logger.debug (f"node: {json.dumps(graph, indent=2)}")
         jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]") #.nodes.[*]")
         nodes = [ match.value for match in jsonpath_query.find (graph) ]
         nodes = self.dedup_nodes (nodes)
-        #print (f"nodes: {json.dumps(nodes,indent=2)}")
-        #print (f"nodes: {len(nodes)}")
         node_id = { name : i for i, name in enumerate([ n['id'] for n in nodes ]) }
         for n in nodes:
             tmp = n['id']
@@ -66,13 +74,13 @@ class TranslatorGraphTools:
             g.add_edge (e['source_id'], e['target_id'], attr_dict=e)
         return g
     def to_knowledge_graph (self, in_graph, out_graph, graph_label=None):
-        ''' Convert a networkx graph to Ros KnowledgeGraph. '''
+        """ Convert a networkx graph to Ros KnowledgeGraph. """
         id2node = {}
         for j, n in enumerate(in_graph.nodes (data=True)):
-            #print (f"{j}:{n}")
+            logger.debug (f"node: {j}:{n}")
             i = n[0]
             attr = n[1]['attr_dict']
-            #print (f"   attr dict: {attr}")
+            logger.debug (f"   attr dict: {attr}")
             #if graph_label:
             #    attr['subgraph'] = graph_label
             attr['nid'] = attr['name']
@@ -81,23 +89,66 @@ class TranslatorGraphTools:
         for i, e in enumerate(in_graph.edges (data=True)):
             #print (f"{i}:{e}")
             attr = e[2]['attr_dict']
-            subj = id2node[e[0]]['id']
+            print 
+            subj = id2node.get(e[0],{}).get('id',None)
             pred = attr['type']
-            obj = id2node[e[1]]['id']
+            obj = id2node.get(e[1],{}).get('id',None)
             if graph_label:
                 attr['subgraph'] = graph_label
             #print (f"({subj}-{pred}->{obj}")
-
-            out_graph.add_edge (subj=subj,
-                                pred=pred,
-                                obj=obj,
-                                props=attr)
+            if subj and pred and obj:
+                out_graph.add_edge (subj=subj,
+                                    pred=pred,
+                                    obj=obj,
+                                    props=attr)
+            
+    def to_knowledge_graph0 (self, in_graph, out_graph, graph_label=None):
+        """ Integrate kgx once it's ported to networkx 2.2 """
+        id2node = {}
+        for n in in_graph.nodes (data=True):
+            node_id = n[0]
+            id2node[node_id] = n[1]
+            print (f"--- {n}")
+            root = n[1]
+            properties = root['attr_dict']
+            properties['category'] = f"Node:{properties['type']}"
+            if 'node_attributes' in properties:
+                print (properties)
+                flat = flattenDict (properties, delim='_')
+                properties.update (flat)
+                del properties['node_attributes']
+            root.update (properties)
+            del root['attr_dict']
+            print (properties)
+        for e in in_graph.edges (data=True):
+            print (f"edge: {e}")
+            attr = e[2]['attr_dict']
+            attr['predicate'] = attr['type']
+            attr['subject'] = attr['source_id']
+            attr['object'] = attr['target_id']
+            del attr['type']
+            del attr['source_id']
+            del attr['target_id']
+        with open('config.yml', 'r') as ymlfile:
+            cfg = yaml.load(ymlfile)
+            kgx = NeoTransformer (
+                graph = in_graph,
+                host = "localhost",
+                ports = { 'bolt': 7687},
+                username = cfg['neo4j']['username'],
+                password = cfg['neo4j']['password']
+            )
+            kgx.save ()
+        
     def file_to_nx (self, file_name):
-        ''' Read answer graph from file and convert to networkx. '''
+        """ Read answer graph from file and convert to networkx. """
         return self.to_nx (self.from_file (file_name))
+    
     def nx_to_d3_json(self, g):
         return json_graph.node_link_data(g)
+    
     def file_to_d3_json(self, file_name):
+        """ Read a file and convert to D3 compatible JSON. """
         g = self.nx_to_d3_json(self.file_to_nx(file_name))
         del g['directed']
         del g['multigraph']
@@ -107,17 +158,16 @@ class TranslatorGraphTools:
             node_count = node_count + 1
             if 'attr_dict' in n:
                 n['name'] = n['attr_dict']['name']
-                #del n['attr_dict']
-        #print (f"node count: {node_count}")
         new_edges = []
         for e in g['links']:
             e['weight'] = round(random.uniform(0.2, 0.98), 2)
             del e['key']
             if e['source'] < len(g['nodes']) and e['target'] < len(g['nodes']):
                 new_edges.append (e)
-        #g['links'] = new_edges
         return g
+    
     def kgs (self, nodes=[], edges=[]):
+        """ Wrap nodes and edges in the outer layers of the KGS standard. """
         return [
             {
                 "result_list": [
@@ -129,3 +179,37 @@ class TranslatorGraphTools:
                 ]
             }
         ]
+
+def flattenDict(d, result=None, delim='.'):
+    if result is None:
+        result = {}
+    for key in d:
+        value = d[key]
+        if isinstance(value, dict):
+            value1 = {}
+            for keyIn in value:
+                value1[delim.join([key,keyIn])]=value[keyIn]
+            flattenDict(value1, result, delim)
+        elif isinstance(value, (list, tuple)):
+            for indexB, element in enumerate(value):
+                if isinstance(element, dict):
+                    value1 = {}
+                    index = 0
+                    for keyIn in element:
+                        newkey = delim.join([key, keyIn, str(indexB)])
+                        value1[newkey]=value[indexB][keyIn]
+                        index += 1
+                    for keyA in value1:
+                        flattenDict(value1, result, delim)
+                elif isinstance(element, (list, tuple)):
+                    for i, value in enumerate (element):
+                        list_key = delim.join (key, i)
+                        if isinstance (value, dict):
+                            value1 = {}
+                            for keyIn in value:
+                                k = delim.join ([ key, i, keyIn ])
+                                value1[k]=value[keyIn]
+                            flattenDict(value1, result, delim)
+        else:
+            result[key]=value
+    return result
