@@ -1,5 +1,5 @@
 
-<img src="https://github.com/NCATS-Tangerine/ros/blob/sharedgraph/media/ros.png" width="40%"></src>
+<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/ros.png" width="40%"></src>
 
 The Ros engine executes query graphs to compose knowledge networks.
 
@@ -205,7 +205,7 @@ The next step in the workflow executes the first modules of workflow one via the
 
 The graph argument references the output from our bionames command above as an input via a variable.
 
-For more details, see the whole [workflow](https://github.com/NCATS-Tangerine/ros/blob/sharedgraph/ros/workflow_one.ros).
+For more details, see the whole [workflow](https://github.com/NCATS-Tangerine/ros/blob/master/ros/workflow_one.ros).
 
 ## Output
 
@@ -217,11 +217,11 @@ It then builds the dependency graph.
 
 Next, it executes jobs in dependency order.
 
-<img src="https://github.com/NCATS-Tangerine/ros/blob/sharedgraph/media/run.png" width="340%"></src>
+<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/run.png" width="340%"></src>
 
 Here's a portion of the knowledge graph created by executing the workflow:
 
-<img src="https://github.com/NCATS-Tangerine/ros/blob/sharedgraph/media/wf1_output.png" width="40%"></src>
+<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/wf1_output.png" width="40%"></src>
 
 ## Execution
 
