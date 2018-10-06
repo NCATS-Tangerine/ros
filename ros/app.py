@@ -8,17 +8,12 @@ import logging.config
 import sys
 import time
 import yaml
-from celery import group
-from celery.utils.graph import DependencyGraph
-from celery.execute import send_task
 from types import SimpleNamespace
-from celery.result import AsyncResult
 from jsonpath_rw import jsonpath, parse
 from ros.router import Router
 from ros.workflow import Workflow
 from ros.lib.ndex import NDEx
 from ros.tasks import exec_operator
-from ros.celery_tools import CeleryManager
 import asyncio
 import uvloop
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -28,13 +23,17 @@ logger.setLevel(logging.WARNING)
 
 def execute_remote (workflow="mq2.ros", host="localhost", port=8080, args={}, library_path=["."]):
     """ Execute the workflow remotely via a web API. """
-    workflow_spec = Workflow.get_workflow (workflow, library_path)
+    logger.debug (f"execute remote: {workflow} libpath: {library_path} port: {port} host: {host} args: {args}")
+    workflow = Workflow (
+        spec=workflow,
+        inputs=args,
+        libpath=library_path)
     return requests.post (
         url = f"{host}:{port}/api/executeWorkflow",
         json = {
-            "workflow" : workflow_spec,
+            "workflow" : workflow.spec,
             "args"     : args
-        })
+        }).json ()
 
 def run_job(j, wf_model, asynchronous=False):
     wf_model.topsort.remove (j)
@@ -92,7 +91,7 @@ class AsyncioExecutor:
         while len(self.workflow.topsort) > len(self.workflow.execution.done):
             logger.debug ("scheduler")
             topsort = self.workflow.topsort.copy ()
-            topsort_rec = topsort.copy ()
+            pending = topsort.copy ()
             for j in topsort:
                 logger.debug (f" -sched: {j}")
                 
@@ -106,7 +105,7 @@ class AsyncioExecutor:
                     """ Has no dependencies or they're all completed. Execute this task. """
                     task = asyncio.ensure_future (exec_async (self.workflow, j))
                     self.workflow.execution.running[j] = task
-                    topsort_rec.remove (j)
+                    pending.remove (j)
                     await task
 
             completed = []
@@ -200,7 +199,7 @@ def main ():
         formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=60))
     arg_parser.add_argument('-a', '--api', help="Execute via API instead of locally.", action="store_true")
     arg_parser.add_argument('-w', '--workflow', help="Workflow to execute.", default="mq2.ros")
-    arg_parser.add_argument('-s', '--server', help="Hostname of api server", default="localhost")
+    arg_parser.add_argument('-s', '--server', help="Hostname of api server", default="http://localhost")
     arg_parser.add_argument('-p', '--port', help="Port of the server", default="80")
     arg_parser.add_argument('-i', '--arg', help="Add an argument expressed as key=val", action='append', default=[])
     arg_parser.add_argument('-o', '--out', help="Output the workflow result graph to a file. Use 'stdout' to print to terminal.")
@@ -218,10 +217,11 @@ def main ():
     response = None
     if args.api:
         """ Invoke a remote API endpoint. """
-        response = execute_rmote (workflow=args.workflow,
-                                  host=args.server,
-                                  port=args.port,
-                                  args=wf_args)
+        response = execute_remote (workflow=args.workflow,
+                                   host=args.server,
+                                   port=args.port,
+                                   args=wf_args,
+                                   library_path=args.lib_path)
     else:
         """ Execute the workflow in process. """
         celery = False
@@ -243,6 +243,8 @@ def main ():
             ]
             loop = asyncio.get_event_loop()
             loop.run_until_complete(asyncio.wait(tasks))
+
+            response = tasks[0].result ()
             
         """ NDEx output support. """
         if args.ndex_id:
@@ -255,7 +257,7 @@ def main ():
     """ Output file. """
     if args.out:
         if args.out == "stdout":
-            logger.debug (f"{graph_text}")
+            logger.debug (f"{json.dumps(response, indent=2)}")
         else:
             with open(args.out, "w") as stream:
                 stream.write (json.dumps(response, indent=2))

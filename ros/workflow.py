@@ -37,14 +37,15 @@ class Workflow:
     def __init__(self, spec, inputs={}, config="ros.yaml", libpath=["."]):
         assert spec, "Workflow specification is required."
 
+        self.libpath = libpath
         if isinstance(spec, str):
             if os.path.exists (spec):
                 logger.info (f"Loading workflow: {spec}")
                 with open (spec, "r") as stream:
                     spec = yaml.load (stream.read ())
-                    
+            
+        self.spec = spec
         self.inputs = inputs
-        self.libpath = libpath
         self.spec = spec
         self.uuid = uuid.uuid4 ()
         self.graph = Neo4JKnowledgeGraph ()
@@ -53,10 +54,10 @@ class Workflow:
         self.errors = []
 
         self.execution = Execution ()
-        
+                
         """ Resolve imports. """
         self.resolve_imports ()
-        
+
         """ Resolve template references in workflow jobs. """
         self.resolve_templates ()
         
@@ -91,21 +92,23 @@ class Workflow:
 
     def resolve_imports (self):
         """ Import separately developed workflow modules into this workflow. """
-        imports = self.spec.get ("import", [])
-        logger.debug ("import")
-        for i in imports:
-            imported = False
-            for path in self.libpath:
-                file_name = os.path.join (path, f"{i}.ros")
-                if os.path.exists (file_name):
-                    with open (file_name, "r") as stream:
-                        obj = yaml.load (stream.read ())
-                        logger.debug (f"  importing {i}@{file_name}")
-                        Resource.deepupdate (self.spec, obj, skip=[ "doc" ])
-                        imported = True
-            if not imported:
-                raise ValueError (f"Unable to find resource: {i}")
-    
+        if 'import' in self.spec:
+            imports = self.spec.get ("import", [])
+            logger.debug ("import")
+            for i in imports:
+                imported = False
+                for path in self.libpath:
+                    file_name = os.path.join (path, f"{i}.ros")
+                    if os.path.exists (file_name):
+                        with open (file_name, "r") as stream:
+                            obj = yaml.load (stream.read ())
+                            logger.debug (f"  importing {i}@{file_name}")
+                            Resource.deepupdate (self.spec, obj, skip=[ "doc" ])
+                            imported = True
+                if not imported:
+                    raise ValueError (f"Unable to find resource: {i}")
+            del self.spec["import"]
+
     def resolve_templates (self):
         """ Map template objects into the jobs referencing them within the workflow. """
         templates = self.spec.get("templates", {})

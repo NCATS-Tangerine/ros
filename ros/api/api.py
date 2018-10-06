@@ -1,16 +1,23 @@
 #!/usr/bin/env python
 
 """ Flask REST API server """
-
+import argparse
+import asyncio
 import os
 import logging
 import json
-import redis
+import time
+import uvloop
 from datetime import datetime
 from flask import request
 from flask_restful import Resource
 from ros.api.api_setup import api, app
-from ros.app import CeleryDAGExecutor
+from ros.app import AsyncioExecutor
+from ros.workflow import Workflow
+
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
+loop = asyncio.get_event_loop()
 
 logger = logging.getLogger("ros-api")
 
@@ -44,21 +51,29 @@ class ExecuteWorkflow(Resource):
         """
         workflow_spec = request.json['workflow']        
         logger.debug(f"Received request {workflow_spec}.")
-        print (f"Received request {json.dumps(workflow_spec,indent=2)}.")
-        executor = CeleryDAGExecutor (
-            spec=workflow_spec,
-            inputs=request.json['args'])
-        response = executor.execute (async=False) 
+        print (f"Received request {json.dumps(workflow_spec,indent=2)} of type {type(workflow_spec)}.")
+
+        executor = AsyncioExecutor (
+            workflow=Workflow (spec=workflow_spec,
+                               inputs=request.json['args']))
+        response = loop.run_until_complete (executor.execute ())
         return response, 200
 
 api.add_resource(ExecuteWorkflow, '/executeWorkflow')
 
 if __name__ == '__main__':
-    # Get host and port from environment variables
+
+    arg_parser = argparse.ArgumentParser(
+        description='Ros API',
+        formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=60))
+    arg_parser.add_argument('-d', '--debug', help="Debug.", action="store_false")
+    arg_parser.add_argument('-p', '--port', help="Port of the server", default="80")
+    args = arg_parser.parse_args ()
+    
     server_host = '0.0.0.0'
-    server_port = int(os.environ['ROS_WF_PORT'])
-    print (f"Serving Ros WF on port: {server_port}")
-    app.run(host=server_host,\
-        port=server_port,\
-        debug=False,\
-        use_reloader=True)
+
+    print (f"Serving Ros API on port: {args.port}")
+    app.run(host=server_host,
+            port=args.port,
+            debug=False,
+            use_reloader=True)
