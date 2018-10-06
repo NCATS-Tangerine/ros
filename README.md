@@ -3,18 +3,8 @@
 
 The Ros engine executes query graphs to compose knowledge networks.
 
-While the language provides common constructs supporting variables, modularity, extensibility, templates, a type system, and dependency management, it is targeted at the distinctive challenges of creating **highly detailed knowledge graphs enabling reasoning and inference**. 
+While the language provides common constructs supporting variables, modularity, extensibility, templates, and a type system, it is targeted at the distinctive challenges of creating **highly detailed knowledge graphs enabling reasoning and inference**.
 
-The engine conducts interactions with modules, some of which will be web APIs, able to receive:
-
-* A **machine question**: A specification of a query.
-* An **input graph**: A graph representing the output of previous steps.
-* **Additional options**: Other options specific to an operator.
-
-and return:
-
-* A **knowledge graph**: A graph.
- 
 ## Language
 
 ### Overview
