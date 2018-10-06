@@ -209,27 +209,19 @@ For more details, see the whole [workflow](https://github.com/NCATS-Tangerine/ro
 
 ## Output
 
-Here's some output from running the workflow above with validation enabled. It shows importing the bionames module, validating each invocation (only disease_identfiers has metadata configured).
+Here's output from a recent run of workflow_one.ros with validation enabled.
+
+It shows importing the bionames module, validating each invocation (only disease_identfiers has metadata configured).
 
 It then builds the dependency graph.
 
-```
-$ ros flow --workflow workflow_one.ros --validate
-importing
-  module: bionames from ./bionames.ros
-validating
-  validate(disease_identifiers).
-  validate(condition_to_drug).
-  validate(module_3).
-  validate(biothings_module_4_and_5).
-  validate(return).
-Validation successful.
-dependencies
-  xray->disease_identifiers
-  gamma->disease_identifiers
-  biothings->condition_to_drug
-  union->biothings_module_4_and_5
-```
+Next, it executes jobs in dependency order.
+
+<img src="https://github.com/NCATS-Tangerine/ros/blob/sharedgraph/media/run.png" width="340%"></src>
+
+Here's a portion of the knowledge graph created by executing the workflow:
+
+<img src="https://github.com/NCATS-Tangerine/ros/blob/sharedgraph/media/wf1_output.png" width="40%"></src>
 
 ## Execution
 
