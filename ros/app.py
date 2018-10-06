@@ -18,9 +18,7 @@ from ros.router import Router
 from ros.workflow import Workflow
 from ros.lib.ndex import NDEx
 from ros.tasks import exec_operator
-#from ros.tasks import exec_async
 from ros.celery_tools import CeleryManager
-
 import asyncio
 import uvloop
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())

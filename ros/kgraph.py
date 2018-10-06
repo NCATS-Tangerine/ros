@@ -1,7 +1,7 @@
 import json
 import logging
 import redis
-from redisgraph import Node, Edge, Graph
+#from redisgraph import Node, Edge, Graph
 from neo4j.v1 import GraphDatabase
 from neo4j.v1.types.graph import Node
 from neo4j.v1.types.graph import Relationship
@@ -33,10 +33,12 @@ class KnowledgeGraph:
         return self.graph.query (query)
     def delete (self):
         ''' Delete the entire graph. '''
+        logger.debug ("deleting graph")
         self.graph.delete ()
 
 class Neo4JKnowledgeGraph:
     ''' Encapsulates a knowledge graph. '''
+
     def __init__(self, host='localhost', port=7687):
         ''' Connect to Neo4J. '''
         uri = f"bolt://{host}:{port}"
@@ -50,7 +52,7 @@ class Neo4JKnowledgeGraph:
     def add_edge (self, subj, pred, obj, props):
         ''' Add an edge. '''
         props['pred'] = pred
-        logger.debug (f"({subj}->{props}->{obj})")
+        logger.debug (f"+edge: ({subj}->{props}->{obj})")
         return self.create_relationship (subj, props, obj)
 
     def commit (self):
@@ -61,42 +63,45 @@ class Neo4JKnowledgeGraph:
         ''' Query the graph. '''
         result = self.graph.query (query)
         return [ node.properties for node in result ]
+    
     def delete (self):
         ''' Delete the entire graph. '''
-        pass #self.graph.delete ()
+        self.exec ("match (a) detach delete a")
+    
     def __del__ (self):
         ''' Close the connection. '''
         self._driver.close ()
-    #---------------------------------------
+        
     def exec(self, command):
         """ Execute a cypher command returning the result. """
         return self.session.run(command)
+    
     def node2json (self, rec):
-        logger.debug (f"process node: {rec}")
         return {
-            "id"          : rec.get("nid", None),
-            "name"        : rec.get("nid", None),
-            #"nid"         : str(rec.get("id", None)),
+            "id"          : rec.get("id", None),
+            "name"        : rec.get("name", None),
             "description" : rec.get("description", None),
             "type"        : rec.get("type", None)
         }
+    
     def edge2json (self, rec):
         return {
             "type" : rec.get ("type", None)
         }
+    
     def query(self, query, nodes = [], edges = []):
         """ Synonym for exec for read only contexts. """
         response = []
         result = self.exec (query)
         for row in result:
-            logger.debug (f" row:--> {row}")
             for k, v in row.items ():
                 if isinstance (v, Node):
                     response.append (self.node2json (v))
                 elif isinstance (v, Relationship):
                     response.append (self.edge2json (v))
-        logger.debug (f"response: {response}")
+        logger.debug (f"query: {response}")
         return response
+    
     def get_node(self, properties, node_type=None):
         """ Get a ndoe given a set of properties and a node type to match on. """
         ntype = f":{node_type}" if node_type else ""
@@ -110,29 +115,22 @@ class Neo4JKnowledgeGraph:
         #properties = ",".join([f""" {k} : "{v}" """ for k, v in properties.items()])
         #statement = f"""CREATE (n{ntype} {{ {properties} }}) RETURN n"""
         props = ",".join([f""" n.{k}="{v}" """ for k, v in properties.items() if not k == 'id'])
-        statement = f"""MERGE (n{ntype} {{ id : {id} }}) SET {props}"""
-        #print (statement)
-        result = self.exec (statement)
-        '''
-        n = [ n for n in result ][0]
-        n = self.node2json(n['n'])
-        logger.debug (f"create_node: {n}")
-        return n
-        '''
+        statement = f"""MERGE (n{ntype} {{ id : "{id}" }}) SET {props}"""
+        logger.debug (f"create: stmt:{statement}")
+        self.exec(statement)
         return properties
-    
+        
     def create_relationship(self, id_a, properties, id_b):
         """ Create a relationship between two nodes given id and type for each end of the relationship and
         properties for the relationship itself. """
         relname = properties['type']
         rprops = ",".join([f""" {k} : "{v}" """ for k, v in properties.items() if not k == "name"])
-        q = f"""MATCH (a {{ nid: "{id_a}" }})-[:{relname} {{ {rprops} }}]->(b {{ nid : "{id_b}" }}) RETURN *"""
         result = self.exec(
-            f"""MATCH (a {{ nid: "{id_a}" }})-[:{relname} {{ {rprops} }}]->(b {{ nid : "{id_b}" }}) RETURN *""")
+            f"""MATCH (a {{ id: "{id_a}" }})-[:{relname} {{ {rprops} }}]->(b {{ id : "{id_b}" }}) RETURN *""")
         if not result.peek ():
             statement = f"""
-                MATCH (a {{ nid: "{id_a}" }})
-                MATCH (b {{ nid: "{id_b}" }})
+                MATCH (a {{ id: "{id_a}" }})
+                MATCH (b {{ id: "{id_b}" }})
                 CREATE (a)-[:{relname} {{ {rprops} }}]->(b)"""
             result = self.exec (statement)
         return result

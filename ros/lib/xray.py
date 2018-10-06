@@ -16,12 +16,15 @@ class XRay (Operator):
         diseases = event.context.graph.query ("match (a:disease) return  a")
         assert len(diseases) > 0, "Found no diseases"
 
-        
-        synonyms = self.gamma.synonymize ('disease', diseases[0]['id'])
-        #print (synonyms)
-        
-        # TODO: synonymize mondo to doid and map to rtx.
-        disease_id = "DOID:9352"
+        """ Synonymize disease. Better than hard coding. Still needs further generalization. """
+        doids = {}
+        for d in diseases:
+            syns = requests.get (f"https://onto.renci.org/synonyms/{d['name']}/").json ()
+            for syn in syns:
+                for s in syn['xref']:
+                    if s.startswith ("DOID"):
+                        doids[s] = s
+        disease_id = [ d for d in doids.keys() ][0]
         
         ''' Execute the module. '''
         if len(diseases) > 0:
@@ -30,7 +33,7 @@ class XRay (Operator):
                 json = {
                     "query_type_id": "Q55",
                     "terms": {
-                        "disease": disease_id #[0]['id'] #"DOID:9352" #disease_ids[0] #"DOID:9352"
+                        "disease": disease_id
                     }
                 }, 
                 headers = { "accept": "application/json" })

@@ -8,7 +8,7 @@ from jsonpath_rw import jsonpath, parse
 from networkx.readwrite import json_graph
 #from kgx import Transformer, NeoTransformer, PandasTransformer, NeoTransformer
 
-logger = logging.getLogger("kgraph")
+logger = logging.getLogger("graph")
 logger.setLevel(logging.WARNING)
 
 class TranslatorGraphTools:
@@ -55,47 +55,75 @@ class TranslatorGraphTools:
         jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]") #.nodes.[*]")
         nodes = [ match.value for match in jsonpath_query.find (graph) ]
         nodes = self.dedup_nodes (nodes)
+
+        node_id = {}
+        for i, n in enumerate(nodes):
+            #logger.debug (f"node: {n}")
+            if 'name' in n:
+                node_id [i] = n['name']
+            else:
+                logger.warning (f"skipping nameless node: {n}")
+        #node_id = { i : ident for i, ident in enumerate([ n['name'] for n in nodes ]) }
+        '''
         node_id = { name : i for i, name in enumerate([ n['id'] for n in nodes ]) }
         for n in nodes:
             tmp = n['id']
             n['id'] = node_id[tmp]
             n['name'] = tmp            
-        
+        '''
         jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.edge_list.[*]")
         edges = [ match.value for match in jsonpath_query.find (graph) ]
+        '''
         for e in edges:
             tmp_src = e['source_id']
             tmp_dst = e['target_id']
             e['source_id'] = node_id[tmp_src]
             e['target_id'] = node_id[tmp_dst]
+        '''
         for n in nodes:
             g.add_node(n['id'], attr_dict=n)
         for e in edges:
             g.add_edge (e['source_id'], e['target_id'], attr_dict=e)
         return g
+    
     def to_knowledge_graph (self, in_graph, out_graph, graph_label=None):
-        """ Convert a networkx graph to Ros KnowledgeGraph. """
+        """ Write a NetworkX graph to KnowledgeGraph. """
         id2node = {}
         for j, n in enumerate(in_graph.nodes (data=True)):
             logger.debug (f"node: {j}:{n}")
-            i = n[0]
+            i, obj = n #[0]
+            #obj = n[1]
+            if not 'attr_dict' in obj:
+                continue
             attr = n[1]['attr_dict']
-            logger.debug (f"   attr dict: {attr}")
-            #if graph_label:
-            #    attr['subgraph'] = graph_label
-            attr['nid'] = attr['name']
+
+            """ encountered responses which randomly have numeric or curie as 'id' """
+            if isinstance(attr['id'], int):
+                """ yes, this also happens. """
+                if isinstance(attr['name'], int):
+                    continue
+                if attr['name'].find (':') > 0:
+                    attr['id'] = attr['name']
+                    
             id2node[i] = out_graph.add_node (label=attr['type'], props=attr)
-            #print (id2node[i])
         for i, e in enumerate(in_graph.edges (data=True)):
-            #print (f"{i}:{e}")
+            subj_id, obj_id, eprops = e
+            attr = eprops['attr_dict']
+            subj = id2node.get (subj_id,{}).get ('id', None)
+            pred = attr['type']
+            obj = id2node.get (obj_id,{}).get ('id', None)
+            '''
             attr = e[2]['attr_dict']
-            print 
             subj = id2node.get(e[0],{}).get('id',None)
             pred = attr['type']
             obj = id2node.get(e[1],{}).get('id',None)
+            '''
+            if subj == None or obj == None:
+                logger.warning (f"Unable to create edge for badly formed nodes: sub:{e[0]} obj:{e[1]}")
+                continue
             if graph_label:
                 attr['subgraph'] = graph_label
-            #print (f"({subj}-{pred}->{obj}")
+            logger.debug (f"({subj}-[{pred} {attr}]->{obj})")
             if subj and pred and obj:
                 out_graph.add_edge (subj=subj,
                                     pred=pred,
@@ -162,8 +190,7 @@ class TranslatorGraphTools:
         for e in g['links']:
             e['weight'] = round(random.uniform(0.2, 0.98), 2)
             del e['key']
-            if e['source'] < len(g['nodes']) and e['target'] < len(g['nodes']):
-                new_edges.append (e)
+            new_edges.append (e)
         return g
     
     def kgs (self, nodes=[], edges=[]):
@@ -213,3 +240,39 @@ def flattenDict(d, result=None, delim='.'):
         else:
             result[key]=value
     return result
+
+
+
+'''
+  this response juggles which field contains the curie!
+
+      {
+        "confidence": 2.32462976742824,
+        "id": "6f05e17c-da07-4ad0-b304-b8e26a2f6016",
+        "result_graph": {
+          "node_list": [
+            {
+              "description": "type 2 diabetes mellitus",
+              "id": "MONDO:0005148",
+              "name": "type 2 diabetes mellitus",
+              "type": "disease"
+            },
+            {
+              "description": "triglyceride",
+              "id": "CHEBI:17855",
+              "name": "triglyceride",
+              "type": "chemical_substance"
+            },
+            {
+              "description": "superoxide",
+              "id": "CHEBI:18421",
+              "name": "superoxide",
+              "type": "chemical_substance"
+            },
+            {
+              "description": "DGAT1",
+              "id": 76,
+              "name": "HGNC:2843",
+              "type": "gene"
+            },
+'''

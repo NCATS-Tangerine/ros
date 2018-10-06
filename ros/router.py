@@ -21,6 +21,25 @@ from ros.lib.gamma import Gamma
 logger = logging.getLogger("router")
 logger.setLevel(logging.WARNING)
 
+class Cache:
+    def __init__(self, root="cache"):
+        self.root = root
+    def __contains__ (self, k):
+        path = os.path.join (self.root, f"{k}.res")
+        return os.path.exists (path)        
+    def __getitem__ (self, k):
+        obj = None
+        path = os.path.join (self.root, f"{k}.res")
+        if os.path.exists (path):
+            with open (path, "r") as stream:
+                obj = json.load (stream)
+        return obj
+    def __setitem__ (self, k, v):
+        path = os.path.join (self.root, f"{k}.res")
+        with open (path, "w") as stream:
+            json.dump (v, stream, indent=2)
+            
+        
 class Router:
 
     """ Route operator invocations through a common interface. """
@@ -37,6 +56,7 @@ class Router:
         }
         self.workflow = workflow
         self.create_template_adapters ()
+        self.cache = Cache ()
         
     def create_template_adapters (self):
         """ Plug in template instances that define new operators. """
@@ -72,8 +92,14 @@ class Router:
                 "args"     : node_copy['args']
             }
             """ Call the operator. """
-            result = self.r[op](**arg_list)
+            key = f"{job_name}-{op_node['code']}_{op_node['args'].get('op','')}"
+            if key in self.cache:
+                result = self.cache[key]
+            else:
+                result = self.r[op](**arg_list)
+                self.cache[key] = result
             text = self.short_text (str(result))
+            
             logger.debug (f"    --({job_name}[{op_node['code']}.{op_node['args'].get('op','')}])>> {text}")
         else:
             raise ValueError (f"Unknown operator: {op}")
