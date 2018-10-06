@@ -13,9 +13,9 @@ A workflow is a series of steps.
 Steps can reference the output of previous steps.
 In general they have access to a shared graph.
 They can also exchange sub-graphs.
-Steps can have associated metadata describing allowed input types and their output.
+Steps can have associated metadata describing their allowed input and output types.
 
-When the engine loads a workflow, it computes a directed acyclic graph modeling job dependencies. It then executes jobs in the indicated order.
+Workflows compute a directed acyclic graph (DAG) modeling job dependencies which are then executed in the order indicated by a topological sort of the DAG.
 
 ### Variables
 
