@@ -22,24 +22,26 @@ logger = logging.getLogger("router")
 logger.setLevel(logging.WARNING)
 
 class Cache:
+    """ Generic cache. Disk based for the time being. """
     def __init__(self, root="cache"):
         self.root = root
+    def _cpath (self, k):
+        return = os.path.join (self.root, f"{k}.res")
     def __contains__ (self, k):
-        path = os.path.join (self.root, f"{k}.res")
-        return os.path.exists (path)        
+        path = self._cpath (k)
+        return os.path.exists (path)
     def __getitem__ (self, k):
         obj = None
-        path = os.path.join (self.root, f"{k}.res")
+        path = self._cpath (k)
         if os.path.exists (path):
             with open (path, "r") as stream:
                 obj = json.load (stream)
         return obj
     def __setitem__ (self, k, v):
-        path = os.path.join (self.root, f"{k}.res")
+        path = self._cpath (k)
         with open (path, "w") as stream:
             json.dump (v, stream, indent=2)
             
-        
 class Router:
 
     """ Route operator invocations through a common interface. """
@@ -98,6 +100,7 @@ class Router:
             else:
                 result = self.r[op](**arg_list)
                 self.cache[key] = result
+                
             text = self.short_text (str(result))
             
             logger.debug (f"    --({job_name}[{op_node['code']}.{op_node['args'].get('op','')}])>> {text}")
