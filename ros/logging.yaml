@@ -32,7 +32,7 @@ handlers:
 
 loggers:
   asyncio:
-    level: DEBUG
+    level: WARNING
     handlers: [console]
     propagate: no
   ros:
@@ -40,11 +40,11 @@ loggers:
     handlers: [console]
     propagate: no
   router:
-    level: DEBUG
+    level: WARNING
     handlers: [console]
     propagate: no
   kgraph:
-    level: DEBUG
+    level: WARNING
     handlers: [console]
     propagate: no
   graph:
@@ -56,7 +56,7 @@ loggers:
     handlers: [console]
     propagate: no
   tasks:
-    level: DEBUG
+    level: WARNING
     handlers: [console]
     propagate: no
 

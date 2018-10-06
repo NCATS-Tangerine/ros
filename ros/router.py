@@ -26,7 +26,7 @@ class Cache:
     def __init__(self, root="cache"):
         self.root = root
     def _cpath (self, k):
-        return = os.path.join (self.root, f"{k}.res")
+        return os.path.join (self.root, f"{k}.res")
     def __contains__ (self, k):
         path = self._cpath (k)
         return os.path.exists (path)

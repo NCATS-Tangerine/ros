@@ -119,7 +119,7 @@ class TranslatorGraphTools:
             obj = id2node.get(e[1],{}).get('id',None)
             '''
             if subj == None or obj == None:
-                logger.warning (f"Unable to create edge for badly formed nodes: sub:{e[0]} obj:{e[1]}")
+                #logger.warning (f"Unable to create edge for badly formed nodes: sub:{e[0]} obj:{e[1]}")
                 continue
             if graph_label:
                 attr['subgraph'] = graph_label
