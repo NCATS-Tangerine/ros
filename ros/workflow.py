@@ -37,22 +37,24 @@ class Workflow:
     def __init__(self, spec, inputs={}, config="ros.yaml", libpath=["."]):
         assert spec, "Workflow specification is required."
 
+        """ If we got a string rather than a dict, load the workflow. """
         self.libpath = libpath
         if isinstance(spec, str):
             if os.path.exists (spec):
                 logger.info (f"Loading workflow: {spec}")
                 with open (spec, "r") as stream:
                     spec = yaml.load (stream.read ())
-            
-        self.spec = spec
+
+        """ Set inputs, specification, generate a GUID, load configuration, and connect to the graph. """
         self.inputs = inputs
         self.spec = spec
         self.uuid = uuid.uuid4 ()
-        self.graph = Neo4JKnowledgeGraph ()
-        self.graph_tools = TranslatorGraphTools ()
         self.config = Config (config)
+        self.graph = Neo4JKnowledgeGraph (host=self.config.get('NEO4J_HOST', "localhost"))
+        self.graph_tools = TranslatorGraphTools ()
         self.errors = []
 
+        """ Prepare to manage execution state. """
         self.execution = Execution ()
                 
         """ Resolve imports. """
