@@ -1,7 +1,7 @@
 
 <img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/ros.png" width="40%"></src>
 
-The Ros engine executes query graphs to compose knowledge networks.
+Ros executes graphs of queries to compose knowledge networks.
 
 While the language provides common constructs supporting variables, modularity, extensibility, templates, and a type system, it is targeted at the distinctive challenges of creating **highly detailed knowledge graphs enabling reasoning and inference**.
 
@@ -232,10 +232,7 @@ A topological sort of the jobs provides the execution order.
 There are two basic execution modes.
 
 * **Synchronous** The prototype runs jobs synchronously.
-* **Asynchronous** Under development is a task queue based approach.
-  Each job is sent, via an AMQP message queue to an execution back end (Celery).
-  Job results are stored in Redis.
-  Ultimately, other back ends would be good.
+* **Asynchronous** Asynchronous execution is concurrent but not parallel. This is handled via Python's **asyncio**. This means multiple operations are able to make progress during the same time window. But it does not mean that the operations literally execute (run CPU operations) simultaneously. Because most Ros operations are I/O bound rather than CPU bound, this will likely be enough for a while. Several tasks can wait for an HTTP request to return while others use the processor to handle results. 
 
 ## Getting Started
 
