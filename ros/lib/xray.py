@@ -19,10 +19,11 @@ class XRay (Operator):
         """ Synonymize disease. Better than hard coding. Still needs further generalization. """
         doids = {}
         for d in diseases:
-            syns = requests.get (f"https://onto.renci.org/synonyms/{d['name']}/").json ()
+            syns = requests.get (f"https://onto.renci.org/synonyms/{d['id']}/").json ()
             for syn in syns:
                 for s in syn['xref']:
                     if s.startswith ("DOID"):
+                        print (f"-------> {s}")
                         doids[s] = s
         disease_id = [ d for d in doids.keys() ][0]
         
