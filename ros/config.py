@@ -5,7 +5,7 @@ import re
 from ros.util import Resource
 
 class Config(dict):
-    def __init__(self, config, prefix=''):
+    def __init__(self, config="ros.yaml", prefix=''):
         '''
         if not config.startswith (os.sep):
             config = os.path.join (os.path.dirname (__file__), config)

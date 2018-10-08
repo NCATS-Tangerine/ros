@@ -2,6 +2,11 @@ system:
   app_root: ~/dev/ros
   app_port: 5006
   num_workers: 3
+neo4j:
+  host: localhost
+  port: 7687
+  username: neo4j
+  password: neo4j0
   
 celery_app_package: ros.dag
 celery_broker_url: "amqp://$RABBITMQ_DEFAULT_USER:$RABBITMQ_DEFAULT_PASS@$BROKER_HOST:$BROKER_PORT/$RABBITMQ_DEFAULT_VHOST"

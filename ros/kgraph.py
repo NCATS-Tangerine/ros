@@ -5,6 +5,7 @@ import redis
 from neo4j.v1 import GraphDatabase
 from neo4j.v1.types.graph import Node
 from neo4j.v1.types.graph import Relationship
+from ros.config import Config
 
 logger = logging.getLogger("kgraph")
 logger.setLevel(logging.WARNING)
@@ -41,8 +42,19 @@ class Neo4JKnowledgeGraph:
 
     def __init__(self, host='localhost', port=7687):
         ''' Connect to Neo4J. '''
+        self.config = Config ()
+        host = self.config['neo4j']['host']
+        username = self.config['neo4j']['username']
+        password = self.config['neo4j']['password']
         uri = f"bolt://{host}:{port}"
-        self._driver = GraphDatabase.driver (uri)
+        logger.debug (f"conneting to neo4j at {uri}")
+        auth = None
+        if isinstance(username,str) and isinstance(password,str):
+            auth = (username, password)
+            self._driver = GraphDatabase.driver (uri, auth=auth)
+        else:
+            self._driver = GraphDatabase.driver (uri)
+    
         self.session = self._driver.session ()
 
     def add_node (self, label, props):
@@ -70,7 +82,9 @@ class Neo4JKnowledgeGraph:
     
     def __del__ (self):
         ''' Close the connection. '''
-        self._driver.close ()
+        if self._driver:
+            logger.debug ("Closing neo4j database connection.")
+            self._driver.close ()
         
     def exec(self, command):
         """ Execute a cypher command returning the result. """
