@@ -19,7 +19,9 @@ Workflows compute a directed acyclic graph (DAG) modeling job dependencies which
 
 ### Variables
 
-Variables passed to the workflow at the command line or via the API can be resolved dynamically. In this example, $disease_name refers to an argument provided by the execution context to this workflow. The provided value will be substituted at runtime. The name `disease_identifiers` is the job's name. When it completes, the knowledg graph standard graph it produces will be saved as the value of the job's name. The graph is also written to the shared graph.
+Variables passed to the workflow at the command line or via the API can be resolved dynamically. In this example, $disease_name refers to an argument provided by the execution context to this workflow. The provided value will be substituted at runtime. 
+
+In the example below, `disease_identifiers` is the job's name. It produces a graph. The JSON object representing that graph will be stored as the value of the job's name. The graph is also written to the shared graph database. Subsequent jobs can interact with either representation.
 
 The `code` tag tells the engine which block of functionality to execute.
 
@@ -50,7 +52,7 @@ Ros currently provides the following core operators:
 * **get**: Invokes an HTTP GET operation on a specified resource.
 * **union**: Unions two or more results into one object.
 
-It also includes certain Translator specific modules. In the future, these will be implemented as Ros plugin: 
+It also includes certain Translator specific modules. In the future, these will be implemented as Ros plugins: 
 * **biothings**: BioThings modules. Currently modules 4 and 5 of workflow 1.
 * **gamma**: Invokes the Gamma reasoner. The example below calls Gamma a few times with different machine questions. It will be updated to use the new Quick API for added flexibility.
 * **xray**: XRay reasoner modules. Currently modules 1 and 2 of workflow 1.
@@ -59,7 +61,14 @@ It also includes certain Translator specific modules. In the future, these will 
 
 Ros provides graphs in two basic modalities:
 
-* **Results**: Results of previous workflow steps can be referenced as variables passed to subsequent steps. This graph can be queried using JSON Path query syntax.
+* **Results**: Results of previous workflow steps can 
+   ````
+   diseases = event.context.jsonquery (
+            query = "$.[*].result_list.[*].[*].result_graph.node_list.[*]",
+            obj = event.conditions)
+            be referenced as variables passed to subsequent steps. This graph can be queried using JSON Path query syntax.
+   
+    ```
 * **Shared**: A shared graph, accessible with the Cypher query language is available to all operators.
 
 Each operator receives an event object provided by the Ros framework. The event provides framework services including the shared graph, graph manipulation tools, and arguments to the invocation of the operator.
