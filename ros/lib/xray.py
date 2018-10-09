@@ -1,7 +1,7 @@
 import requests
 import json
 import sys
-from ros.operator import Operator
+from ros.framework import Operator
 from ros.lib.gamma import Gamma
 
 class XRay (Operator):

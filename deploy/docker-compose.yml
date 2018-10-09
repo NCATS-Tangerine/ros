@@ -1,7 +1,7 @@
 version: "3.4"
 services:
 
-  # Generic neo4j.
+  # Generic neo4j graph database.
   neo4j:
     image: neo4j:3.4.7
     env_file:
@@ -15,7 +15,7 @@ services:
       - "${NEO4J_BOLT_PORT}:${NEO4J_BOLT_PORT}"
       - "${NEO4J_WEB_PORT}:${NEO4J_WEB_PORT}"
 
-  # A Ros OpenAPI endpoint.
+  # A Ros OpenAPI web service endpoint.
   ros:
     build:
       context: .
@@ -31,8 +31,5 @@ services:
       - "${ROS_PORT}:${ROS_PORT}"
     links:
       - neo4j
-      
-#networks:
-#  default:
-#    external:
-#      name: ${COMPOSE_PROJECT_NAME}_default
+    volumes:
+       - /Users/scox/dev/ros/logs:/var/log/ros

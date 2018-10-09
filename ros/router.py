@@ -11,8 +11,8 @@ import time
 import traceback
 from jsonpath_rw import jsonpath, parse
 from ros.config import Config
-from ros.operator import Event
-from ros.operator import Operator
+from ros.framework import Event
+from ros.framework import Operator
 from ros.lib.biothings import Biothings
 from ros.lib.xray import XRay
 from ros.lib.ndex import NDEx

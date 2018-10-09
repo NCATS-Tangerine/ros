@@ -1,7 +1,7 @@
 import requests
 import json
 import os
-from ros.operator import Operator
+from ros.framework import Operator
 
 def annotate_drug(chembl_id):
     """

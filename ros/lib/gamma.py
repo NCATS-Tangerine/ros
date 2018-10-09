@@ -1,7 +1,7 @@
 import requests
 import json
 import logging
-from ros.operator import Operator
+from ros.framework import Operator
 
 logger = logging.getLogger("gamma")
 logger.setLevel(logging.WARNING)

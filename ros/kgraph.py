@@ -48,14 +48,12 @@ class Neo4JKnowledgeGraph:
         password = self.config['neo4j']['password']
         uri = f"bolt://{host}:{port}"
         logger.debug (f"conneting to neo4j at {uri}")
-        print (f"conneting to neo4j at {uri} {username} {password}")
         auth = None
         if isinstance(username,str) and isinstance(password,str):
             auth = (username, password)
             self._driver = GraphDatabase.driver (uri, auth=auth)
         else:
             self._driver = GraphDatabase.driver (uri)
-    
         self.session = self._driver.session ()
 
     def add_node (self, label, props):
