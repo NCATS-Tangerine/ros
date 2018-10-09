@@ -216,6 +216,7 @@ def main ():
     wf_args = { k : v for k, v in [ arg.split("=") for arg in args.arg ] }
     response = None
     if args.api:
+        
         """ Invoke a remote API endpoint. """
         response = execute_remote (workflow=args.workflow,
                                    host=args.server,
@@ -223,36 +224,27 @@ def main ():
                                    args=wf_args,
                                    library_path=args.lib_path)
     else:
-        """ Execute the workflow in process. """
-        celery = False
-        if celery:
-            """ Execute with celery. """
-            executor = CeleryDAGExecutor (
-                workflow=Workflow.get_workflow (workflow=args.workflow,
-                                                inputs=wf_args,
-                                                library_path=args.lib_path))
-            response = executor.execute ()
-        else:
-            """ Execute via python async. """
-            executor = AsyncioExecutor (
-                workflow=Workflow.get_workflow (workflow=args.workflow,
-                                                inputs=wf_args,
-                                                library_path=args.lib_path))
-            tasks = [
-                asyncio.ensure_future (executor.execute ())
-            ]
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(asyncio.wait(tasks))
-
-            response = tasks[0].result ()
-            
-        """ NDEx output support. """
-        if args.ndex_id:
-            jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph")
-            graph = [ match.value for match in jsonpath_query.find (response) ]
-            logger.debug (f"{args.ndex_id} => {json.dumps(graph, indent=2)}")
-            ndex = NDEx ()
-            ndex.publish (args.ndex_id, graph)
+        
+        """ Execute via python async. """
+        executor = AsyncioExecutor (
+            workflow=Workflow.get_workflow (workflow=args.workflow,
+                                            inputs=wf_args,
+                                            library_path=args.lib_path))
+        tasks = [
+            asyncio.ensure_future (executor.execute ())
+        ]
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(asyncio.wait(tasks))
+        
+        response = tasks[0].result ()
+        
+    """ NDEx output support. """
+    if args.ndex_id:
+        jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph")
+        graph = [ match.value for match in jsonpath_query.find (response) ]
+        logger.debug (f"{args.ndex_id} => {json.dumps(graph, indent=2)}")
+        ndex = NDEx ()
+        ndex.publish (args.ndex_id, graph)
 
     """ Output file. """
     if args.out:

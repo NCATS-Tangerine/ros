@@ -44,7 +44,7 @@ loggers:
     handlers: [console]
     propagate: no
   kgraph:
-    level: WARNING
+    level: DEBUG
     handlers: [console]
     propagate: no
   graph:

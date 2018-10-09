@@ -1,0 +1,38 @@
+version: "3.4"
+services:
+
+  # Generic neo4j.
+  neo4j:
+    image: neo4j:3.4.7
+    env_file:
+      - ./ros.env
+    environment:
+      - NEO4J_AUTH=${NEO4J_USERNAME}/${NEO4J_PASSWORD}
+      - NEO4J_dbms_connectors_default__listen__address=0.0.0.0
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.\\\* \
+      - NEO4J_dbms_connector_bolt_address=0.0.0.0:7687
+    ports:
+      - "${NEO4J_BOLT_PORT}:${NEO4J_BOLT_PORT}"
+      - "${NEO4J_WEB_PORT}:${NEO4J_WEB_PORT}"
+
+  # A Ros OpenAPI endpoint.
+  ros:
+    build:
+      context: .
+    env_file:
+      - ./ros.env
+    environment:
+      - ROS_PORT
+      - NEO4J_HOST
+      - NEO4J_USERNAME
+      - NEO4J_PASSWORD
+      - NEO4J_BOLT_PORT
+    ports:
+      - "${ROS_PORT}:${ROS_PORT}"
+    links:
+      - neo4j
+      
+#networks:
+#  default:
+#    external:
+#      name: ${COMPOSE_PROJECT_NAME}_default

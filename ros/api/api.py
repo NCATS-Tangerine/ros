@@ -15,13 +15,17 @@ from ros.api.api_setup import api, app
 from ros.app import AsyncioExecutor
 from ros.workflow import Workflow
 
+""" Setup the async event loop. """
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-
 loop = asyncio.get_event_loop()
 
 logger = logging.getLogger("ros-api")
 
+
 class ExecuteWorkflow(Resource):
+    
+    """ Workflow execution and monitoring logic. """
+    
     def post(self):
         """
         ExecuteWorkflow

@@ -48,6 +48,7 @@ class Neo4JKnowledgeGraph:
         password = self.config['neo4j']['password']
         uri = f"bolt://{host}:{port}"
         logger.debug (f"conneting to neo4j at {uri}")
+        print (f"conneting to neo4j at {uri} {username} {password}")
         auth = None
         if isinstance(username,str) and isinstance(password,str):
             auth = (username, password)
