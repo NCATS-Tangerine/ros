@@ -241,7 +241,7 @@ A topological sort of the jobs provides the execution order.
 
 There are two basic execution modes.
 
-* **Synchronous** The prototype runs jobs synchronously.
+* **Synchronous** Jobs run one at a time. This is currently disabled but the plan is to reintroduce it as a debugging aid.
 * **Asynchronous** Asynchronous execution is concurrent but not parallel. This is handled via Python's **asyncio**. This means multiple operations are able to make progress during the same time window. But it does not mean that the operations literally execute (run CPU operations) simultaneously. Because most Ros operations are I/O bound rather than CPU bound, this will likely be enough for a while. Several tasks can wait for an HTTP request to return while others use the processor to handle results. 
 
 ## Getting Started
