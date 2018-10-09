@@ -17,7 +17,11 @@ RUN apt-get install -y emacs24-nox
 
 ENV PYTHONPATH /ros
 
-ENTRYPOINT python api/api.py --port $ROS_PORT
+ADD ./run_api.sh /ros/run_api.sh
+
+ENTRYPOINT /ros/run_api.sh
+
+#ENTRYPOINT python api/api.py --port $ROS_PORT
 
 #ENTRYPOINT gunicorn \
 #                    --timeout 3000 \
