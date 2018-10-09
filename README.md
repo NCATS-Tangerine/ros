@@ -61,16 +61,17 @@ It also includes certain Translator specific modules. In the future, these will 
 
 Ros provides graphs in two basic modalities:
 
-* **Results**: Results of previous workflow steps can 
-   ````
+* **Results**: Results of previous workflow steps can be referenced as variables passed to subsequent steps. This graph can be queried using JSON Path query syntax. The following example uses the jsonquery facility in the Ros framework to query a variable called *condition*:
+   ```
    diseases = event.context.jsonquery (
             query = "$.[*].result_list.[*].[*].result_graph.node_list.[*]",
             obj = event.conditions)
-            be referenced as variables passed to subsequent steps. This graph can be queried using JSON Path query syntax.
+   ```
+* **Shared**: A shared graph, accessible with the Cypher query language is available to all operators. This example uses the Ros framework's cypher query on the shared graph with biolink-model concepts.
+   ```
+   diseases = event.context.graph.query ("match (a:disease) return  a")
+   ```
    
-    ```
-* **Shared**: A shared graph, accessible with the Cypher query language is available to all operators.
-
 Each operator receives an event object provided by the Ros framework. The event provides framework services including the shared graph, graph manipulation tools, and arguments to the invocation of the operator.
 
 These facilities allow the operator to query the graphs before executing their main logic and to update it as well.
