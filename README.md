@@ -250,14 +250,17 @@ There are two basic execution modes.
 
 **Requirements:**
 
-  * A machine with a running Docker service
+  * A running Docker service.
   * Git installed.
   * Ports 7474, 7687, and 5002 open.
 
 **Start:**
+
+```
 git clone git@github.com:NCATS-Tangerine/ros.git
 cd ros/deploy
 docker-compose up
+```
 
 **Use:** 
 
@@ -266,7 +269,7 @@ docker-compose up
   ```
   $ docker exec -it deploy_ros_1 bash
   ```
-  * Run a workflow.
+  * Run a workflow via the API. 
   ```
   $ python app.py --api --port 5002 --workflow workflows/workflow_one.ros -l workflows -i disease_name="type 2 diabetes mellitus" --out stdout
   ```
