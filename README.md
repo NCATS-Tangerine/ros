@@ -260,13 +260,16 @@ cd ros/deploy
 docker-compose up
 
 **Use:** 
-Connect to the [local Neo4J](http://localhost:7474/browser/)
 
-```
-$ pip install ros
-$ ros --help
-$ ros --api --port 5002 --workflow workflow_one.ros --arg disease_name="diabetes mellitus type 2" -l workflows
-```
+  * Connect to the [local Neo4J](http://localhost:7474/browser/)
+  * Connect to the API docker container
+  ```
+  $ docker exec -it deploy_ros_1 bash
+  ```
+  * Run a workflow.
+  ```
+  $ python app.py --api --port 5002 --workflow workflows/workflow_one.ros -l workflows -i disease_name="type 2 diabetes mellitus" --out stdout
+  ```
 
 ### Install
 
