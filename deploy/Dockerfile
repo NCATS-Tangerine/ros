@@ -1,4 +1,4 @@
-FROM python:3.7.1
+FROM python:3.7
 
 RUN git clone "https://github.com/NCATS-Tangerine/ros" "ros" 2> /dev/null || (cd "ros" ; git pull)
 
