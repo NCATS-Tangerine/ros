@@ -246,14 +246,49 @@ There are two basic execution modes.
 
 ## Getting Started
 
+### Docker
+
+**Requirements:**
+
+  * A running Docker service.
+  * Git installed.
+  * Ports 7474, 7687, and 5002 open.
+
+**Start:**
+
+```
+git clone git@github.com:NCATS-Tangerine/ros.git
+cd ros/deploy
+docker-compose up
+```
+
+**Use:** 
+
+  * Connect to the [local Neo4J](http://localhost:7474/browser/)
+  * Connect to the API docker container
+  ```
+  $ docker exec -it deploy_ros_1 bash
+  ```
+  * Run a workflow via the API. 
+  ```
+  $ python app.py --api --port 5002 --workflow workflows/workflow_one.ros -l workflows -i disease_name="type 2 diabetes mellitus" --out stdout
+  ```
+
 ### Install
 
-These steps install the package, print help text, and execute  workflow one. To run this, you'll need workflow_one.ros and bionames.ros from the repo.
+**Requirements:**
+
+  * Python >3.6.5
+  * Neo4J >3.3.4
+  
+**Steps:**
+
+These steps install the package, print help text, and execute  workflow one. To run this, you'll need workflow_one.ros and bionames.ros from the repo. The `-l workflows` flag names the directory containing the workflows.
 
 ```
 $ pip install ros
 $ ros --help
-$ ros --workflow workflow_one.ros --arg disease_name="diabetes mellitus type 2"
+$ ros --workflow workflow_one.ros --arg disease_name="diabetes mellitus type 2" -l workflows
 ```
 
 **Note**: Currently, the Python ndex2 client depends on an old version of NetworkX that's incompatible with Ros. A new version is expected soon. They can be used together but the install process is a bit more complicated than above.
