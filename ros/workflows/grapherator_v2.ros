@@ -1,0 +1,25 @@
+
+template:
+
+  condition_expansion_to_gene_pathway_drug:
+    doc: |
+      Call workflow-one:modules(one,two) through a common interface.
+    code: graph-operator
+    args:
+      map:
+        disease_id: select "$.[*].result_list.[*][*].result_graph.node_list.[*].id" from $disease_identifiers
+      message:
+        question_graph:
+          nodes:
+            - id: "n00"
+              type: disease
+              curie: $disease_id
+            - id: "n01"
+              type: gene
+            - id: "n02"
+              type: genetic_condition
+        knowledge_graph:
+          nodes: select "$.[*].result_list.[*][*].result_graph.node_list.[*]" from $disease_identifiers
+      services:
+        - name: rtx
+          url: http://localhost:5003/wf1mod2and3

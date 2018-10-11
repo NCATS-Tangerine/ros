@@ -51,38 +51,18 @@ class TranslatorGraphTools:
         
         """ Serialize node and edge python objects. """
         g = nx.MultiDiGraph()
-        logger.debug (f"node: {json.dumps(graph, indent=2)}")
+        #logger.debug (f"graph: {json.dumps(graph, indent=2)}")
         jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]") #.nodes.[*]")
         nodes = [ match.value for match in jsonpath_query.find (graph) ]
         nodes = self.dedup_nodes (nodes)
-
-        node_id = {}
-        for i, n in enumerate(nodes):
-            #logger.debug (f"node: {n}")
-            if 'name' in n:
-                node_id [i] = n['name']
-            else:
-                logger.warning (f"skipping nameless node: {n}")
-        #node_id = { i : ident for i, ident in enumerate([ n['name'] for n in nodes ]) }
-        '''
-        node_id = { name : i for i, name in enumerate([ n['id'] for n in nodes ]) }
-        for n in nodes:
-            tmp = n['id']
-            n['id'] = node_id[tmp]
-            n['name'] = tmp            
-        '''
+    
         jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.edge_list.[*]")
         edges = [ match.value for match in jsonpath_query.find (graph) ]
-        '''
-        for e in edges:
-            tmp_src = e['source_id']
-            tmp_dst = e['target_id']
-            e['source_id'] = node_id[tmp_src]
-            e['target_id'] = node_id[tmp_dst]
-        '''
         for n in nodes:
+            logger.debug (f"  --node> {n}")
             g.add_node(n['id'], attr_dict=n)
         for e in edges:
+            logger.debug (f"  --edge> {e}")
             g.add_edge (e['source_id'], e['target_id'], attr_dict=e)
         return g
     
@@ -194,13 +174,14 @@ class TranslatorGraphTools:
         return g
     
     def kgs (self, nodes=[], edges=[]):
-        """ Wrap nodes and edges in the outer layers of the KGS standard. """
+        """ Wrap nodes and edges in KGS standard. """
         return [
             {
                 "result_list": [
                     {
                         "result_graph" : {
-                            "node_list" : nodes
+                            "node_list" : nodes,
+                            "edge_list" : edges
                         }
                     }
                 ]

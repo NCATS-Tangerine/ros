@@ -9,3 +9,6 @@ def config():
 
 def test_config (config):
     assert config['USER'] == os.environ['USER']
+
+#def test_nested(config):
+#    assert config['system.

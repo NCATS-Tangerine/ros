@@ -265,18 +265,22 @@ class Workflow:
 
     """ Result management. """
     def form_key (self, job_name):
-        ''' Form the key name. '''
+        """ Form the key name. """
         return f"{self.uuid}.{job_name}.res"
     
     def set_result (self, job_name, value):
-        ''' Set the result value. '''
-        if not value:
-            raise ValueError (f"Null value set for job_name: {job_name}")
-        self.spec.get("workflow",{}).get(job_name,{})["result"] = value 
+        """ Set the result value. """
+        assert value, f"Null value set for job_name: {job_name}"
+
+        """ In memory. """
+        self.spec.get("workflow",{}).get(job_name,{})["result"] = value
+
+        """ Update the graph store. """
         self.graph_tools.to_knowledge_graph (
             in_graph = self.graph_tools.to_nx (value),
             out_graph = self.graph)
-        
+
+        """ Cache. """
         key = self.form_key (job_name)
         if not os.path.exists ('cache'):
             os.mkdir ("cache")
@@ -285,8 +289,10 @@ class Workflow:
             json.dump (value, stream, indent=2)
 
     def get_result (self, job_name):
-        ''' Get the result graph. We pass the whole graph for every graph. '''
+        """ Get the result graph. We pass the whole graph for every graph. """
         result = None
+
+        """ Cache. """
         key = self.form_key (job_name)
         if not os.path.exists ('cache'):
             os.mkdir ("cache")
@@ -294,9 +300,11 @@ class Workflow:
         if os.path.exists (fname):
             with open(fname, "r") as stream:
                 result = json.load (stream)
+
         return result
 
+    """ Query. """
     def jsonquery (self, query, obj):
+        """ Execute a jsonpath_rw query on the given object. """
         jsonpath_query = parse (query)
         return [ match.value for match in jsonpath_query.find (obj) ]
-    

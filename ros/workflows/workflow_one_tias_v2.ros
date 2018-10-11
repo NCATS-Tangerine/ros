@@ -1,0 +1,75 @@
+doc: |
+  NCATS Biomedical Translator - Workflow One
+
+import:
+  - bionames
+  - grapherator_v2
+  
+workflow:
+
+  disease_identifiers:
+    doc: |
+      Resolve an English disease name to ontology identifiers.
+    code: bionames
+    args:
+      type: disease
+      input: $disease_name
+        
+  condition_to_drug:
+    doc: |
+      Call workflow-one:modules(one,two) through a common interface.
+    code: graph-operator
+    args:
+      map:
+        disease_id: select "$.[*].result_list.[*][*].result_graph.node_list.[*].id" from $disease_identifiers
+      message:
+        question_graph:
+          nodes:
+            - id: "n00"
+              type: disease
+              curie: $disease_id
+            - id: "n01"
+              type: gene
+            - id: "n02"
+              type: genetic_condition
+        knowledge_graph:
+          nodes: select "$.[*].result_list.[*][*].result_graph.node_list.[*]" from $disease_identifiers
+      services:
+        - name: rtx
+          url: http://localhost:5003/wf1mod2and3
+
+  module_3:
+    doc: |
+      Passes the output of the disease_identifiers operator to Gamma.
+    code: gamma
+    args:
+      op: module_wf1_mod3
+      conditions: $disease_identifiers
+      
+  biothings_module_4_and_5:
+    doc: |
+      Module 5
+        * What are the common side effects of [drug]?
+        * What is the approval status of [drug]?
+        * What are the approved indications for [drug]?
+        * What is the established pharm class for [drug]?
+      Uses BioThings to get drug annotations for each drug.
+      Accepts module 1s entire graph as input.
+    code: biothings
+    args:
+      op: annotate_drugs
+      graph: $condition_to_drug
+
+  return:
+    doc: |
+      Union answers.
+    code: union
+    args:
+      elements:
+        - biothings_module_4_and_5
+        - module_3
+        
+
+
+
+              

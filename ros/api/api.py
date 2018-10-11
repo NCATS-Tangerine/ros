@@ -1,87 +1,79 @@
-#!/usr/bin/env python
-
-""" Flask REST API server """
 import argparse
-import asyncio
-import os
 import logging
-import json
-import time
-import uvloop
-from datetime import datetime
-from flask import request
-from flask_restful import Resource
-from ros.api.api_setup import api, app
+from json import loads as json_loads
+from json import dumps as json_dumps
 from ros.app import AsyncioExecutor
 from ros.workflow import Workflow
+from ros.util import LoggingUtil
+from sanic import Sanic
+from sanic.response import html, json
+from tornado.platform.asyncio import BaseAsyncIOLoop, to_asyncio_future
+from sanic_openapi import swagger_blueprint, openapi_blueprint
+from sanic_openapi import doc
 
-""" Setup the async event loop. """
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-loop = asyncio.get_event_loop()
+"""
+Models the web application programmer interface (API) to Ros knowledge network workflow engine.
+"""
 
-logger = logging.getLogger("ros-api")
+LoggingUtil.setup_logging (default_path="../logging.yaml")
+logger = logging.getLogger("api")
 
+app = Sanic(__name__)
+app.blueprint(openapi_blueprint)
+app.blueprint(swagger_blueprint)
 
-class ExecuteWorkflow(Resource):
+""" Configure API metadata. """
+app.config.API_VERSION = '1.0.0'
+app.config.API_TITLE = 'Ros API'
+app.config.API_DESCRIPTION = 'Ros Knowledge Network Workflow API'
+app.config.API_TERMS_OF_SERVICE = 'https://github.com/NCATS-Tangerine/ros'
+app.config.API_PRODUCES_CONTENT_TYPES = [ 'application/json' ]
+app.config.API_CONTACT_EMAIL = 'scox@renci.org'
+
+@app.post('/api/executeWorkflow/')
+@doc.summary("""
+   Executes a knowledge network workflow. For documentation on workflow syntax and how to subit to this endpoint, see the Ros documentation.
+   It's linked above in 'Terms of Service'."""
+)
+async def executeWorkflow(request):
     
-    """ Workflow execution and monitoring logic. """
-    
-    def post(self):
-        """
-        ExecuteWorkflow
-        ---
-        tags: [executeWorkflow]
-        summary: "Execute a Ros workflow."
-        description: ""
-        operationId: "executeWorkflow"
-        consumes:
-          - "application/json"
-        produces:
-          - "application/json"
-        parameters:
-          - in: "body"
-            name: "body"
-            description: "Workflow to be executed"
-            required: true
-            #schema:
-            #    $ref: "#/definitions/Query"
-        responses:
-            200:
-                description: "successful operation"
-                #schema:
-                #    $ref: "#/definitions/Response"
-            400:
-                description: "Invalid status value"
-        """
-        workflow_spec = request.json['workflow']        
-        logger.debug(f"Received request {workflow_spec}.")
-        print (f"Received request {json.dumps(workflow_spec,indent=2)} of type {type(workflow_spec)}.")
+    """ Gather the workflow contents from the request. """
+    workflow_spec = request.json['workflow']
+    logger.debug(f"Received workflow execution request.")
 
-        executor = AsyncioExecutor (
-            workflow=Workflow (spec=workflow_spec,
-                               inputs=request.json['args']))
-        response = loop.run_until_complete (executor.execute ())
-        return response, 200
+    """ Build an async executor passing the workflow and its arguments. """
+    executor = AsyncioExecutor (
+        workflow=Workflow (
+            spec=workflow_spec,
+            inputs=request.json['args']))
 
-api.add_resource(ExecuteWorkflow, '/executeWorkflow')
+    """ Execute the workflow coroutine asynchronously and return results when available. """
+    return json(await executor.execute ())
+
+def workaround_sanic_openapi_naming_issue ():
+    """
+    The framework renders two endpoint definitions for each actual one.
+    Workaround until a better solution's found.
+    """
+    n = {}
+    for k, v in app.router.routes_all.items ():
+        if k[:-1] in n or f"{k}/" in n:
+            continue
+        n[k] = v
+    app.router.routes_all = n
+workaround_sanic_openapi_naming_issue ()
 
 if __name__ == '__main__':
-    
-    gunicorn_logger = logging.getLogger("gunicorn.error")
-    app.logger.handlers = gunicorn_logger.handlers
-    app.logger.setLevel(gunicorn_logger.level)
-    
+
+    """ Process arguments. """
     arg_parser = argparse.ArgumentParser(
         description='Ros API',
         formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=60))
     arg_parser.add_argument('-d', '--debug', help="Debug.", action="store_false")
-    arg_parser.add_argument('-p', '--port', help="Port of the server", default="80")
+    arg_parser.add_argument('-p', '--port', help="Port of the server", default="8000")
+    arg_parser.add_argument('--host', help="Server hostname", default="0.0.0.0")
+    arg_parser.add_argument('--workers', help="Number of workers", type=int, default=1)
     args = arg_parser.parse_args ()
-    
-    server_host = '0.0.0.0'
 
-    print (f"Serving Ros API on port: {args.port}")
-    app.run(host=server_host,
-            port=args.port,
-            debug=False,
-            use_reloader=True)
+    """ Start the server. """
+    app.run(host=args.host, port=args.port, debug=args.debug, workers=args.workers)

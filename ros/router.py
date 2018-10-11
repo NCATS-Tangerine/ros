@@ -17,6 +17,7 @@ from ros.lib.biothings import Biothings
 from ros.lib.xray import XRay
 from ros.lib.ndex import NDEx
 from ros.lib.gamma import Gamma
+from ros.lib.graphoperator import GraphOperator
 
 logger = logging.getLogger("router")
 logger.setLevel(logging.WARNING)
@@ -48,13 +49,14 @@ class Router:
     """ TODO: Plugin framework to allow a profile of domain specific modules to be imported (e.g. Translator, M2M, etc) """
     def __init__(self, workflow):
         self.r = {
-            'requests'  : self.requests,
-            'biothings' : self.biothings,
-            'gamma'     : self.gamma,
-            'xray'      : self.xray,
-            'ndex'      : self.ndex,
-            'union'     : self.union,
-            'get'       : self.http_get
+            'graph-operator' : self.graph_operator,
+            'requests'       : self.requests,
+            'biothings'      : self.biothings,
+            'gamma'          : self.gamma,
+            'xray'           : self.xray,
+            'ndex'           : self.ndex,
+            'union'          : self.union,
+            'get'            : self.http_get
         }
         self.workflow = workflow
         self.create_template_adapters ()
@@ -163,6 +165,11 @@ class Router:
     
     def biothings(self, context, job_name, node, op, args):
         return Biothings ().invoke (
+            Event (context=context,
+                   node=node))
+
+    def graph_operator(self, context, job_name, node, op, args):
+        return GraphOperator ().invoke (
             Event (context=context,
                    node=node))
 

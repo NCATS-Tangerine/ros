@@ -6,8 +6,8 @@ import datetime
 import os
 from collections import namedtuple
 import copy
+import yaml
 
-#loggers = {}
 class LoggingUtil(object):
     """ Logging utility controlling format and setting initial logging level """
     @staticmethod
@@ -28,6 +28,25 @@ class LoggingUtil(object):
         logger.addHandler(handler)
         logger.setLevel(level)
         return logger
+
+    @staticmethod
+    def setup_logging(
+            default_path=os.path.join(os.path.dirname(__file__), 'logging.yaml'),
+            default_level=logging.INFO,
+            env_key='LOG_CFG'):
+        """Setup logging configuration
+        
+        """
+        path = default_path
+        value = os.getenv(env_key, None)
+        if value:
+            path = value
+        if os.path.exists(path):
+            with open(path, 'rt') as f:
+                config = yaml.safe_load(f.read())
+            logging.config.dictConfig(config)
+        else:
+            logging.basicConfig(level=default_level)
 
 class Resource:
     @staticmethod

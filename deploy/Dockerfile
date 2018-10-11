@@ -1,4 +1,4 @@
-FROM python:3.6.5
+FROM python:3.7.1
 
 RUN git clone "https://github.com/NCATS-Tangerine/ros" "ros" 2> /dev/null || (cd "ros" ; git pull)
 
@@ -32,4 +32,6 @@ ENTRYPOINT /ros/run_api.sh
 #                    --log-level debug \
 #                    --capture-output \
 #                    ros.api.api:app
+
+# PYTHONPATH=$PWD/.. gunicorn ros.api.api:app --bind 0.0.0.0:5002 --worker-class sanic.worker.GunicornWorker 
 
