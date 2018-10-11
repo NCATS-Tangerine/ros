@@ -1,6 +1,6 @@
 FROM python:3.7
 
-RUN git clone "https://github.com/NCATS-Tangerine/ros" "ros" 2> /dev/null || (cd "ros" ; git pull)
+RUN git clone "https://github.com/NCATS-Tangerine/ros" "ros" 2> /dev/null || (cd "ros" ; echo yes | git pull)
 
 WORKDIR /ros/ros
 
@@ -18,8 +18,13 @@ RUN apt-get install -y emacs24-nox
 ENV PYTHONPATH /ros
 
 ADD ./run_api.sh /ros/run_api.sh
+RUN chmod +x /ros/run_api.sh
 
 ENTRYPOINT /ros/run_api.sh
+
+
+
+
 
 #ENTRYPOINT python api/api.py --port $ROS_PORT
 
