@@ -14,6 +14,7 @@ from ros.router import Router
 from ros.workflow import Workflow
 from ros.lib.ndex import NDEx
 from ros.tasks import exec_operator
+from ros.util import JSONKit
 import asyncio
 import uvloop
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -240,11 +241,10 @@ def main ():
         
     """ NDEx output support. """
     if args.ndex_id:
-        jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph")
-        graph = [ match.value for match in jsonpath_query.find (response) ]
-        logger.debug (f"{args.ndex_id} => {json.dumps(graph, indent=2)}")
-        ndex = NDEx ()
-        ndex.publish (args.ndex_id, graph)
+        print (json.dumps (response, indent=2))
+        graph = JSONKit.select ("$.[*][*].result_list.[*][*].result_graph", response)
+        logger.debug (f"NDEx-graph({args.ndex_id})=> {json.dumps(graph, indent=2)}")
+        NDEx ().publish (args.ndex_id, graph)
 
     """ Output file. """
     if args.out:

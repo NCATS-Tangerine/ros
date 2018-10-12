@@ -6,6 +6,8 @@ import sys
 from ndex2 import create_nice_cx_from_networkx
 from ndex2.client import Ndex2
 
+#from ndex2.NiceCXNetwork import NiceCXNetwork
+
 class NDEx:
 
    """ An interface to the NDEx network catalog. """ 
@@ -55,6 +57,7 @@ class NDEx:
       
       for n in nodes:
          g.add_node(n['id'], attr_dict=n)
+         print (f"----------> {n}")
       for e in edges:
          print (f"  s: {json.dumps(e,indent=2)}")
          g.add_edge (e['source_id'], e['target_id'], attr_dict=e)

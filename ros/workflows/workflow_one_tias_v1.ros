@@ -15,10 +15,10 @@ workflow:
       type: disease
       input: $disease_name
         
-  condition_to_drug:
-    doc: |
-      Call workflow-one:modules(one,two) through a common interface.
-    code: condition_expansion_to_gene_pathway_drug
+#  condition_to_drug:
+#    doc: |
+#      Call workflow-one:modules(one,two) through a common interface.
+#    code: condition_expansion_to_gene_pathway_drug
 
   condition_to_drug:
     doc: |

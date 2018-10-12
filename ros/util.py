@@ -7,6 +7,7 @@ import os
 from collections import namedtuple
 import copy
 import yaml
+from jsonpath_rw import parse
 
 class LoggingUtil(object):
     """ Logging utility controlling format and setting initial logging level """
@@ -136,3 +137,12 @@ class Resource:
                     Resource.deepupdate(target_elements[name], src_elements[name],overwrite_keys)
                 else:
                     target.append( src_elements[name] )
+
+class JSONKit:
+    
+    """ Query. """
+    @staticmethod
+    def select (query, obj):
+        """ Execute a jsonpath_rw query on the given object. """
+        jsonpath_query = parse (query)
+        return [ match.value for match in jsonpath_query.find (obj) ]

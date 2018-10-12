@@ -2,9 +2,9 @@ FROM python:3.7
 
 RUN git clone "https://github.com/NCATS-Tangerine/ros" "ros" 2> /dev/null || (cd "ros" ; echo yes | git pull)
 
-WORKDIR /ros/ros
+WORKDIR /ros
 
-RUN pip install -r requirements.txt
+RUN pip install -r ros/requirements.txt
 
 ENV ROS_HOME /ros
 ENV ROS_PORT 5002

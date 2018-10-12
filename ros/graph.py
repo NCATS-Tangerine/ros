@@ -46,6 +46,15 @@ class TranslatorGraphTools:
                 self.coalesce_node (n, nodes, seen) for n in nodes
             ] if nn is not None
         ]
+    
+    def answer_set_to_nx (self, answers):
+        """ Compose a NetworkX graph from an answer set. """
+        result = nx.MultiDiGraph ()
+        for answer in answers:
+            g = self.to_nx (answer)
+            result = nx.compose(result, g)
+        return result
+    
     def to_nx (self, graph):
         """ Convert answer graph to NetworkX. """
         
@@ -71,8 +80,7 @@ class TranslatorGraphTools:
         id2node = {}
         for j, n in enumerate(in_graph.nodes (data=True)):
             logger.debug (f"node: {j}:{n}")
-            i, obj = n #[0]
-            #obj = n[1]
+            i, obj = n
             if not 'attr_dict' in obj:
                 continue
             attr = n[1]['attr_dict']
@@ -92,12 +100,7 @@ class TranslatorGraphTools:
             subj = id2node.get (subj_id,{}).get ('id', None)
             pred = attr['type']
             obj = id2node.get (obj_id,{}).get ('id', None)
-            '''
-            attr = e[2]['attr_dict']
-            subj = id2node.get(e[0],{}).get('id',None)
-            pred = attr['type']
-            obj = id2node.get(e[1],{}).get('id',None)
-            '''
+
             if subj == None or obj == None:
                 #logger.warning (f"Unable to create edge for badly formed nodes: sub:{e[0]} obj:{e[1]}")
                 continue
@@ -225,7 +228,7 @@ def flattenDict(d, result=None, delim='.'):
 
 
 '''
-  this response juggles which field contains the curie!
+  this response juggles which field contains the curie. eek.
 
       {
         "confidence": 2.32462976742824,
