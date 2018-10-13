@@ -295,7 +295,7 @@ source ros.env
 docker-compose up
 ```
 
-### Use From the Command Line
+### Usage - Command Line
 
   * Connect to the [local Neo4J](http://localhost:7474/browser/)
   * Connect to the API docker container
@@ -304,6 +304,23 @@ docker-compose up
   $ cd ../ros
   $ PYTHONPATH=$PWD/.. python app.py --api --workflow workflows/workflow_one.ros -l workflows -i disease_name="type 2 diabetes mellitus" --out stdout
   ```
+### Usage - Programmatic
+
+Ros can execute workflows remotely and return the resulting knowledge network. The client currently supports JSON and NetowrkX representations.
+
+  ```
+  from ros.client import Client
+ 
+  ros = Client (url="http://localhost:5002")
+  response = ros.run (workflow='workflows/workflow_one.ros',
+                      args = { "disease_name" : "type 2 diabetes mellitus" },
+                      library_path = [ 'workflows' ])
+
+  graph = response.to_nx ()    
+  for n in graph.nodes (data=True):
+      print (n)
+  ```
+
 
 ### Install
 
