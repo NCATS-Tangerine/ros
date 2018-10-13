@@ -3,7 +3,7 @@
 
 ## Overview
 
-Ros executes graphs of queries to compose knowledge networks.
+Ros executes graphs of queries to cooperatively compose knowledge networks.
 
 While the language provides common constructs supporting variables, modularity, extensibility, templates, and a type system, it is targeted at the distinctive challenges of creating **highly detailed knowledge graphs enabling reasoning and inference**.
 
