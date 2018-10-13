@@ -1,11 +1,29 @@
 
 <img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/ros.png" width="40%"></src>
 
+## Overview
+
 Ros executes graphs of queries to compose knowledge networks.
 
 While the language provides common constructs supporting variables, modularity, extensibility, templates, and a type system, it is targeted at the distinctive challenges of creating **highly detailed knowledge graphs enabling reasoning and inference**.
 
-## Language
+### Usage
+
+Here's output from a recent run of workflow_one.ros with validation enabled.
+
+It shows importing the bionames module, validating each invocation (only disease_identfiers has metadata configured).
+
+It then builds the dependency graph.
+
+Next, it executes jobs in dependency order.
+
+<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/run.png" width="100%"></src>
+
+Here's a portion of the knowledge graph created by executing the workflow:
+
+<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/wf1_output.png" width="100%"></src>
+
+## Language Reference
 
 ### Overview
 
@@ -216,22 +234,6 @@ The next step in the workflow executes the first modules of workflow one via the
 The graph argument references the output from our bionames command above as an input via a variable.
 
 For more details, see the whole [workflow](https://github.com/NCATS-Tangerine/ros/blob/master/ros/workflow_one.ros).
-
-## Output
-
-Here's output from a recent run of workflow_one.ros with validation enabled.
-
-It shows importing the bionames module, validating each invocation (only disease_identfiers has metadata configured).
-
-It then builds the dependency graph.
-
-Next, it executes jobs in dependency order.
-
-<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/run.png" width="100%"></src>
-
-Here's a portion of the knowledge graph created by executing the workflow:
-
-<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/wf1_output.png" width="100%"></src>
 
 ## Execution
 
