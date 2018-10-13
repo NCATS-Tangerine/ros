@@ -4,10 +4,14 @@ import traceback
 import unittest
 import datetime
 import os
+import re
 from collections import namedtuple
 import copy
 import yaml
 from jsonpath_rw import parse
+
+logger = logging.getLogger("util")
+logger.setLevel(logging.WARNING)
 
 class LoggingUtil(object):
     """ Logging utility controlling format and setting initial logging level """
@@ -139,10 +143,67 @@ class Resource:
                     target.append( src_elements[name] )
 
 class JSONKit:
-    
-    """ Query. """
-    @staticmethod
-    def select (query, obj):
-        """ Execute a jsonpath_rw query on the given object. """
+    """ Generic kit for sql like selects on JSON object hierarchies. """
+    def select (self, query, graph, field="type", target=None):
+        """ Query nodes by some field, matching a list of target values """
         jsonpath_query = parse (query)
-        return [ match.value for match in jsonpath_query.find (obj) ]
+        values = [ match.value for match in jsonpath_query.find (graph) ]
+        return [ val for val in values if target is None or val[field] in target ]
+
+class Syfur:
+    """
+    An intentionall bad implementation of a query language reminiscent of cypher.
+    Workflow's must be secure even posted from non-secure clients.
+    So we prevent them from executing arbitrary cppher.
+    Some of this can be achived with parameters but not all.
+    Hopefully, will be replaced by a cypher parser in the future.
+    In the meantime, we provide a basic graph query capability enabling automated validation and other features.
+
+    TODO: edges.
+    """
+    def __init__(self):
+        self.queries = {
+            "match"            : "match (obj) return {field}",
+            "match_type"       : "match (obj:{type}) return {field}",
+            "match_params"     : "match (obj{props}) return {field}",
+        }
+        self.id_pat = re.compile ("^([a-zA-Z_\.0-9]+)$")
+        self.value_pat = re.compile ("^([a-zA-Z_:\.0-9]+)$")
+        
+    def _field(self, val):
+        return val if val == "*" else f"obj.{val}"
+    def _gen(self, template, parameters):
+        logger.debug (f"syfur template: {template}, parameters: {json.dumps(parameters, indent=2)}")
+        return self.queries[template].format (**parameters)
+    
+    def parse (self, query):
+        tokens = query.split ()
+        syntax_message = "Invalid syntax. 'Query := match <filter> return <field>. Filter := arg=value. Field := <str>."
+        assert len(tokens) >= 3, syntax_message
+        assert tokens[0].lower() == 'match' and tokens[-2].lower() == 'return', syntax_message
+
+        parameters = {}
+        for t in tokens:
+            if t == 'match':
+                continue
+            if t == 'return':
+                break
+            assert '=' in t, syntax_message
+            assert not 'delete' in t and not 'detach' in t, syntax_message
+            
+            k, v = t.split ('=')
+            assert self.id_pat.match (k).groups(), syntax_message
+            assert self.value_pat.match (k).groups(), syntax_message
+
+            parameters[k] = v
+
+        field = self._field (tokens[-1])
+        assert self.id_pat.match (field), syntax_message
+
+        query_template = "match_params"
+
+        props = ",".join([f"""{k}:'{v}'""" for k, v in parameters.items() ])
+        parameters['props'] = f"{{ {props} }}" if len(props) > 0 else props
+        parameters['field'] = field
+        
+        return self._gen (query_template, parameters)

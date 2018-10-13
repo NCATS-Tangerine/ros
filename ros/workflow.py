@@ -16,6 +16,7 @@ from ros.util import Resource
 from ros.config import Config
 from ros.graph import TranslatorGraphTools
 from ros.kgraph import Neo4JKnowledgeGraph
+from ros.util import JSONKit
 
 logger = logging.getLogger("ros")
 logger.setLevel(logging.WARNING)
@@ -53,7 +54,8 @@ class Workflow:
         self.graph = Neo4JKnowledgeGraph (host=self.config.get('NEO4J_HOST', "localhost"))
         self.graph_tools = TranslatorGraphTools ()
         self.errors = []
-
+        self.json = JSONKit ()
+        
         """ Prepare to manage execution state. """
         self.execution = Execution ()
                 
@@ -303,8 +305,3 @@ class Workflow:
 
         return result
 
-    """ Query. """
-    def jsonquery (self, query, obj):
-        """ Execute a jsonpath_rw query on the given object. """
-        jsonpath_query = parse (query)
-        return [ match.value for match in jsonpath_query.find (obj) ]

@@ -1,23 +1,30 @@
 import json
+import logging
 import networkx as nx
-from jsonpath_rw import jsonpath, parse
 import os
 import sys
+from jsonpath_rw import jsonpath, parse
 from ndex2 import create_nice_cx_from_networkx
 from ndex2.client import Ndex2
+from ros.util import JSONKit
 
-#from ndex2.NiceCXNetwork import NiceCXNetwork
+logger = logging.getLogger("ndex")
+logger.setLevel(logging.WARNING)
 
 class NDEx:
 
-   """ An interface to the NDEx network catalog. """ 
+   """ An interface to the NDEx network catalog. """
+   
    def __init__(self, uri="http://public.ndexbio.org"):
-       
+
+      self.jsonkit = JSONKit ()
+      
+      """ Authenticate to NDEx based on locally stored credentials. """
       ndex_creds = os.path.expanduser("~/.ndex")
       if os.path.exists (ndex_creds):
          with open(ndex_creds, "r") as stream:
             ndex_creds_obj = json.loads (stream.read ())
-            print (f"connecting to ndex as {ndex_creds_obj['username']}")
+            logger.debug (f"connecting to ndex as {ndex_creds_obj['username']}")
             account = ndex_creds_obj['username']
             password = ndex_creds_obj['password']
       else:
@@ -33,40 +40,42 @@ class NDEx:
          networks = self.session.status.get("networkCount")
          users = self.session.status.get("userCount")
          groups = self.session.status.get("groupCount")
-         print(f"session: networks: {networks} users: {users} groups: {groups}")
+         logger.debug (f"session: networks: {networks} users: {users} groups: {groups}")
       except Exception as inst:
-         print(f"Could not access account {account}")
+         logger.error (f"Could not access account {account}")
          raise inst
       
-   def publish (self, name, graph):
-      """ Save a networkx graph to NDEx. """
-      assert name, "A name for the network is required."
+   def publish (self, event):
+      return self._publish (name=event.name, graph=event.graph)
+   
+   def _publish (self, name, graph):
+      
+      """ Save a graph to NDEx. First, validate input. """
+      assert name, "Missing required network name."
+      assert graph, "Graph must be non null. "
+      assert len(graph) > 0, "Graph may not be empty."
 
-      """ Serialize node and edge python objects. """
+      """ TODO: Use graph tools to_nx instead. """
+      """ Select pieces of interest. """
+      """ May require different handling if this needs to run as a workflow step as opposed to a CLI argument. """
+      """ answers = self.jsonkit.select (query="$.[*].result_list.[*].[*].result_graph", graph=graph) """
+      nodes = self.jsonkit.select (query="$.[*].node_list.[*].[*]", graph=graph)
+      edges = self.jsonkit.select (query="$.[*].edge_list.[*].[*]", graph=graph)
+
+      """ Create the NetworkX graph. """
       g = nx.MultiDiGraph()
-      print (f"{json.dumps (graph, indent=2)}")
-
-      
-      jsonpath_query = parse ("$.[*].node_list.[*].[*]")
-      nodes = [ match.value for match in jsonpath_query.find (graph) ]
-      print (f"{json.dumps(nodes, indent=2)}")
-
-      jsonpath_query = parse ("$.[*].edge_list.[*].[*]")
-      edges = [ match.value for match in jsonpath_query.find (graph) ]
-      print (f"{json.dumps(edges, indent=2)}")
-      
       for n in nodes:
          g.add_node(n['id'], attr_dict=n)
-         print (f"----------> {n}")
       for e in edges:
-         print (f"  s: {json.dumps(e,indent=2)}")
          g.add_edge (e['source_id'], e['target_id'], attr_dict=e)
+
+      assert len(g.nodes()) > 0, "Cannot save empty graph."
+      logger.debug (f" connected: edges: {len(g.edges())} nodes: {len(g.nodes())}")
 
       """ Convert to CX network. """
       nice_cx = create_nice_cx_from_networkx (g)
       nice_cx.set_name (name)
-      print (f" connected: edges: {len(g.edges())} nodes: {len(g.nodes())}")
-      print (nice_cx)
 
       """ Upload to NDEx. """
       upload_message = nice_cx.upload_to(self.uri, self.account, self.password)
+      logger.debug ("Upload to NDEx complete.")

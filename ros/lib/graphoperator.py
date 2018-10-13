@@ -102,7 +102,7 @@ class GraphOperator(Operator):
                         syntax_valid = True
                         resolved_source = event.context.resolve_arg (source)
                         logger.debug (f"resolved source {resolved_source} and pattern {pattern}.")
-                        response = event.context.jsonquery (
+                        response = event.context.json.select (
                             query = pattern,
                             obj = resolved_source)
                         logger.debug (f"query-result: {response}")
@@ -173,10 +173,10 @@ class GraphOperator(Operator):
         """ fancy, but broken. """
         """ Select nodes and edges from all results and aggregate. """
         responses = event.context.graph_tools.kgs (
-            nodes = event.context.jsonquery (
+            nodes = event.context.json.select (
                 query = "$.[*].result_list.[*].[*].result_graph.node_list.[*]",
                 obj = responses),
-            edges = event.context.jsonquery (
+            edges = event.context.json.select (
                 query = "$.[*].result_list.[*].[*].result_graph.edge_list.[*]",
         obj = responses))
         '''

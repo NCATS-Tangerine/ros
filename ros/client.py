@@ -6,7 +6,6 @@ import logging.config
 from jsonpath_rw import jsonpath, parse
 from ros.router import Router
 from ros.workflow import Workflow
-from ros.util import JSONKit
 
 logger = logging.getLogger("client")
 logger.setLevel(logging.WARNING)
@@ -51,6 +50,7 @@ class Client:
                 }).json ())
 
 def main ():
+    
     workflow = 'workflows/workflow_one.ros'
     args = {
         "disease_name" : "type 2 diabetes mellitus",

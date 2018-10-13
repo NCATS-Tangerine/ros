@@ -44,11 +44,11 @@ loggers:
     handlers: [console]
     propagate: no
   kgraph:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: no
   graph:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: no
   graphOperator:
@@ -69,7 +69,11 @@ loggers:
     level: WARNING
     handlers: [console]
     propagate: no
-
+  validate:
+    level: DEBUG
+    handlers: [console]
+    propagage: no
+    
 root:
-    level: INFO
+    level: WARNING
     handlers: [console, info_file_handler, error_file_handler]

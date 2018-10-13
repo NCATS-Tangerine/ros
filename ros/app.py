@@ -9,7 +9,8 @@ import sys
 import time
 import yaml
 from types import SimpleNamespace
-from jsonpath_rw import jsonpath, parse
+#from jsonpath_rw import jsonpath, parse
+from ros.client import Client
 from ros.router import Router
 from ros.workflow import Workflow
 from ros.lib.ndex import NDEx
@@ -22,6 +23,7 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 logger = logging.getLogger("runner")
 logger.setLevel(logging.WARNING)
 
+'''
 def execute_remote (workflow="mq2.ros", host="localhost", port=8080, args={}, library_path=["."]):
     """ Execute the workflow remotely via a web API. """
     logger.debug (f"execute remote: {workflow} libpath: {library_path} port: {port} host: {host} args: {args}")
@@ -35,6 +37,7 @@ def execute_remote (workflow="mq2.ros", host="localhost", port=8080, args={}, li
             "workflow" : workflow.spec,
             "args"     : args
         }).json ()
+'''
 
 def run_job(j, wf_model, asynchronous=False):
     wf_model.topsort.remove (j)
@@ -197,40 +200,40 @@ def start_task_queue ():
 def main ():
     arg_parser = argparse.ArgumentParser(
         description='Ros Workflow CLI',
-        formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=60))
-    arg_parser.add_argument('-a', '--api', help="Execute via API instead of locally.", action="store_true")
-    arg_parser.add_argument('-w', '--workflow', help="Workflow to execute.", default="mq2.ros")
-    arg_parser.add_argument('-s', '--server', help="Hostname of api server", default="http://localhost")
-    arg_parser.add_argument('-p', '--port', help="Port of the server", default="80")
+        formatter_class=lambda prog: argparse.ArgumentDefaultsHelpFormatter(prog, max_help_position=60))
+#        formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=60))
+    arg_parser.add_argument('-a', '--api', help="URL of the remote Ros server to use.", action="store_true")
+    arg_parser.add_argument('-w', '--workflow', help="Workflow to execute.", default="workflow_one.ros")
+    arg_parser.add_argument('-s', '--server', help="Hostname of api server", default="http://localhost:5002")
+#    arg_parser.add_argument('-p', '--port', help="Port of the server", default="80")
     arg_parser.add_argument('-i', '--arg', help="Add an argument expressed as key=val", action='append', default=[])
     arg_parser.add_argument('-o', '--out', help="Output the workflow result graph to a file. Use 'stdout' to print to terminal.")
-    arg_parser.add_argument('-l', '--lib_path', help="A directory containing workflow modules.", action='append', default=["."])
-    arg_parser.add_argument('-n', '--ndex_id', help="Publish the graph to NDEx")
+    arg_parser.add_argument('-l', '--libpath', help="A directory containing workflow modules.", action='append', default=["."])
+    arg_parser.add_argument('-n', '--ndex', help="Name of the graph to publish to NDEx. Requires valid ~/.ndex credential file.")
     arg_parser.add_argument('--validate', help="Validate inputs and outputs", action="store_true")
     args = arg_parser.parse_args ()
 
     setup_logging ()
-
-    #start_task_queue ()
     
     """ Parse input arguments. """
     wf_args = { k : v for k, v in [ arg.split("=") for arg in args.arg ] }
     response = None
     if args.api:
+
+        """ Use the Ros client to run a workflow remotely. """
+        client = Client (url=args.server)
+        ros_result = client.run (workflow=args.workflow,
+                                 args=wf_args,
+                                 library_path=args.libpath)
+        response = ros_result.result
         
-        """ Invoke a remote API endpoint. """
-        response = execute_remote (workflow=args.workflow,
-                                   host=args.server,
-                                   port=args.port,
-                                   args=wf_args,
-                                   library_path=args.lib_path)
     else:
         
-        """ Execute via python async. """
+        """ Execute locally via python async. """
         executor = AsyncioExecutor (
             workflow=Workflow.get_workflow (workflow=args.workflow,
                                             inputs=wf_args,
-                                            library_path=args.lib_path))
+                                            library_path=args.libpath))
         tasks = [
             asyncio.ensure_future (executor.execute ())
         ]
@@ -239,20 +242,20 @@ def main ():
         
         response = tasks[0].result ()
         
-    """ NDEx output support. """
-    if args.ndex_id:
-        print (json.dumps (response, indent=2))
-        graph = JSONKit.select ("$.[*][*].result_list.[*][*].result_graph", response)
-        logger.debug (f"NDEx-graph({args.ndex_id})=> {json.dumps(graph, indent=2)}")
-        NDEx ().publish (args.ndex_id, graph)
+    if args.ndex:
+        """ Output to NDEx. """
+        jsonkit = JSONKit ()
+        graph = jsonkit.select ("$.[*][*].result_list.[*][*].result_graph", response)
+        logger.debug (f"Publishing result as NDEx graph({args.ndex})=> {json.dumps(graph, indent=2)}")
+        NDEx ()._publish (args.ndex, graph)
 
-    """ Output file. """
     if args.out:
+        """ Write to a file, possibly standard ouput. """
         if args.out == "stdout":
-            logger.debug (f"{json.dumps(response, indent=2)}")
+            print (f"{json.dumps(response, indent=2)}")
         else:
             with open(args.out, "w") as stream:
-                stream.write (json.dumps(response, indent=2))
+                json.dump (response, indent=2)
             
 if __name__ == '__main__':
     main ()

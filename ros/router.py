@@ -18,6 +18,7 @@ from ros.lib.xray import XRay
 from ros.lib.ndex import NDEx
 from ros.lib.gamma import Gamma
 from ros.lib.graphoperator import GraphOperator
+from ros.lib.validate import Validate
 
 logger = logging.getLogger("router")
 logger.setLevel(logging.WARNING)
@@ -50,6 +51,7 @@ class Router:
     def __init__(self, workflow):
         self.r = {
             'graph-operator' : self.graph_operator,
+            'validate'       : self.validate,
             'requests'       : self.requests,
             'biothings'      : self.biothings,
             'gamma'          : self.gamma,
@@ -118,6 +120,7 @@ class Router:
         """ Do an HTTP GET. """
         event = Event (context, node)
         url = event.pattern.format (**event.node['args'])
+        logger.debug ("http-get: url:{url} rename:{event.rename}")
         response = nodes=requests.get(
                 url = url,
                 headers = {
@@ -129,12 +132,13 @@ class Router:
             foreach = v['foreach']
             old = v['old']
             new = v['new']
-            targets = event.context.jsonquery (query = foreach, obj = response)
+            #targets = event.select (query = foreach, graph = response)
             for r in response:
+                logger.debug (f"rename {old} to {new} in {r}")
                 if not new in r and old in r:
                     r[new] = r[old]
                     del r[old]
-
+        logger.debug (f"http response: {response}")
         return context.graph_tools.kgs (response)
 
     def requests (self, context, job_name, node, op, args):
@@ -173,6 +177,17 @@ class Router:
             Event (context=context,
                    node=node))
 
+    def ndex(self, context, job_name, node, op, args):
+        return NDEx ().invoke (
+            Event (context=context,
+                   node=node))
+    
+    def validate(self, context, job_name, node, op, args):
+        return Validate ().invoke (
+            Event (context=context,
+                   node=node))
+
+    '''
     def ndex (self, context, job_name, node):
         graph_obj = context.resolve_arg (graph)
         jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph")
@@ -181,3 +196,4 @@ class Router:
         ndex = NDEx ()
         if op == "publish":
             ndex.publish (key, graph)
+    '''

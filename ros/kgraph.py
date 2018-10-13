@@ -112,6 +112,8 @@ class Neo4JKnowledgeGraph:
                     response.append (self.node2json (v))
                 elif isinstance (v, Relationship):
                     response.append (self.edge2json (v))
+                elif isinstance (v, str):
+                    response.append (v)
         logger.debug (f"query: {response}")
         return response
     
@@ -125,8 +127,6 @@ class Neo4JKnowledgeGraph:
         """ Create a generic node given a set of properties and a node type. """
         id = properties['id']
         ntype = f":{node_type}" if node_type else ""
-        #properties = ",".join([f""" {k} : "{v}" """ for k, v in properties.items()])
-        #statement = f"""CREATE (n{ntype} {{ {properties} }}) RETURN n"""
         props = ",".join([f""" n.{k}="{v}" """ for k, v in properties.items() if not k == 'id'])
         statement = f"""MERGE (n{ntype} {{ id : "{id}" }}) SET {props}"""
         logger.debug (f"create: stmt:{statement}")
