@@ -29,6 +29,7 @@ setup(
     ]},
     version = '${version}',
     description = 'Ros Knowledge Network',
+    long_description = "Description",
     author = 'Steve Cox',
     author_email = 'scox@renci.org',
     install_requires = requirements,
