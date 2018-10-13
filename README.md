@@ -345,26 +345,36 @@ To save a workflow to NDEx.
 
 ### Help
 
-```
-$ ros flow --help
-usage: run_tasks.py [-h] [-a] [-w WORKFLOW] [-s SERVER] [-p PORT] [-i ARG]
-                    [-o OUT] [-l LIB_PATH] [-n NDEX_ID] [--validate]
 
-Ros Workflow CLI
-
-optional arguments:
-  -h, --help                        show this help message and exit
-  -a, --api                         Execute via API instead of locally.
-  -w WORKFLOW, --workflow WORKFLOW  Workflow to execute.
-  -s SERVER, --server SERVER        Hostname of api server
-  -p PORT, --port PORT              Port of the server
-  -i ARG, --arg ARG                 Add an argument expressed as key=val
-  -o OUT, --out OUT                 Output the workflow result graph to a
-                                    file. Use 'stdout' to print to terminal.
-  -l LIB_PATH, --lib_path LIB_PATH  A directory containing workflow modules.
-  -n NDEX_ID, --ndex_id NDEX_ID     Publish the graph to NDEx
-  --validate                        Validate inputs and outputs
   ```
+  $ PYTHONPATH=$PWD/.. python app.py --help
+  usage: app.py [-h] [-a] [-w WORKFLOW] [-s SERVER] [-i ARG] [-o OUT]
+                [-l LIBPATH] [-n NDEX] [--validate]
+
+  Ros Workflow CLI
+
+  optional arguments:
+    -h, --help                        show this help message and exit
+    -a, --api                         URL of the remote Ros server to use.
+                                      (default: False)
+    -w WORKFLOW, --workflow WORKFLOW  Workflow to execute. (default:
+                                      workflow_one.ros)
+    -s SERVER, --server SERVER        Hostname of api server (default:
+                                      http://localhost:5002)
+    -i ARG, --arg ARG                 Add an argument expressed as key=val
+                                      (default: [])
+    -o OUT, --out OUT                 Output the workflow result graph to a
+                                      file. Use 'stdout' to print to terminal.
+                                      (default: None)
+    -l LIBPATH, --libpath LIBPATH     A directory containing workflow modules.
+                                      (default: ['.'])
+    -n NDEX, --ndex NDEX              Name of the graph to publish to NDEx.
+                                      Requires valid ~/.ndex credential file.
+                                      (default: None)
+    --validate                        Validate inputs and outputs (default:
+                                      False)
+
+    ```
   
 ## Next
 
