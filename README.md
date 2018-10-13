@@ -1,11 +1,50 @@
 
 <img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/ros.png" width="40%"></src>
 
-Ros executes graphs of queries to compose knowledge networks.
+## Overview
+
+Ros executes graphs of queries to cooperatively compose knowledge networks.
 
 While the language provides common constructs supporting variables, modularity, extensibility, templates, and a type system, it is targeted at the distinctive challenges of creating **highly detailed knowledge graphs enabling reasoning and inference**.
 
-## Language
+### Usage
+
+Ros is in very early development and is changing rapidly.
+
+Running a workflow locally from the command line produces output like this:
+
+<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/run.png" width="100%"></src>
+
+And builds this knowledge graph:
+
+<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/wf1_output.png" width="100%"></src>
+
+- [Overview](#overview)
+  * [Usage](#usage)
+- [Language Reference](#language-reference)
+  * [Overview](#overview-1)
+  * [Variables](#variables)
+  * [Operators](#operators)
+  * [Graphs](#graphs)
+  * [Metadata](#metadata)
+  * [Templates](#templates)
+  * [Modules](#modules)
+- [Putting it All Together](#putting-it-all-together)
+  * [1. Define A Template](#1-define-a-template)
+  * [2. Optionally Model Input and Output Types](#2-optionally-model-input-and-output-types)
+  * [3. Build the Workflow](#3-build-the-workflow)
+- [Execution](#execution)
+- [Getting Started](#getting-started)
+  * [Docker](#docker)
+    + [Requirements](#requirements)
+    + [Start](#start)
+  * [Usage - Command Line](#usage---command-line)
+  * [Usage - Programmatic](#usage---programmatic)
+  * [Install](#install)
+  * [NDEx](#ndex)
+  * [Help](#help)
+
+## Language Reference
 
 ### Overview
 
@@ -61,9 +100,9 @@ It also includes certain Translator specific modules. In the future, these will 
 
 Ros provides graphs in two basic modalities:
 
-* **Results**: Results of previous workflow steps can be referenced as variables passed to subsequent steps. This graph can be queried using JSON Path query syntax. The following example uses the jsonquery facility in the Ros framework to query a variable called *condition*:
+* **Results**: Results of previous workflow steps can be referenced as variables passed to subsequent steps. This graph can be queried using JSON Path query syntax. The following example uses the json select facility in the Ros framework to query a variable called *condition*:
    ```
-   diseases = event.context.jsonquery (
+   diseases = event.select (
             query = "$.[*].result_list.[*].[*].result_graph.node_list.[*]",
             obj = event.conditions)
    ```
@@ -106,10 +145,19 @@ A library path like those featured in other high level programming languages gov
 
 Here's a usage example to put all of this in context.
 
-To begin with, here is a template called bionames.
+### 1. Define A Template
 
-* It extends the builtin `get` operator and sets the `pattern` argument to a defined value.
+We begin with the common use case of converting user supplied text into ontology identifiers. We create a template task for this purpose.
+
+* It extends the builtin `get` http operator and sets the `pattern` argument to a defined value.
 * It's saved to a file called `bionames.ros` in a directory that's on the library path.
+
+The bionames template is now a reusable component that can be imported into a variety of workflows.
+
+### 2. Optionally Model Input and Output Types
+
+Though currently optional, the template also specifies
+
 * The `meta` tag describes metadata about the operator.
 * The `main` operator is used when no sub-operators are specified.
 * Each operator has input and output sections.
@@ -161,6 +209,8 @@ types:
     extends: primitive
 ```
 
+### 3. Build the Workflow
+
 Next, we import the template above into a workflow definition.
 
 ```
@@ -182,13 +232,11 @@ workflow:
 ...
 ```
 
-Within the workflow section, the first operator names the imported bionames template as the job to execute.
+The `disease_identifiers` task instantiates the bionames template. It supplies the required arguments, including resolving the `disease_name` input argument specific to this workflow.
 
-It also populates the type and input arguments required by the template.
+Once this module has executed, subsequent steps can reference the graph it produced via the variable `$disease_identifiers`.
 
-Executing this module will produce a JSON object that can be referenced elsewhere in the workflow as `$disease_identifiers`.
-
-The next step in the workflow executes the first modules of workflow one via the XRay reasoner:
+The next step in the workflow makes use of this by referencing the output of our template invocation. The workflow engine sees this reference and makes the new job depend on the referenced job. This is how the job DAG governing execution order is calculated.
 
 ```
   condition_to_drug:
@@ -213,25 +261,7 @@ The next step in the workflow executes the first modules of workflow one via the
       graph: $disease_identifiers
 ```
 
-The graph argument references the output from our bionames command above as an input via a variable.
-
 For more details, see the whole [workflow](https://github.com/NCATS-Tangerine/ros/blob/master/ros/workflow_one.ros).
-
-## Output
-
-Here's output from a recent run of workflow_one.ros with validation enabled.
-
-It shows importing the bionames module, validating each invocation (only disease_identfiers has metadata configured).
-
-It then builds the dependency graph.
-
-Next, it executes jobs in dependency order.
-
-<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/run.png" width="100%"></src>
-
-Here's a portion of the knowledge graph created by executing the workflow:
-
-<img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/wf1_output.png" width="100%"></src>
 
 ## Execution
 
@@ -239,46 +269,64 @@ For all workflows, the engine builds a directed acyclic graph (DAG) of jobs by e
 
 A topological sort of the jobs provides the execution order.
 
-There are two basic execution modes.
+Execution is asynchronous. To the extent you subscribe to the [semantic distinction between 'concurrent' and 'parallel'](https://softwareengineering.stackexchange.com/questions/190719/the-difference-between-concurrent-and-parallel-execution) workflow execution is concurrent but not parallel.
 
-* **Synchronous** Jobs run one at a time. This is currently disabled but the plan is to reintroduce it as a debugging aid.
-* **Asynchronous** Asynchronous execution is concurrent but not parallel. This is handled via Python's **asyncio**. This means multiple operations are able to make progress during the same time window. But it does not mean that the operations literally execute (run CPU operations) simultaneously. Because most Ros operations are I/O bound rather than CPU bound, this will likely be enough for a while. Several tasks can wait for an HTTP request to return while others use the processor to handle results. 
+The current implementation uses Python's [asyncio](https://docs.python.org/3/library/asyncio.html). This means multiple operations are able to make progress during the same time window. But it does not mean that the operations literally execute (run CPU operations) simultaneously. The current profile of operations is I/O bound rather than CPU bound so this approach is likely to be enough for a while. Several tasks can wait for an HTTP request to return while others use the processor to handle results.
+
+The API also handles requests asynchronously using [Sanic](https://github.com/huge-success/sanic) and [Tornado](https://www.tornadoweb.org/en/stable/) 
 
 ## Getting Started
 
 ### Docker
 
-**Requirements:**
+#### Requirements
 
-  * A running Docker service.
-  * Git installed.
-  * Ports 7474, 7687, and 5002 open.
+  * Docker
+  * Docker Compose (included with Docker on Mac)
+  * Git
+  * Ports 7474, 7687, and 5002 available
 
-**Start:**
+#### Start
 
 ```
 git clone git@github.com:NCATS-Tangerine/ros.git
 cd ros/deploy
+source ros.env
 docker-compose up
 ```
 
-**Use:** 
+### Usage - Command Line
 
   * Connect to the [local Neo4J](http://localhost:7474/browser/)
   * Connect to the API docker container
-  ```
-  $ docker exec -it deploy_ros_1 bash
-  ```
   * Run a workflow via the API. 
   ```
-  $ python app.py --api --port 5002 --workflow workflows/workflow_one.ros -l workflows -i disease_name="type 2 diabetes mellitus" --out stdout
+  $ cd ../ros
+  $ PYTHONPATH=$PWD/.. python app.py --api --workflow workflows/workflow_one.ros -l workflows -i disease_name="type 2 diabetes mellitus" --out stdout
   ```
+### Usage - Programmatic
+
+Ros can execute workflows remotely and return the resulting knowledge network. The client currently supports JSON and NetowrkX representations.
+
+  ```
+  from ros.client import Client
+ 
+  ros = Client (url="http://localhost:5002")
+  response = ros.run (workflow='workflows/workflow_one.ros',
+                      args = { "disease_name" : "type 2 diabetes mellitus" },
+                      library_path = [ 'workflows' ])
+
+  graph = response.to_nx ()    
+  for n in graph.nodes (data=True):
+      print (n)
+  ```
+
 
 ### Install
 
 **Requirements:**
 
-  * Python >3.6.5
+  * Python >3.7.x
   * Neo4J >3.3.4
   
 **Steps:**
@@ -291,50 +339,57 @@ $ ros --help
 $ ros --workflow workflow_one.ros --arg disease_name="diabetes mellitus type 2" -l workflows
 ```
 
-**Note**: Currently, the Python ndex2 client depends on an old version of NetworkX that's incompatible with Ros. A new version is expected soon. They can be used together but the install process is a bit more complicated than above.
-
 ### NDEx
 
-Save a workflow to NDEx:
+To save a workflow to NDEx.
 
-Create an NDEx account.
+  * Create an NDEx account.
+  * Create an ~/.ndex credential file like this:
 
-Create an ~/.ndex credential file like this:
+    ```
+    {
+      "username" : "<username>",
+      "password" : "<password>"
+    }
+    ```
+  * Run the workflow with NDEx output:
 
-```
-{
-  "username" : "<username>",
-  "password" : "<password>"
-}
-```
+    ```
+    ros flow --workflow workflow_one.ros --out output.json --ndex wf1
+    ```
 
-Run the workflow with NDEx output:
+### Help
 
-```
-ros flow --workflow workflow_one.ros --out output.json --ndex_id wf1
-```
 
-Help:
-```
-$ ros flow --help
-usage: run_tasks.py [-h] [-a] [-w WORKFLOW] [-s SERVER] [-p PORT] [-i ARG]
-                    [-o OUT] [-l LIB_PATH] [-n NDEX_ID] [--validate]
-
-Ros Workflow CLI
-
-optional arguments:
-  -h, --help                        show this help message and exit
-  -a, --api                         Execute via API instead of locally.
-  -w WORKFLOW, --workflow WORKFLOW  Workflow to execute.
-  -s SERVER, --server SERVER        Hostname of api server
-  -p PORT, --port PORT              Port of the server
-  -i ARG, --arg ARG                 Add an argument expressed as key=val
-  -o OUT, --out OUT                 Output the workflow result graph to a
-                                    file. Use 'stdout' to print to terminal.
-  -l LIB_PATH, --lib_path LIB_PATH  A directory containing workflow modules.
-  -n NDEX_ID, --ndex_id NDEX_ID     Publish the graph to NDEx
-  --validate                        Validate inputs and outputs
   ```
+  $ PYTHONPATH=$PWD/.. python app.py --help
+  usage: app.py [-h] [-a] [-w WORKFLOW] [-s SERVER] [-i ARG] [-o OUT]
+                [-l LIBPATH] [-n NDEX] [--validate]
+
+  Ros Workflow CLI
+
+  optional arguments:
+    -h, --help                        show this help message and exit
+    -a, --api                         URL of the remote Ros server to use.
+                                      (default: False)
+    -w WORKFLOW, --workflow WORKFLOW  Workflow to execute. (default:
+                                      workflow_one.ros)
+    -s SERVER, --server SERVER        Hostname of api server (default:
+                                      http://localhost:5002)
+    -i ARG, --arg ARG                 Add an argument expressed as key=val
+                                      (default: [])
+    -o OUT, --out OUT                 Output the workflow result graph to a
+                                      file. Use 'stdout' to print to terminal.
+                                      (default: None)
+    -l LIBPATH, --libpath LIBPATH     A directory containing workflow modules.
+                                      (default: ['.'])
+    -n NDEX, --ndex NDEX              Name of the graph to publish to NDEx.
+                                      Requires valid ~/.ndex credential file.
+                                      (default: None)
+    --validate                        Validate inputs and outputs (default:
+                                      False)
+
+    ```
   
 ## Next
 
