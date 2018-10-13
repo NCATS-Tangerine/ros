@@ -19,6 +19,31 @@ And builds this knowledge graph:
 
 <img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/wf1_output.png" width="100%"></src>
 
+- [Overview](#overview)
+  * [Usage](#usage)
+- [Language Reference](#language-reference)
+  * [Overview](#overview-1)
+  * [Variables](#variables)
+  * [Operators](#operators)
+  * [Graphs](#graphs)
+  * [Metadata](#metadata)
+  * [Templates](#templates)
+  * [Modules](#modules)
+- [Putting it All Together](#putting-it-all-together)
+  * [1. Define A Template](#1-define-a-template)
+  * [2. Optionally Model Input and Output Types](#2-optionally-model-input-and-output-types)
+  * [3. Build the Workflow](#3-build-the-workflow)
+- [Execution](#execution)
+- [Getting Started](#getting-started)
+  * [Docker](#docker)
+    + [Requirements](#requirements)
+    + [Start](#start)
+  * [Use From the Command Line](#use-from-the-command-line)
+  * [Install](#install)
+  * [NDEx](#ndex)
+  * [Help](#help)
+- [Next](#next)
+
 ## Language Reference
 
 ### Overview
