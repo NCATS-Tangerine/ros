@@ -7,7 +7,8 @@ set -x
 
 write_setup_config () {
 cat <<EOF > setup.py
-from distutils.core import setup
+#from distutils.core import setup
+from setuptools import setup
 
 # read the contents of your README file
 from os import path
@@ -37,7 +38,7 @@ setup(
     version = '${version}',
     description = 'Ros Knowledge Network',
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type='text/plain',
     author = 'Steve Cox',
     author_email = 'scox@renci.org',
     install_requires = requirements,
