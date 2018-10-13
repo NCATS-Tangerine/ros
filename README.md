@@ -9,17 +9,11 @@ While the language provides common constructs supporting variables, modularity, 
 
 ### Usage
 
-Here's output from a recent run of workflow_one.ros with validation enabled.
-
-It shows importing the bionames module, validating each invocation (only disease_identfiers has metadata configured).
-
-It then builds the dependency graph.
-
-Next, it executes jobs in dependency order.
+Running a workflow locally from the command line produces output like this:
 
 <img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/run.png" width="100%"></src>
 
-Here's a portion of the knowledge graph created by executing the workflow:
+And builds this knowledge graph:
 
 <img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/wf1_output.png" width="100%"></src>
 
