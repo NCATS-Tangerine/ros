@@ -9,7 +9,7 @@ While the language provides common constructs supporting variables, modularity, 
 
 ### Usage
 
-Ros is in very early development and is changing rapidly.
+Ros is new and is changing frequently.
 
 Running a workflow locally from the command line produces output like this:
 
