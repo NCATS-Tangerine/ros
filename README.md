@@ -299,12 +299,10 @@ docker-compose up
 
   * Connect to the [local Neo4J](http://localhost:7474/browser/)
   * Connect to the API docker container
-  ```
-  $ docker exec -it deploy_ros_1 bash
-  ```
   * Run a workflow via the API. 
   ```
-  $ python app.py --api --port 5002 --workflow workflows/workflow_one.ros -l workflows -i disease_name="type 2 diabetes mellitus" --out stdout
+  $ cd ../ros
+  $ PYTHONPATH=$PWD/.. python app.py --api --workflow workflows/workflow_one.ros -l workflows -i disease_name="type 2 diabetes mellitus" --out stdout
   ```
 
 ### Install
@@ -340,7 +338,7 @@ To save a workflow to NDEx.
   * Run the workflow with NDEx output:
 
     ```
-    ros flow --workflow workflow_one.ros --out output.json --ndex_id wf1
+    ros flow --workflow workflow_one.ros --out output.json --ndex wf1
     ```
 
 ### Help
