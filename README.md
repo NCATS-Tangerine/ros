@@ -38,11 +38,11 @@ And builds this knowledge graph:
   * [Docker](#docker)
     + [Requirements](#requirements)
     + [Start](#start)
-  * [Use From the Command Line](#use-from-the-command-line)
+  * [Usage - Command Line](#usage---command-line)
+  * [Usage - Programmatic](#usage---programmatic)
   * [Install](#install)
   * [NDEx](#ndex)
   * [Help](#help)
-- [Next](#next)
 
 ## Language Reference
 
