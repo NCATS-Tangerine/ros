@@ -38,7 +38,7 @@ setup(
     version = '${version}',
     description = 'Ros Knowledge Network',
     long_description=long_description,
-    long_description_content_type='text/plain',
+    long_description_content_type='text/markdown',
     author = 'Steve Cox',
     author_email = 'scox@renci.org',
     install_requires = requirements,
