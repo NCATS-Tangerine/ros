@@ -143,7 +143,7 @@ A library path like those featured in other high level programming languages gov
 
 ### Automated Validation
 
-When a workflow has run, we'd like to run validations that test the integrity of the answer we got. In this first Ros version, we support a limited form of automated validation. The limits have to do with making Ros a secure. Since we execute queries remotely, it is not realistic to execute arbitrary graph queries posted from the internet. Instead, we provide a limited query syntax that still allows us to do a lot of validation. The query syntax is called Syfur - a less capable query system reminiscent of Cypher.
+When a workflow has run, we'd like to run validations that test the integrity of the answer we got. In this first Ros version, we support a limited form of automated validation. The limitations are motivated by making Ros secure. Since we execute queries remotely, it's not realistic to run arbitrary graph queries posted from clients on the internet. Instead, we provide a limited query syntax that still allows us to do a lot of validation. The query syntax is called Syfur - a less capable query system reminiscent of Cypher.
 
 The example below from workflow_one shows Syfur's usage.
 
@@ -427,8 +427,7 @@ To save a workflow to NDEx.
                                       (default: None)
     --validate                        Validate inputs and outputs (default:
                                       False)
-
-    ```
+  ```
   
 ## Next
 
