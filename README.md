@@ -9,8 +9,6 @@ While the language provides common constructs supporting variables, modularity, 
 
 ### Usage
 
-Ros is new and is changing frequently.
-
 Running a workflow locally from the command line produces output like this:
 
 <img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/run.png" width="100%"></src>
