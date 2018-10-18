@@ -114,7 +114,7 @@ class TranslatorGraphTools:
                                     obj=obj,
                                     props=attr)
             
-    def to_knowledge_graph0 (self, in_graph, out_graph, graph_label=None):
+    def to_knowledge_graph_kgx (self, in_graph, out_graph, graph_label=None):
         """ Integrate kgx once it's ported to networkx 2.2 """
         id2node = {}
         for n in in_graph.nodes (data=True):
