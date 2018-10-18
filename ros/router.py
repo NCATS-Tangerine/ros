@@ -52,20 +52,32 @@ class Router:
     """ Route operator invocations through a common interface. """
     """ TODO: Plugin framework to allow a profile of domain specific modules to be imported (e.g. Translator, M2M, etc) """
     def __init__(self, workflow):
+        self.workflow = workflow
         self.r = {
+            '''
             'graph-operator' : self.graph_operator,
             'bionames'       : self.bionames,
             'icees'          : self.icees,
-            'validate'       : self.validate,
-            'requests'       : self.requests,
             'biothings'      : self.biothings,
             'gamma'          : self.gamma,
             'xray'           : self.xray,
             'ndex'           : self.ndex,
+            '''
+            'validate'       : self.validate,
+            'requests'       : self.requests,
             'union'          : self.union,
             'get'            : self.http_get
         }
-        self.workflow = workflow
+
+        logger.debug (f"  --libraries:")
+        for plugin in self.workflow.plugins:
+            libraries = plugin.libraries ()
+            for libname in libraries:
+                lib = self.workflow.load_and_instantiate (libname)
+                self.r[lib.name] = lambda context, job_name, node, op, args:\
+                                   lib.invoke (Event (context=context, node=node))
+                logger.debug (f"    --lib: {libname}@{plugin.name} loaded.")
+        
         self.create_template_adapters ()
         self.cache = Cache ()
         
@@ -159,7 +171,7 @@ class Router:
             maq = MaQ ()
             questions = maq.parse (event.MaQ, self.workflow)
             for question in questions:
-                #logger.debug (f"Requests.POST: {json.dumps(question, indent=2)}")
+                logger.debug (f"Requests.POST: {json.dumps(question, indent=2)}")
                 response = requests.post(
                     url = url,
                     json = question,

@@ -210,12 +210,18 @@ class Syfur:
         return self._gen (query_template, parameters)
 
 class Context:
-    def resolve(self, val):
-        return {
+    """ A trivial context implementation. """
+    def __init__(self):
+        self.mem = {
             "$drugs" : [ "curie:1234", "curie:4567", "curie:1341" ],
-            "$disease" : "curie:7890"
-        }.get (val, None) if val.startswith ("$") else val
-    
+            "$disease" : "curie:7890",
+            "$diseases" : [ "curie:9999", "curie:129191", "curie:234535" ]
+        }
+    def resolve_arg(self, val):
+        return self.mem.get (val, None) if val.startswith ("$") else val
+    def set(self, name, val):
+        self.mem[name] = val
+        
 class Concept:
     def __init__(self, name):
         self.name = name

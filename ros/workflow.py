@@ -1,4 +1,5 @@
 import argparse
+import importlib
 import json
 import logging
 import requests
@@ -56,10 +57,21 @@ class Workflow:
         self.graph_tools = TranslatorGraphTools ()
         self.errors = []
         self.json = JSONKit ()
-        
+
         """ Prepare to manage execution state. """
         self.execution = Execution ()
-                
+
+        self.plugins = []
+        """ Load plugins. """
+        plugin_config = self.config["plugins"]
+        for plugin_def in plugin_config:
+            name = plugin_def['name']
+            driver = self.load_and_instantiate (plugin_def['driver'])
+            self.plugins.append (driver)
+            workflows = driver.workflows ()
+            logger.debug (f"Connecting {name}: {driver}")
+            logger.debug (f"  --workflows: {workflows}")
+
         """ Resolve imports. """
         self.resolve_imports ()
 
@@ -73,6 +85,16 @@ class Workflow:
         self.create_dag ()
 
         self.enforce_specification ()
+        
+    def load_and_instantiate (self, class_name):
+        module_name = ".".join (class_name.split(".")[:-1])
+
+        class_name = class_name.split(".")[-1]
+        
+        """Constructor"""
+        module = importlib.import_module(module_name)
+        the_class = getattr(module, class_name)
+        return the_class()
         
     def enforce_specification (self):
         """ Define the beginnings of a language specification. """

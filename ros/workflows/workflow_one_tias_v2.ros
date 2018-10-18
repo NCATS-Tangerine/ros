@@ -39,7 +39,7 @@ workflow:
           nodes: select "$.[*].result_list.[*][*].result_graph.node_list.[*]" from $disease_identifiers
       services:
         - name: rtx
-          url: http://localhost:5003/wf1mod2and3
+          url: http://localhost:5003/wf1mod1and2
 
   module_3:
     doc: |
