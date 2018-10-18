@@ -230,7 +230,12 @@ class Router:
         logger.debug (f"requests.response: {json.dumps(result,indent=2)}")
         return result
     
-        
+    def validate(self, context, job_name, node, op, args):
+        return Validate ().invoke (
+            Event (context=context,
+                   node=node))
+    
+    '''
     def xray(self, context, job_name, node, op, args):
         return XRay ().invoke (
             event=Event (context=context,
@@ -256,11 +261,6 @@ class Router:
             Event (context=context,
                    node=node))
     
-    def validate(self, context, job_name, node, op, args):
-        return Validate ().invoke (
-            Event (context=context,
-                   node=node))
-    
     def bionames(self, context, job_name, node, op, args):
         return Bionames ().invoke (
             Event (context=context,
@@ -270,5 +270,5 @@ class Router:
         return Icees ().invoke (
             Event (context=context,
                    node=node))
-
+    '''
 
