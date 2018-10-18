@@ -9,8 +9,6 @@ While the language provides common constructs supporting variables, modularity, 
 
 ### Usage
 
-Ros is new and is changing frequently.
-
 Running a workflow locally from the command line produces output like this:
 
 <img src="https://github.com/NCATS-Tangerine/ros/blob/master/media/run.png" width="100%"></src>
@@ -141,6 +139,45 @@ External modules can be loaded via the `import` tag.
 
 A library path like those featured in other high level programming languages governs where libraries are loaded from.
 
+### Automated Validation
+
+When a workflow has run, we'd like to run validations that test the integrity of the answer we got. In this first Ros version, we support a limited form of automated validation. The limitations are motivated by making Ros secure. Since we execute queries remotely, it's not realistic to run arbitrary graph queries posted from clients on the internet. Instead, we provide a limited query syntax that still allows us to do a lot of validation. The query syntax is called Syfur - a less capable query system reminiscent of Cypher.
+
+The example below from workflow_one shows Syfur's usage.
+
+  ```
+  automated_validation:
+    doc: |
+      Automated Validation
+         We can test the knowledge network with constraints including all, match, and none.
+         The depends arg ensures the validation runs only after the graph is built.
+         Each test has a name, documentation, a query, and an operator defining the constraint to enforce
+      Syfur
+         A principal virtue of Ros is the ability to remotely execute workflows.
+         To make this possible, it must be secured against remote code execution attacks
+         This includes cypher injection.
+         It may be possible to accomplish some of this in other ways, but for now, we provide Syfur
+         Syfur is a restricted DSL that translates to a subset of Cypher. See examples below.
+    code: validate
+    args:
+      depends: $biothings_module_4_and_5
+      tests:
+        test_type_2_diabetes_exists:
+          doc: Ensure type 2 diabetes mellitus and other conditions are present.
+          items: "match type=disease return id"
+          all: [ "OMIM:600001", "MONDO:0005148", "DOID:9352" ]
+        test_pioglitazone:
+          doc: Test attributes of a specific chemical. Ensure type 2 diabetes mellitus is present.
+          items: "match type=chemical_substance id=CHEMBL.COMPOUND:CHEMBL595 return node_attributes"
+          match:
+            - .*Thiazolidinedione.*
+            - ".*{'name': 'EPC', 'value': 'Peroxisome Proliferator Receptor gamma Agonist'}.*"
+        test_absence_of_something:
+          doc: Verify there is none of something in our graph.
+          items: "match return id"
+          none: [ 'BAD:123' ]
+  ```
+   
 ## Putting it All Together
 
 Here's a usage example to put all of this in context.
@@ -388,8 +425,7 @@ To save a workflow to NDEx.
                                       (default: None)
     --validate                        Validate inputs and outputs (default:
                                       False)
-
-    ```
+  ```
   
 ## Next
 
