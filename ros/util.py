@@ -1,3 +1,4 @@
+import copy
 import logging
 import json
 import traceback
@@ -207,3 +208,140 @@ class Syfur:
         parameters['field'] = field
         
         return self._gen (query_template, parameters)
+
+class Context:
+    def resolve(self, val):
+        return {
+            "$drugs" : [ "curie:1234", "curie:4567", "curie:1341" ],
+            "$disease" : "curie:7890"
+        }.get (val, None) if val.startswith ("$") else val
+    
+class Concept:
+    def __init__(self, name):
+        self.name = name
+        self.nodes = []
+            
+class MaQ:
+    def __init__(self):
+        """ Extract values within parantheses someplace in a string. """
+        self.paren = re.compile("^.*\(([\\\\$a-zA-Z0-9_]+)\).*$")
+
+        """ Map a few shortcut names to common biolink model concepts. Ok, there's really just one annoying one. """
+        self.shortcuts = {
+            "chem" : "chemical_substance",
+        }
+
+    def question (self, nodes, edges):
+        return {
+            "machine_question": {
+                "edges": edges,
+                "nodes": nodes
+            }
+        }
+    def edge (self, source, target, type_name=None):
+        e = {
+            "source_id": source,
+            "target_id": target
+        }
+        if type_name:
+            e["type_name"] = type_name
+        return e
+    def node (self, identifier, type_name, value=None):
+        logger.debug (f"value -> {value}")
+        n = {
+            "id": identifier,
+            "type": type_name
+        }
+        if value:
+            n ['curie'] = value 
+        return n
+
+    def val(self, value, field="id"):
+        result = value
+        if isinstance(value, dict) and field in value:
+            result = value[field]
+        return result
+    
+    def parse (self, query, context):
+        """ chem($drugs)->gene->disease($disease) """
+        """ eventually: chem($drugs)-[$predicates]->gene->[$gd_preds]->disease($disease) """
+        
+        if isinstance(query, list):
+            return [ question for sublist in [ self.parse (q, context) for q in query ] for question in sublist ]
+
+        concepts = query.split ("->")
+        logger.debug (f"concepts: {concepts}")
+        concept_order = []
+        concept_map = {}
+        for index, concept in enumerate(concepts):
+            if '(' in concept:
+                """ This concept is parameterized. """
+                name = concept.split ('(')[0]
+                name = self.shortcuts.get (name, name)
+                logger.debug (f"concept name concept: {concept} ===> {name}")
+                concept_order.append (name)
+                
+                """ Match and extract the parameters. """
+                val = self.paren.match (concept).groups()[0]
+                value = context.resolve_arg (val)
+                concept_map[name] = Concept (name)
+                
+                if isinstance (value,list):
+                    """ It's a list. Build the set and permute. """
+                    concept_map[name].nodes = [ self.node (
+                        identifier = index,
+                        type_name = name,
+                        value = self.val(v)) for v in value ]
+                elif isinstance (value, str):
+                    concept_map[name].nodes = [ self.node (
+                        identifier = index,
+                        type_name = name,
+                        value = self.val(value)) ]
+            else:
+                name = self.shortcuts.get (concept, concept)
+                concept_order.append (name)
+                concept_map[name] = Concept (name)
+                concept_map[name].nodes = [ self.node (
+                    identifier = index,
+                    type_name = name) ]
+            
+        edges = []
+        questions = []
+        for index, name in enumerate (concept_order):
+            concept = concept_map [name]
+            logger.debug (f"concept: {concept}")
+            previous = concept_order[index-1] if index > 0 else None
+            if index == 0:
+                for node in concept.nodes:
+                    """ Model the first step. """
+                    questions.append (self.question (
+                        nodes = [ node ],
+                        edges = []))
+            else:
+                new_questions = []
+                for question in questions:
+                    logger.debug (f"question: {question}")
+                    for node in concept.nodes:
+                        """ Permute each question. """
+                        nodes = copy.deepcopy (question["machine_question"]['nodes'])
+                        lastnode = nodes[-1]
+                        nodes.append (node)
+                        edges = copy.deepcopy (question["machine_question"]['edges'])
+                        edges.append (self.edge (
+                            source=lastnode['id'],
+                            target=node['id']))
+                        new_questions.append (self.question (
+                            nodes = nodes,
+                            edges = edges))
+                        #logger.debug (f"-------------------------------------------------")
+                        #logger.debug (f"new_questions: {json.dumps(new_questions, indent=2)}")
+                questions = new_questions
+
+        return questions
+                
+                
+if __name__ == '__main__':
+    m = MaQ ()
+    c = Context ()
+    m.parse ("""chem($drugs)->gene->disease($disease) """, c)
+    

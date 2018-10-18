@@ -136,7 +136,7 @@ class Neo4JKnowledgeGraph:
     def create_relationship(self, id_a, properties, id_b):
         """ Create a relationship between two nodes given id and type for each end of the relationship and
         properties for the relationship itself. """
-        relname = properties['type']
+        relname = properties['type'].replace('-','_')
         rprops = ",".join([f""" {k} : "{v}" """ for k, v in properties.items() if not k == "name"])
         result = self.exec(
             f"""MATCH (a {{ id: "{id_a}" }})-[:{relname} {{ {rprops} }}]->(b {{ id : "{id_b}" }}) RETURN *""")

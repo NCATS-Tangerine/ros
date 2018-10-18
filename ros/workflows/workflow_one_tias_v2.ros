@@ -1,5 +1,8 @@
-doc: |
-  NCATS Biomedical Translator - Workflow One
+ros: 0.1
+info:
+  version: 0.0.1
+  title: Ros Workflow One
+  description: A workflow orchestrating the construction and validation of a graphical knowledge network.
 
 import:
   - bionames

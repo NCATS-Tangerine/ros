@@ -1,0 +1,78 @@
+ros: 0.1
+info:
+  version: 0.0.1
+  title: Ros Workflow One
+  description: |
+    A workflow orchestrating the construction and validation of a graphical knowledge network aimed at addressing these questions.
+    CQ1. Among pediatric patients with an asthma-like phenotype, is exposure to particulate matter <=2.5 micrometers in diameter (PM2.5)
+         and [exposure to] ozone associated with responsiveness to treatment? (In other words, are exposures higher in patients who are
+         non-responsive to treatment than in patients who are responsive to treatment?)
+    CQ2. What protein (gene) targets and biological pathways are activated or inhibited by PM2.5 and ozone?
+    CQ3. What pediatric medications are available that act on the protein (gene) targets and biological pathways that are activated or
+         inhibited by PM2.5 and ozone exposure?
+    CQ4. Which medications are currently prescribed to pediatric patients with an asthma-like phenotype who are responsive to treatment
+         despite high levels of exposure to PM2.5 and ozone?
+    CQ5. What is the protein (gene) target and biological pathway of medications currently prescribed to patients with an asthma-like
+         phenotype who are responsive to treatment despite high levels of exposure to PM2.5 and ozone?
+
+workflow:
+
+  disease_ids:
+    doc: Resolve an English disease name to ontology identifiers.
+    code: bionames
+    args:
+      type: disease
+      input: $disease_name
+
+  drug_ids:
+    doc: Resolve drug names to identifiers.
+    code: bionames
+    args:
+      type: chemical_substance
+      input: $drug_name
+
+  particulate_matter_ids:
+    doc: Get particulate matter ids
+    code: bionames
+    args:
+      type: chemical_substance
+      input: particulate matter
+
+#  chemical_to_gene_to_disease:
+#    doc: Build a graph of chemical-gene-disease associations.
+#    code: requests
+#    args:
+#      depends:
+#        - $disease_ids
+#        - $drug_ids
+#        - $particulate_matter_ids
+#      pattern: http://robokop.renci.org:6011/api/now?max_results=250
+#      MaQ:
+#        - chemical_substance($drug_ids)->gene->disease($disease_ids)
+#        - chemical_substance($particulate_matter_ids)->gene->disease($disease_ids)
+
+  icees_overlay:
+    doc: Augment graph with ICEES clinical data.
+    code: icees
+    args:
+      #depends: $chemical_to_gene_to_disease
+      cohort:
+        - AvgDailyPM2.5Exposure > 2
+#        - TotalEDInpatientVisits < 2
+      associations_to_all_features:
+        feature: TotalEDInpatientVisits < 2
+        max_p_value: 0.1
+        
+  return:
+    doc: Union answers.
+    code: union
+    args:
+      elements:
+        - icees_overlay
+        #- chemical_to_gene_to_disease
+        
+        
+
+
+
+              

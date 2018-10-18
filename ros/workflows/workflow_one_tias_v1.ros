@@ -1,5 +1,8 @@
-doc: |
-  NCATS Biomedical Translator - Workflow One
+ros: 0.1
+info:
+  version: 0.0.1
+  title: Ros Workflow One
+  description: A workflow orchestrating the construction and validation of a graphical knowledge network.
 
 import:
   - bionames
@@ -15,11 +18,6 @@ workflow:
       type: disease
       input: $disease_name
         
-#  condition_to_drug:
-#    doc: |
-#      Call workflow-one:modules(one,two) through a common interface.
-#    code: condition_expansion_to_gene_pathway_drug
-
   condition_to_drug:
     doc: |
       Call workflow-one:modules(one,two) through a common interface.

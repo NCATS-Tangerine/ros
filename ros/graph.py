@@ -29,6 +29,7 @@ class TranslatorGraphTools:
     def coalesce_node (self, node, all_nodes, seen):
         """ Merge all_nodes into node. """
         result = None
+        logger.debug (node)
         n_id = node['id']
         if not n_id in seen:
             seen[n_id] = n_id

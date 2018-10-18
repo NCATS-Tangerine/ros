@@ -46,7 +46,7 @@ class GraphOperator(Operator):
         }
         update (response, values)
         return response
-    
+    '''
     def resolve(self, d, event, loop, index):
         result = d
         if isinstance(d, list):
@@ -69,7 +69,7 @@ class GraphOperator(Operator):
                 else:
                     result[k] = v
         return result
-
+    '''
     def resolve(self, d, event, loop, index):
         result = d
         if isinstance(d, list):
@@ -104,7 +104,7 @@ class GraphOperator(Operator):
                         logger.debug (f"resolved source {resolved_source} and pattern {pattern}.")
                         response = event.context.json.select (
                             query = pattern,
-                            obj = resolved_source)
+                            graph = resolved_source)
                         logger.debug (f"query-result: {response}")
             if not syntax_valid:
                 logger.error (f"Incorrectly formatted statement: {value}. Supported syntax is 'select <pattern> from <variable>'.")
@@ -119,7 +119,7 @@ class GraphOperator(Operator):
         responses = []
         loop = { k : self.resolve_query(v, event) for k, v in event.map.items () }
 
-        """ Recursively process messages replacing variables, executing queries. """
+        """ Process messages replacing variables, executing queries. """
         messages = []
         for index in range(0, len(loop)):
             archetype = self.new_message (event.message)

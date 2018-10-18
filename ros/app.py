@@ -9,7 +9,6 @@ import sys
 import time
 import yaml
 from types import SimpleNamespace
-#from jsonpath_rw import jsonpath, parse
 from ros.client import Client
 from ros.router import Router
 from ros.workflow import Workflow
@@ -22,22 +21,6 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 logger = logging.getLogger("runner")
 logger.setLevel(logging.WARNING)
-
-'''
-def execute_remote (workflow="mq2.ros", host="localhost", port=8080, args={}, library_path=["."]):
-    """ Execute the workflow remotely via a web API. """
-    logger.debug (f"execute remote: {workflow} libpath: {library_path} port: {port} host: {host} args: {args}")
-    workflow = Workflow (
-        spec=workflow,
-        inputs=args,
-        libpath=library_path)
-    return requests.post (
-        url = f"{host}:{port}/api/executeWorkflow",
-        json = {
-            "workflow" : workflow.spec,
-            "args"     : args
-        }).json ()
-'''
 
 def run_job(j, wf_model, asynchronous=False):
     wf_model.topsort.remove (j)
@@ -97,16 +80,15 @@ class AsyncioExecutor:
             topsort = self.workflow.topsort.copy ()
             pending = topsort.copy ()
             for j in topsort:
-                logger.debug (f" -sched: {j}")
                 
                 if j in self.workflow.execution.done or j in self.workflow.execution.running:
                     """ If running or done, it doesn't need further scheduling. """
                     continue
                 
                 dependencies = self.workflow.dependencies[j]
-                logger.debug (f"   done: {self.workflow.execution.done.keys ()} deps: {dependencies}")                
+                logger.debug (f"   this:{j}, done:{[ d for d in self.workflow.execution.done.keys ()]} deps:{dependencies}")                
                 if len(dependencies) == 0 or all ([ d in self.workflow.execution.done for d in dependencies ]):
-                    """ Has no dependencies or they're all completed. Execute this task. """
+                    """ Has no dependencies or they're all completed. Execute this task. Use Python async for concurrency. """
                     task = asyncio.ensure_future (exec_async (self.workflow, j))
                     self.workflow.execution.running[j] = task
                     pending.remove (j)
@@ -201,11 +183,9 @@ def main ():
     arg_parser = argparse.ArgumentParser(
         description='Ros Workflow CLI',
         formatter_class=lambda prog: argparse.ArgumentDefaultsHelpFormatter(prog, max_help_position=60))
-#        formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=60))
     arg_parser.add_argument('-a', '--api', help="URL of the remote Ros server to use.", action="store_true")
     arg_parser.add_argument('-w', '--workflow', help="Workflow to execute.", default="workflow_one.ros")
     arg_parser.add_argument('-s', '--server', help="Hostname of api server", default="http://localhost:5002")
-#    arg_parser.add_argument('-p', '--port', help="Port of the server", default="80")
     arg_parser.add_argument('-i', '--arg', help="Add an argument expressed as key=val", action='append', default=[])
     arg_parser.add_argument('-o', '--out', help="Output the workflow result graph to a file. Use 'stdout' to print to terminal.")
     arg_parser.add_argument('-l', '--libpath', help="A directory containing workflow modules.", action='append', default=["."])
@@ -255,7 +235,7 @@ def main ():
             print (f"{json.dumps(response, indent=2)}")
         else:
             with open(args.out, "w") as stream:
-                json.dump (response, indent=2)
+                json.dump (response, stream, indent=2)
             
 if __name__ == '__main__':
     main ()

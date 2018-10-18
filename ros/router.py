@@ -13,12 +13,15 @@ from jsonpath_rw import jsonpath, parse
 from ros.config import Config
 from ros.framework import Event
 from ros.framework import Operator
+from ros.lib.bionames import Bionames
 from ros.lib.biothings import Biothings
 from ros.lib.xray import XRay
 from ros.lib.ndex import NDEx
 from ros.lib.gamma import Gamma
+from ros.lib.icees import Icees
 from ros.lib.graphoperator import GraphOperator
 from ros.lib.validate import Validate
+from ros.util import MaQ
 
 logger = logging.getLogger("router")
 logger.setLevel(logging.WARNING)
@@ -51,6 +54,8 @@ class Router:
     def __init__(self, workflow):
         self.r = {
             'graph-operator' : self.graph_operator,
+            'bionames'       : self.bionames,
+            'icees'          : self.icees,
             'validate'       : self.validate,
             'requests'       : self.requests,
             'biothings'      : self.biothings,
@@ -99,12 +104,15 @@ class Router:
             }
             """ Call the operator. """
             key = f"{job_name}-{op_node['code']}_{op_node['args'].get('op','')}"
+            '''
+            '''
             if key in self.cache:
                 result = self.cache[key]
             else:
                 result = self.r[op](**arg_list)
                 self.cache[key] = result
-                
+
+            #result = self.r[op](**arg_list)                
             text = self.short_text (str(result))
             
             logger.debug (f"    --({job_name}[{op_node['code']}.{op_node['args'].get('op','')}])>> {text}")
@@ -142,20 +150,74 @@ class Router:
         return context.graph_tools.kgs (response)
 
     def requests (self, context, job_name, node, op, args):
+        """ Generic HTTP utility. """
+        result = None
         event = Event (context, node)
         url = event.pattern.format (**event.node['args'])
-        return context.graph_tools.kgs (
-            nodes=requests.post(
+        if event.MaQ:
+            responses = []
+            maq = MaQ ()
+            questions = maq.parse (event.MaQ, self.workflow)
+            for question in questions:
+                #logger.debug (f"Requests.POST: {json.dumps(question, indent=2)}")
+                response = requests.post(
+                    url = url,
+                    json = question,
+                    headers = {
+                        'accept': 'application/json'
+                    })
+                """ Check status and handle response. """
+                if response.status_code == 200 or response.status_code == 202:
+                    responses.append (response.json ())
+                else:
+                    logger.warning (f"error {response.status_code} processing MaQ request: {question}")
+                    print (response.text)
+                    #raise ValueError (response.text)
+
+            edges = []
+            nodes = []
+            for r in responses:
+                # gamma:
+                if 'answers' in r:
+                    for answer in r['answers']:
+                        nodes = nodes + answer['nodes']
+                        edges = edges + answer['edges']
+                # others
+                if not 'result_list' in r:
+                    continue
+                for g in r['result_list']:
+                    print (json.dumps(g, indent=2))
+                    edges = edges + g['result_graph']['edge_list']
+                    nodes = nodes + g['result_graph']['node_list']
+            result = self.workflow.graph_tools.kgs (nodes = nodes, edges = edges)
+
+        elif event.body:
+            """ Handle POST. May need to tag more explicitly. """
+            response = requests.post(
                 url = url,
-                data = event.body,
+                json = event.body,
                 headers = {
                     'accept': 'application/json'
-                }).json ()) if event.body else context.graph_tools.kgs (
-                    nodes=requests.get(
-                        url = url,
-                        headers = {
-                            'accept': 'application/json'
-                        }).json ())
+                })
+            if response.status_code == 200 or response.status_code == 202:
+                result = response.json ()
+            else:
+                raise ValueError (response.text)
+        else:
+            """ Handle GET request. """
+            response = requests.get(
+                url = url,
+                headers = {
+                    'accept': 'application/json'
+                })
+            if response.status_code == 200 or response.status_code == 202:
+                result = response.json ()
+            else:
+                raise ValueError (response.text)
+
+        logger.debug (f"requests.response: {json.dumps(result,indent=2)}")
+        return result
+    
         
     def xray(self, context, job_name, node, op, args):
         return XRay ().invoke (
@@ -186,14 +248,15 @@ class Router:
         return Validate ().invoke (
             Event (context=context,
                    node=node))
+    
+    def bionames(self, context, job_name, node, op, args):
+        return Bionames ().invoke (
+            Event (context=context,
+                   node=node))
 
-    '''
-    def ndex (self, context, job_name, node):
-        graph_obj = context.resolve_arg (graph)
-        jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph")
-        graph = [ match.value for match in jsonpath_query.find (graph_obj) ]
-        print (f"{key} => {json.dumps(graph, indent=2)}")
-        ndex = NDEx ()
-        if op == "publish":
-            ndex.publish (key, graph)
-    '''
+    def icees(self, context, job_name, node, op, args):
+        return Icees ().invoke (
+            Event (context=context,
+                   node=node))
+
+

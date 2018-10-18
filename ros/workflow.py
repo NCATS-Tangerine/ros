@@ -3,6 +3,7 @@ import json
 import logging
 import requests
 import os
+import re
 import sys
 import yaml
 import time
@@ -71,6 +72,32 @@ class Workflow:
         """ Create the directed acyclic graph of the workflow. """
         self.create_dag ()
 
+        self.enforce_specification ()
+        
+    def enforce_specification (self):
+        """ Define the beginnings of a language specification. """
+
+        """ Must include a version. For now, there is only one. """
+        assert self.spec.get ('ros') == 0.1
+
+        """ Validate workflow object. """
+        workflow = self.spec.get ('workflow', {})
+        assert len(workflow) > 0, "Workflow element exists but contains no steps."
+
+        """ Validate information section. """
+        info = self.spec.get ("info", {})
+        assert info, "Missing 'info' section."
+        version = info.get ("version")
+        assert version, "Missing info version "
+        assert re.match("^\d+?\.\d+?.\d+?$", version), "Version is not a float."
+
+        title = info.get ("title")
+        assert isinstance(title, str), "Title is not valid."
+
+        description = info.get ("description")
+        assert isinstance(description, str), "Description is not valid."
+
+        
     def create_dag (self):
         """ Examine job dependencies and create a directed acyclic graph of jobs in the workflow. """
         logger.debug ("dag")        
@@ -305,3 +332,44 @@ class Workflow:
 
         return result
 
+    """ Manage variable and query resolution generically. """
+    
+    def resolve(self, d, event, loop, index):
+        result = d
+        if isinstance(d, list):
+            result = [ self.resolve(e, event, loop, index) for e in d ]
+        elif isinstance(d, dict):
+            for k, v in d.items():
+                result[k] = self.resolve(v, event, loop, index)
+        elif isinstance(d, str):
+            if d.startswith('$'):
+                key = d[1:]
+                obj = loop[key][index] if key in loop and len(loop[key]) > index else None 
+                if not obj:
+                    obj = event.context.resolve_arg (d)
+                result = obj
+            elif d.startswith('select '):
+                result = self.resolve_query (d, event)
+        return result
+
+    def resolve_query (self, value, event):
+        """ Resolve arguments, including select statements, into values. """
+        response = value
+        if isinstance(value, str):
+            syntax_valid = False
+            tokens = value.split (" ")
+            if len(tokens) == 4:
+                select_keyword, pattern, from_keyword, source = tokens
+                if select_keyword == 'select' and from_keyword == 'from':
+                    pattern = pattern.strip ('"')
+                    if source.startswith ("$"):
+                        syntax_valid = True
+                        resolved_source = event.context.resolve_arg (source)
+                        logger.debug (f"resolved source {resolved_source} and pattern {pattern}.")
+                        response = event.context.json.select (
+                            query = pattern,
+                            graph = resolved_source)
+                        logger.debug (f"query-result: {response}")
+            if not syntax_valid:
+                logger.error (f"Incorrectly formatted statement: {value}. Supported syntax is 'select <pattern> from <variable>'.")
+        return response

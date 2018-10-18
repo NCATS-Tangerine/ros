@@ -81,3 +81,11 @@ class Gamma(Operator):
     def wf1_module3 (self, graph):
         pass #curl -X GET "http://robokop.renci.org/api/wf1mod3a/DOID:9352/?max_results=5" -H "accept: application/json"
 
+    def invoke (self, event):
+        url = "http://robokop.renci.org:6011/api/now?max_results=250"
+        response = requests.post (
+            url = url,
+            data = machine_question,
+            headers = { "Content-Type" : "application/json" }).json ()
+
+

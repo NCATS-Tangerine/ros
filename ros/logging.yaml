@@ -48,19 +48,23 @@ loggers:
     handlers: [console]
     propagate: no
   graph:
-    level: INFO
+    level: DEBUG
     handlers: [console]
     propagate: no
   graphOperator:
-    level: DEBUG
+    level: WARNING
     handlers: [console]
     propagate: no
   runner:
-    level: DEBUG
+    level: WARNING
     handlers: [console]
     propagate: no
   tasks:
     level: WARNING
+    handlers: [console]
+    propagate: no
+  util:
+    level: DEBUG
     handlers: [console]
     propagate: no
 
@@ -73,6 +77,10 @@ loggers:
     level: DEBUG
     handlers: [console]
     propagage: no
+  icees:
+    level: DEBUG
+    handlers: [console]
+    propagate: no
     
 root:
     level: WARNING
