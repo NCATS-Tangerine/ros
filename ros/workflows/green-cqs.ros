@@ -38,24 +38,24 @@ workflow:
       type: chemical_substance
       input: particulate matter
 
-  chemical_to_gene_to_disease:
-    doc: Build a graph of chemical-gene-disease associations.
-    code: requests
-    args:
-      depends:
-        - $disease_ids
-        - $drug_ids
-        - $particulate_matter_ids
-      pattern: http://robokop.renci.org:6011/api/now?max_results=250
-      MaQ:
-        - chemical_substance($drug_ids)->gene->disease($disease_ids)
-        - chemical_substance($particulate_matter_ids)->gene->disease($disease_ids)
+#  chemical_to_gene_to_disease:
+#    doc: Build a graph of chemical-gene-disease associations.
+#    code: requests
+#    args:
+#      depends:
+#        - $disease_ids
+#        - $drug_ids
+#        - $particulate_matter_ids
+#      url: http://robokop.renci.org:6011/api/now?max_results=250
+#      MaQ:
+#        - chemical_substance($drug_ids)->gene->disease($disease_ids)
+#        - chemical_substance($particulate_matter_ids)->gene->disease($disease_ids)
 
   clinical_observations:
     doc: Augment graph with ICEES clinical data.
     code: icees
     args:
-      depends: $chemical_to_gene_to_disease
+ #     depends: $chemical_to_gene_to_disease
       cohort:
         - AvgDailyPM2.5Exposure > 2
       associations_to_all_features:
@@ -68,7 +68,7 @@ workflow:
     args:
       elements:
         - clinical_observations
-        - chemical_to_gene_to_disease
+#        - chemical_to_gene_to_disease
         
         
 

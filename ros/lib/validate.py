@@ -18,7 +18,16 @@ class Validate (Operator):
         """ Execute validations. """
 
         result = {}
-        for name, assertion in event.tests.items ():
+
+        """ Test activation condition. """
+        var = event.context.resolve_arg (event.when['var'])
+        val = event.when['val']
+        if not var == val:
+            logger.info (f"Skipping validation. Unmet condition: {var} == {val}.")
+            return result
+
+        """ Activation condition met. Execute validation. """
+        for name, assertion in event.then.items ():
             logger.info (f"Validator running test {name}: {assertion['doc']}")
             items = event.context.graph.query (self.syfur.parse (assertion['items']))
 
@@ -41,4 +50,4 @@ class Validate (Operator):
                 for n in none_op:
                     assert n not in items, f"Found element {n} which must not appear in items {items}."
                 result['none'] = 'success'
-        return event.context.graph_tools.kgs (nodes=[])
+        return event.context.graph.tools.kgs (nodes=[])

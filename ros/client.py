@@ -3,9 +3,12 @@ import os
 import requests
 import logging
 import logging.config
+import networkx as nx
+from node2vec import Node2Vec
 from jsonpath_rw import jsonpath, parse
 from ros.router import Router
 from ros.workflow import Workflow
+from ros.csvargs import CSVArgs
 
 logger = logging.getLogger("client")
 logger.setLevel(logging.WARNING)
@@ -20,7 +23,7 @@ class WorkflowResult:
         self.result = result
     def to_nx (self):
         """ Use Ros graph tools to compose a NetworkX object from the workflowanswer set. """
-        return self.workflow.graph_tools.answer_set_to_nx (self.result)
+        return self.workflow.graph.tools.answer_set_to_nx (self.result)
     
 class Client:
     """ A Ros client to make getting a network from a workflow easier. """
@@ -39,6 +42,8 @@ class Client:
             inputs=args,
             libpath=library_path)
 
+        print (workflow.spec)
+        
         """ Execute the workflow remotely and return both the workflow object and the response we got. """
         return WorkflowResult (
             workflow = workflow,
@@ -48,7 +53,16 @@ class Client:
                     "workflow" : workflow.spec,
                     "args"     : args
                 }).json ())
-
+'''
+def learn_embeddings(walks):
+    """
+    Learn embeddings by optimizing the Skipgram objective using SGD.
+    """
+    walks = [map(str, walk) for walk in walks]
+    model = Word2Vec(walks, size=args.dimensions, window=args.window_size, min_count=0, sg=1, workers=args.workers, iter=args.iter)
+    model.save_word2vec_format(args.output)
+    return
+'''    
 def main ():
     
     workflow = 'workflows/workflow_one.ros'
@@ -68,6 +82,38 @@ def main ():
     graph = response.to_nx ()    
     for n in graph.nodes (data=True):
         print (n)
-                
+
+
+
+    n2v = Node2Vec (graph, dimensions=128, walk_length=80,
+                    num_walks=10, p=1, q=1, weight_key='weight',
+                    workers=1, sampling_strategy=None, quiet=False)
+    model = n2v.fit ()
+
+def main2 ():
+
+    args_list = CSVArgs ('test.csv')
+    workflow = 'workflows/m2m_models_v1.ros'
+    libpath = [ 'workflows' ]
+
+    """ Build graph. """
+    g = nx.MultiDiGraph ()
+    for args in args_list.vals: 
+        ros = Client (url="http://localhost:5002")
+        response = ros.run (workflow=workflow,
+                            args = args,
+                            library_path = libpath)
+        
+        print (json.dumps (response.result, indent=2))
+        response_nx = response.to_nx ()
+        print (f"read {len(response_nx.nodes())} nodes and {len(response_nx.edges())} edges.")
+        g = nx.compose (g, response.to_nx ())
+
+    """ Calulate node embeddings. """
+    n2v = Node2Vec (g, dimensions=128, walk_length=80,
+                    num_walks=10, p=1, q=1, weight_key='weight',
+                    workers=1, sampling_strategy=None, quiet=False)
+    model = n2v.fit ()
+    
 if __name__ == '__main__':
-    main ()
+    main2 ()

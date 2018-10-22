@@ -46,41 +46,49 @@ class Cache:
         path = self._cpath (k)
         with open (path, "w") as stream:
             json.dump (v, stream, indent=2)
-            
+
+""" Keep logging to a reasonable level. """
+first_router = True
+
 class Router:
 
-    """ Route operator invocations through a common interface. """
-    """ TODO: Plugin framework to allow a profile of domain specific modules to be imported (e.g. Translator, M2M, etc) """
+    """
+    Route operator invocations through a common interface.
+    These may be core operators defined in the framework. 
+    Or operators defined in an extension module.
+    """
+
     def __init__(self, workflow):
         self.workflow = workflow
         self.r = {
-            '''
-            'graph-operator' : self.graph_operator,
-            'bionames'       : self.bionames,
-            'icees'          : self.icees,
-            'biothings'      : self.biothings,
-            'gamma'          : self.gamma,
-            'xray'           : self.xray,
-            'ndex'           : self.ndex,
-            '''
-            'validate'       : self.validate,
             'requests'       : self.requests,
+            'validate'       : self.validate,
             'union'          : self.union,
             'get'            : self.http_get
         }
 
-        logger.debug (f"  --libraries:")
+        global first_router
+        if first_router:
+            logger.debug (f"  --libraries:")
         for plugin in self.workflow.plugins:
             libraries = plugin.libraries ()
             for libname in libraries:
-                lib = self.workflow.load_and_instantiate (libname)
-                self.r[lib.name] = lambda context, job_name, node, op, args:\
-                                   lib.invoke (Event (context=context, node=node))
-                logger.debug (f"    --lib: {libname}@{plugin.name} loaded.")
+                lib = self.workflow.instantiate (libname)
+                invoker = self.create_plugin_invoker (libname) #, context, job_name, node, op, args)
+                self.r[lib.name] = invoker
+                if first_router:
+                    logger.debug (f"    --lib: {libname}@{plugin.name} loaded.")
+        first_router = False
         
         self.create_template_adapters ()
         self.cache = Cache ()
-        
+
+    def create_plugin_invoker (self, libname): #, context, job_name, node, op, args):
+        def invoker (context, job_name, node, op, args):
+            lib = self.workflow.instantiate (libname)
+            return lib.invoke (Event (context=context, node=node))
+        return invoker
+    
     def create_template_adapters (self):
         """ Plug in template instances that define new operators. """
         for name, template in self.workflow.spec.get("templates", {}).items ():
@@ -116,15 +124,14 @@ class Router:
             }
             """ Call the operator. """
             key = f"{job_name}-{op_node['code']}_{op_node['args'].get('op','')}"
-            '''
-            '''
+
             if key in self.cache:
                 result = self.cache[key]
             else:
+                logger.debug (f"invoking {op} {self.r[op]}")
                 result = self.r[op](**arg_list)
                 self.cache[key] = result
 
-            #result = self.r[op](**arg_list)                
             text = self.short_text (str(result))
             
             logger.debug (f"    --({job_name}[{op_node['code']}.{op_node['args'].get('op','')}])>> {text}")
@@ -159,13 +166,13 @@ class Router:
                     r[new] = r[old]
                     del r[old]
         logger.debug (f"http response: {response}")
-        return context.graph_tools.kgs (response)
+        return context.graph.tools.kgs (response)
 
     def requests (self, context, job_name, node, op, args):
         """ Generic HTTP utility. """
         result = None
         event = Event (context, node)
-        url = event.pattern.format (**event.node['args'])
+        url = event.url.format (**event.node['args'])
         if event.MaQ:
             responses = []
             maq = MaQ ()
@@ -201,7 +208,7 @@ class Router:
                     print (json.dumps(g, indent=2))
                     edges = edges + g['result_graph']['edge_list']
                     nodes = nodes + g['result_graph']['node_list']
-            result = self.workflow.graph_tools.kgs (nodes = nodes, edges = edges)
+            result = self.workflow.graph.tools.kgs (nodes = nodes, edges = edges)
 
         elif event.body:
             """ Handle POST. May need to tag more explicitly. """
@@ -234,41 +241,4 @@ class Router:
         return Validate ().invoke (
             Event (context=context,
                    node=node))
-    
-    '''
-    def xray(self, context, job_name, node, op, args):
-        return XRay ().invoke (
-            event=Event (context=context,
-                         node=node))
-
-    def gamma(self, context, job_name, node, op, args):
-        return Gamma ().invoke (
-            event = Event (context=context,
-                           node=node))
-    
-    def biothings(self, context, job_name, node, op, args):
-        return Biothings ().invoke (
-            Event (context=context,
-                   node=node))
-
-    def graph_operator(self, context, job_name, node, op, args):
-        return GraphOperator ().invoke (
-            Event (context=context,
-                   node=node))
-
-    def ndex(self, context, job_name, node, op, args):
-        return NDEx ().invoke (
-            Event (context=context,
-                   node=node))
-    
-    def bionames(self, context, job_name, node, op, args):
-        return Bionames ().invoke (
-            Event (context=context,
-                   node=node))
-
-    def icees(self, context, job_name, node, op, args):
-        return Icees ().invoke (
-            Event (context=context,
-                   node=node))
-    '''
 

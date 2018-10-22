@@ -6,6 +6,7 @@ from neo4j.v1 import GraphDatabase
 from neo4j.v1.types.graph import Node
 from neo4j.v1.types.graph import Relationship
 from ros.config import Config
+from ros.graph import TranslatorGraphTools
 
 logger = logging.getLogger("kgraph")
 logger.setLevel(logging.WARNING)
@@ -41,8 +42,14 @@ class Neo4JKnowledgeGraph:
     ''' Encapsulates a knowledge graph. '''
 
     def __init__(self, host='localhost', port=7687):
-        ''' Connect to Neo4J. '''
+
+        """ Construct graph tools. """
+        self.tools = TranslatorGraphTools ()
+        
+        """ Load configuration. """
         self.config = Config ()
+
+        """ Connect to Neo4J """
         host = self.config['neo4j']['host']
         username = self.config['neo4j']['username']
         password = self.config['neo4j']['password']
@@ -57,30 +64,30 @@ class Neo4JKnowledgeGraph:
         self.session = self._driver.session ()
 
     def add_node (self, label, props):
-        ''' Add a node to the graph. '''
+        """ Add a node to the graph. """
         return self.create_node (props, node_type=label)
 
     def add_edge (self, subj, pred, obj, props):
-        ''' Add an edge. '''
+        """ Add an edge. """
         props['pred'] = pred
         logger.debug (f"+edge: ({subj}->{props}->{obj})")
         return self.create_relationship (subj, props, obj)
 
     def commit (self):
-        ''' Commit changes. '''
+        """ Commit changes. """
         pass #self.session.commit ()
 
     def query (self, query):
-        ''' Query the graph. '''
+        """ Query the graph. """
         result = self.graph.query (query)
         return [ node.properties for node in result ]
     
     def delete (self):
-        ''' Delete the entire graph. '''
+        """ Delete the entire graph. """
         self.exec ("match (a) detach delete a")
     
     def __del__ (self):
-        ''' Close the connection. '''
+        """ Close the connection. """
         if self._driver:
             logger.debug ("Closing neo4j database connection.")
             self._driver.close ()

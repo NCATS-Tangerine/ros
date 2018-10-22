@@ -11,7 +11,10 @@ neo4j:
 plugins:
   - name: t10r
     driver: t10r.ros.plugin.Plugin
-  
+    config:
+      bionames:
+        url: "https://bionames.renci.org/lookup/{input}/{type}/"
+
 services:
   condition_to_similar_to_gene_to_pathway_to_drug:
     - name : gamma

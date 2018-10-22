@@ -16,7 +16,6 @@ from networkx.algorithms import lexicographical_topological_sort
 from ros.router import Router
 from ros.util import Resource
 from ros.config import Config
-from ros.graph import TranslatorGraphTools
 from ros.kgraph import Neo4JKnowledgeGraph
 from ros.util import JSONKit
 
@@ -54,19 +53,18 @@ class Workflow:
         self.uuid = uuid.uuid4 ()
         self.config = Config (config)
         self.graph = Neo4JKnowledgeGraph (host=self.config.get('NEO4J_HOST', "localhost"))
-        self.graph_tools = TranslatorGraphTools ()
         self.errors = []
         self.json = JSONKit ()
 
         """ Prepare to manage execution state. """
         self.execution = Execution ()
 
-        self.plugins = []
         """ Load plugins. """
+        self.plugins = []
         plugin_config = self.config["plugins"]
         for plugin_def in plugin_config:
             name = plugin_def['name']
-            driver = self.load_and_instantiate (plugin_def['driver'])
+            driver = self.instantiate (plugin_def['driver'])
             self.plugins.append (driver)
             workflows = driver.workflows ()
             logger.debug (f"Connecting {name}: {driver}")
@@ -84,17 +82,16 @@ class Workflow:
         """ Create the directed acyclic graph of the workflow. """
         self.create_dag ()
 
+        """ Validate the workflow with respect to the schema. """
         self.enforce_specification ()
         
-    def load_and_instantiate (self, class_name):
+    def instantiate (self, class_name):
+        """ Given a class name <module>.<classname>, load the module and instantiate the class. """
         module_name = ".".join (class_name.split(".")[:-1])
-
         class_name = class_name.split(".")[-1]
-        
-        """Constructor"""
         module = importlib.import_module(module_name)
         the_class = getattr(module, class_name)
-        return the_class()
+        return the_class ()
         
     def enforce_specification (self):
         """ Define the beginnings of a language specification. """
@@ -119,7 +116,6 @@ class Workflow:
         description = info.get ("description")
         assert isinstance(description, str), "Description is not valid."
 
-        
     def create_dag (self):
         """ Examine job dependencies and create a directed acyclic graph of jobs in the workflow. """
         logger.debug ("dag")        
@@ -211,14 +207,14 @@ class Workflow:
             workflow_spec = yaml.load (stream.read ())
         return Workflow (workflow_spec, inputs=inputs, libpath=library_path)
     
+    '''
     def set_result(self, job_name, value):
         self.spec.get("workflow",{}).get(job_name,{})["result"] = value
         
     def get_result(self, job_name): #, value):
         return self.spec.get("workflow",{}).get(job_name,{}).get("result", None)
-    
+
     def execute (self, router):
-        ''' Execute this workflow. '''
         operators = self.spec.get ("workflow", {})
         for operator in operators:
             logger.debug (f"Executing operator: {operator}")
@@ -228,7 +224,8 @@ class Workflow:
             result = router.route (self, operator, op_node, op_code, args)
             self.set_result (operator, result)
         return self.get_step("return")["result"]
-    
+    '''
+
     def get_step (self, name):
         return self.spec.get("workflow",{}).get (name)
     
@@ -296,12 +293,15 @@ class Workflow:
             op = f".{op}" if len(op) > 0 else ''
             logger.debug (f"  dependency: {op_node['code']}{op}->{d}")
         return dependencies
+    
     def generate_dependent_jobs(self, workflow_model, operator, dag):
         dependencies = []
         adjacency_list = { ident : deps for ident, deps in dag.adjacency() }
         op_node = self.spec["workflow"][operator]
         dependency_tasks = adjacency_list[operator].keys ()
         return [ d for d in dependency_tasks ]
+
+    '''
     def json (self):
         return {
             "uuid" : self.uuid,
@@ -313,7 +313,8 @@ class Workflow:
             "failed" : {},
             "done" : {}
         }
-
+    '''
+    
     """ Result management. """
     def form_key (self, job_name):
         """ Form the key name. """
@@ -321,15 +322,16 @@ class Workflow:
     
     def set_result (self, job_name, value):
         """ Set the result value. """
-        assert value, f"Null value set for job_name: {job_name}"
+        #assert value, f"Null value set for job_name: {job_name}"
 
         """ In memory. """
         self.spec.get("workflow",{}).get(job_name,{})["result"] = value
 
         """ Update the graph store. """
-        self.graph_tools.to_knowledge_graph (
-            in_graph = self.graph_tools.to_nx (value),
-            out_graph = self.graph)
+        if value:
+            self.graph.tools.to_knowledge_graph (
+                in_graph = self.graph.tools.to_nx (value),
+                out_graph = self.graph)
 
         """ Cache. """
         key = self.form_key (job_name)
@@ -375,12 +377,15 @@ class Workflow:
         return result
 
     def resolve_query (self, value, event):
+        """ Implementation of a simple SQL like syntax combining jsonpath and workflow results. """
         """ Resolve arguments, including select statements, into values. """
         response = value
         if isinstance(value, str):
             syntax_valid = False
             tokens = value.split (" ")
-            if len(tokens) == 4:
+            """ 1. select 2. <query> 3. from 4.<object> """
+            query_field_count = 4 
+            if len(tokens) == query_field_count: 
                 select_keyword, pattern, from_keyword, source = tokens
                 if select_keyword == 'select' and from_keyword == 'from':
                     pattern = pattern.strip ('"')
