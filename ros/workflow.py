@@ -36,7 +36,7 @@ class Workflow:
     * Variables, templates, separate modules, a type system for input and output parameters.
     * An event model for passing context and parameters to graph operators.
     """
-    def __init__(self, spec, inputs={}, config="ros.yaml", libpath=["."]):
+    def __init__(self, spec, inputs={}, config=None, libpath=["."]):
         assert spec, "Workflow specification is required."
 
         """ If we got a string rather than a dict, load the workflow. """
@@ -51,6 +51,8 @@ class Workflow:
         self.inputs = inputs
         self.spec = spec
         self.uuid = uuid.uuid4 ()
+        if config == None:
+            config = os.path.join(os.path.dirname(__file__), 'ros.yaml')
         self.config = Config (config)
         self.graph = Neo4JKnowledgeGraph (host=self.config.get('NEO4J_HOST', "localhost"))
         self.errors = []

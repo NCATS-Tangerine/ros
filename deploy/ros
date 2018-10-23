@@ -1,0 +1,26 @@
+#!/bin/bash
+
+app () {
+
+    source ros.env
+
+    db () {
+        docker-compose run --service-ports neo4j
+    }
+
+    up () {
+        docker-compose up
+    }
+
+    clean () {
+        container=$(docker ps -a | awk '{ print $NF }' | grep _ros)
+        docker stop $container
+        docker rm $container
+        docker rmi -f $(docker images | grep _ros | awk '{ print $1 }')
+    }
+    
+    $*
+}
+
+echo $*
+app $*
