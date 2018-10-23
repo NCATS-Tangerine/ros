@@ -1,3 +1,6 @@
+doc: |
+  Defines a reusable template for calling a workflow module.
+  
 templates:
   
   condition_expansion_to_gene_pathway_drug:

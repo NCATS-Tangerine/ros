@@ -13,13 +13,7 @@ from jsonpath_rw import jsonpath, parse
 from ros.config import Config
 from ros.framework import Event
 from ros.framework import Operator
-from ros.lib.bionames import Bionames
-from ros.lib.biothings import Biothings
-from ros.lib.xray import XRay
 from ros.lib.ndex import NDEx
-from ros.lib.gamma import Gamma
-from ros.lib.icees import Icees
-from ros.lib.graphoperator import GraphOperator
 from ros.lib.validate import Validate
 from ros.util import MaQ
 

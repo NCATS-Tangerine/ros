@@ -16,6 +16,8 @@ RUN apt update
 RUN apt-get install -y emacs24-nox
 
 ENV PYTHONPATH /ros
+ENV API_PORT 5002
+ENV UPDATE_REPO yes
 
 ADD ./run_api.sh /ros/run_api.sh
 RUN chmod +x /ros/run_api.sh

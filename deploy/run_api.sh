@@ -1,12 +1,24 @@
 #!/bin/bash
 
-test -d ros && (cd ros; git pull) || echo yes | git clone "https://github.com/NCATS-Tangerine/ros"
+if [[ "$UPDATE_REPO" -eq "yes" ]]; then
+    test -d ros && (cd ros; git pull) || echo yes | git clone "https://github.com/NCATS-Tangerine/ros-t10r.git"
+    test -d ros && (cd ros; git pull) || echo yes | git clone "https://github.com/NCATS-Tangerine/ros"
+fi
 
-ROS_HOME=/ros
+ROOT=/
+ROS_HOME=$ROOT/ros
+ROS_T10R_HOME=$ROOT/ros-t10r
+
+pip install -r $ROS_HOME/ros/requirements.txt
+#pip install -r $ROS_T10R_HOME/requirements.txt
+
 cd $ROS_HOME/ros
 
-PYTHONPATH=$ROS_HOME
+export PYTHONPATH=$ROS_HOME:$ROS_T10R_HOME
 
-#python api/api.py --port $ROS_PORT
+# $PWD/..:$PWD/../../ros-t10r/ \
+# PYTHONPATH=$PYTHONPATH \
 
-PYTHONPATH=$PWD/.. gunicorn ros.api.api:app --bind 0.0.0.0:5002 --worker-class sanic.worker.GunicornWorker 
+gunicorn ros.api.api:app \
+         --bind 0.0.0.0:$API_PORT \
+         --worker-class sanic.worker.GunicornWorker
