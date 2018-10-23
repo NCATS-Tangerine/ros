@@ -65,6 +65,8 @@ workaround_sanic_openapi_naming_issue ()
 
 if __name__ == '__main__':
 
+    LoggingUtil.setup_logging ()
+    
     """ Process arguments. """
     arg_parser = argparse.ArgumentParser(
         description='Ros API',

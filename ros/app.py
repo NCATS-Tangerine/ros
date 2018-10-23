@@ -15,6 +15,7 @@ from ros.workflow import Workflow
 from ros.lib.ndex import NDEx
 from ros.tasks import exec_operator
 from ros.util import JSONKit
+from ros.util import LoggingUtil
 import asyncio
 import uvloop
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -148,24 +149,6 @@ class CeleryDAGExecutor:
                 logger.debug (f"removing {job_name} from running.")
                 del model.running[c]
         return model.done['return']
-    
-def setup_logging(
-        default_path=os.path.join(os.path.dirname(__file__), 'logging.yaml'),
-        default_level=logging.INFO,
-        env_key='LOG_CFG'):
-    """Setup logging configuration
-
-    """
-    path = default_path
-    value = os.getenv(env_key, None)
-    if value:
-        path = value
-    if os.path.exists(path):
-        with open(path, 'rt') as f:
-            config = yaml.safe_load(f.read())
-        logging.config.dictConfig(config)
-    else:
-        logging.basicConfig(level=default_level)
 
 def start_task_queue ():
     """
@@ -193,7 +176,7 @@ def main ():
     arg_parser.add_argument('--validate', help="Validate inputs and outputs", action="store_true")
     args = arg_parser.parse_args ()
 
-    setup_logging ()
+    LoggingUtil.setup_logging ()
     
     """ Parse input arguments. """
     wf_args = { k : v for k, v in [ arg.split("=") for arg in args.arg ] }
