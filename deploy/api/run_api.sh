@@ -33,12 +33,12 @@ manage_repo () {
     cd $pop
 }
 
-manage_repo ros-t10r https://github.com/NCATS-Tangerine/ros-t10r.git
+manage_repo ros-translator https://github.com/NCATS-Tangerine/ros-translator.git
 manage_repo ros https://github.com/NCATS-Tangerine/ros
 
 ROS_HOME=$ROOT/ros
-ROS_T10R_HOME=$ROOT/ros-t10r
-export PYTHONPATH=$ROS_HOME:$ROS_T10R_HOME
+ROS_TRANSLATOR_HOME=$ROOT/ros-translator
+export PYTHONPATH=$ROS_HOME:$ROS_TRANSLATOR_HOME
 
 pip install -r $ROS_HOME/ros/requirements.txt
 
