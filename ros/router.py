@@ -71,7 +71,7 @@ class Router:
             libraries = plugin.libraries ()
             for libname in libraries:
                 lib = self.workflow.instantiate (libname)
-                invoker = self.create_plugin_invoker (libname) #, context, job_name, node, op, args)
+                invoker = self.create_plugin_invoker (libname)
                 self.r[lib.name] = invoker
                 if first_router:
                     logger.debug (f"    --lib: {libname}@{plugin.name} loaded.")
@@ -124,14 +124,6 @@ class Router:
             """ Call the operator. """
             key = f"{job_name}-{op_node['code']}_{op_node['args'].get('op','')}"
 
-            '''
-            if key in self.cache:
-                result = self.cache[key]
-            else:
-                logger.debug (f"invoking {op} {self.r[op]}")
-                result = self.r[op](**arg_list)
-                self.cache[key] = result
-            '''
             result = self.cache.get (key)
             if not result:
                 logger.debug (f"invoking {op} {self.r[op]}")

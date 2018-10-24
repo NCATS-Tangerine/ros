@@ -46,16 +46,19 @@ class Workflow:
                 logger.info (f"Loading workflow: {spec}")
                 with open (spec, "r") as stream:
                     spec = yaml.load (stream.read ())
-
+            else:
+                raise ValueError (f"File not found: {spec}")
+            
         """ Set inputs, specification, generate a GUID, load configuration, and connect to the graph. """
         self.inputs = inputs
         self.spec = spec
         self.uuid = uuid.uuid4 ()
         if config == None:
-            config = os.path.join(os.path.dirname(__file__), 'ros.yaml')
+            local_config = os.path.expanduser("~/.ros.yaml")
+            default_config = os.path.join(os.path.dirname(__file__), "ros.yaml")
+            config = local_config if os.path.exists (local_config) else default_config
         self.config = Config (config)
         db_host = self.config.get('NEO4J_HOST', "localhost")
-        print (f"neo4j host: {db_host}")
         self.graph = Neo4JKnowledgeGraph (host=db_host)
         self.errors = []
         self.json = JSONKit ()
@@ -304,20 +307,6 @@ class Workflow:
         op_node = self.spec["workflow"][operator]
         dependency_tasks = adjacency_list[operator].keys ()
         return [ d for d in dependency_tasks ]
-
-    '''
-    def json (self):
-        return {
-            "uuid" : self.uuid,
-            "spec" : self.spec,
-            "inputs" : self.inputs,
-            "dependencies" : self.dependencies,
-            "topsort" : self.topsort,
-            "running" : {},
-            "failed" : {},
-            "done" : {}
-        }
-    '''
     
     """ Result management. """
     def form_key (self, job_name):

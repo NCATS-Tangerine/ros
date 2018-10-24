@@ -13,8 +13,8 @@ redis:
   port: 6379
 
 plugins:
-  - name: t10r
-    driver: t10r.ros.plugin.Plugin
+  - name: translator
+    driver: translator.ros.plugin.Plugin
     config:
       bionames:
         url: "https://bionames.renci.org/lookup/{input}/{type}/"
