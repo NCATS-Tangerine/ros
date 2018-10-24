@@ -54,7 +54,9 @@ class Workflow:
         if config == None:
             config = os.path.join(os.path.dirname(__file__), 'ros.yaml')
         self.config = Config (config)
-        self.graph = Neo4JKnowledgeGraph (host=self.config.get('NEO4J_HOST', "localhost"))
+        db_host = self.config.get('NEO4J_HOST', "localhost")
+        print (f"neo4j host: {db_host}")
+        self.graph = Neo4JKnowledgeGraph (host=db_host)
         self.errors = []
         self.json = JSONKit ()
 

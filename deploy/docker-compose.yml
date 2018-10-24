@@ -29,16 +29,19 @@ services:
     env_file:
       - ./ros.env
     environment:
-      - UPDATE_REPO=false
+      - UPDATE_REPO
       - ROS_PORT
       - NEO4J_HOST
       - NEO4J_USERNAME
       - NEO4J_PASSWORD
       - NEO4J_BOLT_PORT
+      - REDIS_HOST
+      - REDIS_PORT
     ports:
       - "${ROS_PORT}:${ROS_PORT}"
     links:
       - neo4j
+      - redis
 
 
 

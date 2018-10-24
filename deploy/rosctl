@@ -22,6 +22,7 @@ app () {
         docker-compose run --service-ports neo4j
     }
     up () {
+        source ros.env
         docker-compose up
     }
 
