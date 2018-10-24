@@ -1,6 +1,12 @@
 version: "3.4"
 services:
 
+  # Redis
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+      
   # Generic neo4j graph database.
   neo4j:
     image: neo4j:3.4.7
@@ -22,6 +28,7 @@ services:
     env_file:
       - ./ros.env
     environment:
+      - UPDATE_REPO=false
       - ROS_PORT
       - NEO4J_HOST
       - NEO4J_USERNAME

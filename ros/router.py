@@ -16,10 +16,12 @@ from ros.framework import Operator
 from ros.lib.ndex import NDEx
 from ros.lib.validate import Validate
 from ros.util import MaQ
+from ros.cache import Cache
 
 logger = logging.getLogger("router")
 logger.setLevel(logging.WARNING)
 
+'''
 class Cache:
     """ Generic cache. Disk based for the time being. """
     def __init__(self, root="cache"):
@@ -40,6 +42,7 @@ class Cache:
         path = self._cpath (k)
         with open (path, "w") as stream:
             json.dump (v, stream, indent=2)
+'''
 
 """ Keep logging to a reasonable level. """
 first_router = True
@@ -75,7 +78,9 @@ class Router:
         first_router = False
         
         self.create_template_adapters ()
-        self.cache = Cache ()
+        self.config = Config ()
+        self.cache = Cache (redis_host=self.config['REDIS_HOST'],
+                            redis_port=self.config['REDIS_PORT'])
 
     def create_plugin_invoker (self, libname): #, context, job_name, node, op, args):
         def invoker (context, job_name, node, op, args):
@@ -119,13 +124,20 @@ class Router:
             """ Call the operator. """
             key = f"{job_name}-{op_node['code']}_{op_node['args'].get('op','')}"
 
+            '''
             if key in self.cache:
                 result = self.cache[key]
             else:
                 logger.debug (f"invoking {op} {self.r[op]}")
                 result = self.r[op](**arg_list)
                 self.cache[key] = result
-
+            '''
+            result = self.cache.get (key)
+            if not result:
+                logger.debug (f"invoking {op} {self.r[op]}")
+                result = self.r[op](**arg_list)
+                self.cache.set (key,result)
+                
             text = self.short_text (str(result))
             
             logger.debug (f"    --({job_name}[{op_node['code']}.{op_node['args'].get('op','')}])>> {text}")
