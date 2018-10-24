@@ -2,7 +2,7 @@ FROM python:3.7
 
 WORKDIR /
 RUN git clone "https://github.com/NCATS-Tangerine/ros" "ros" 2> /dev/null || (cd "ros" ; echo yes | git pull)
-RUN git clone "https://github.com/NCATS-Tangerine/ros-t10r.git" "ros-t10r" 2> /dev/null || (cd "ros-t10r" ; echo yes | git pull)
+RUN git clone "https://github.com/NCATS-Tangerine/ros-translator.git" "ros-translator" 2> /dev/null || (cd "ros-translator" ; echo yes | git pull)
 
 WORKDIR /ros
 
