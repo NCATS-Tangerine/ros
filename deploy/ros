@@ -3,22 +3,20 @@
 app () {
 
     source ros.env
-
-
     
     build () {
         local mod=$1
         if [ -z "$mod" ]; then
             echo module name required
         fi
-        docker build --no-cache $mod -t greentranslator/green-$mod
+        docker build --no-cache $mod -t greentranslator/ros-$mod
     }
     push () {
         local mod=$1
         if [ -z "$mod" ]; then
             echo module name required
         fi
-        docker push greentranslator/green-$mod
+        docker push greentranslator/ros-$mod
     }
     db () {
         docker-compose run --service-ports neo4j

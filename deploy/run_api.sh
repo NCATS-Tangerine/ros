@@ -49,12 +49,12 @@ export SANIC_RESPONSE_TIMEOUT=$API_TIMEOUT
 
 echo $API_TIMEOUT
 
-echo gunicorn ros.api.api:app \
+SCMD="gunicorn ros.api.api:app \
          --bind 0.0.0.0:$API_PORT \
          --timeout $API_TIMEOUT \
-         --worker-class sanic.worker.GunicornWorker
+         --workers 4 \
+         --worker-class sanic.worker.GunicornWorker"
 
-gunicorn ros.api.api:app \
-         --bind 0.0.0.0:$API_PORT \
-         --timeout $API_TIMEOUT \
-         --worker-class sanic.worker.GunicornWorker
+echo $SCMD
+
+$SCMD

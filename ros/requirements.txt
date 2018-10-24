@@ -23,6 +23,7 @@ ijson==2.3
 jmespath==0.9.3
 joblib==0.12.5
 jsonpath-rw==1.4.0
+lru-dict==1.1.6
 more-itertools==4.3.0
 multidict==4.4.2
 namedtupled==0.3.3

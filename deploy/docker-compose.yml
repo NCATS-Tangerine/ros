@@ -23,8 +23,9 @@ services:
 
   # A Ros OpenAPI web service endpoint.
   ros:
-    build:
-      context: .
+    image: greentranslator/ros-api:latest
+#    build:
+#      context: api
     env_file:
       - ./ros.env
     environment:
