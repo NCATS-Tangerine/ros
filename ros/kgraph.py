@@ -6,7 +6,6 @@ from neo4j.v1 import GraphDatabase
 from neo4j.v1.types.graph import Node
 from neo4j.v1.types.graph import Relationship
 from ros.config import Config
-from ros.graph import TranslatorGraphTools
 
 logger = logging.getLogger("kgraph")
 logger.setLevel(logging.WARNING)
@@ -42,9 +41,6 @@ class Neo4JKnowledgeGraph:
     ''' Encapsulates a knowledge graph. '''
 
     def __init__(self, host='localhost', port=7687):
-
-        """ Construct graph tools. """
-        self.tools = TranslatorGraphTools ()
         
         """ Load configuration. """
         self.config = Config ()

@@ -16,6 +16,7 @@ from networkx.algorithms import lexicographical_topological_sort
 from ros.router import Router
 from ros.util import Resource
 from ros.config import Config
+from ros.graph import TranslatorGraphTools
 from ros.kgraph import Neo4JKnowledgeGraph
 from ros.util import JSONKit
 from ros.cache import Cache
@@ -55,6 +56,7 @@ class Workflow:
         self.spec = spec
         self.uuid = uuid.uuid4 ()
         self.config = Config (config)
+        self.tools = TranslatorGraphTools ()
         if local_connection:
             self.cache = Cache (redis_host=self.config['REDIS_HOST'],
                                 redis_port=self.config['REDIS_PORT'])
@@ -322,8 +324,8 @@ class Workflow:
 
         """ Update the graph store. """
         if value:
-            self.graph.tools.to_knowledge_graph (
-                in_graph = self.graph.tools.to_nx (value),
+            self.tools.to_knowledge_graph (
+                in_graph = self.tools.to_nx (value),
                 out_graph = self.graph)
 
         """ Cache. """

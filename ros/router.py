@@ -170,7 +170,7 @@ class Router:
                     r[new] = r[old]
                     del r[old]
         logger.debug (f"http response: {response}")
-        return context.graph.tools.kgs (response)
+        return context.tools.kgs (response)
 
     def requests (self, context, job_name, node, op, args):
         """ Generic HTTP utility. """
@@ -212,7 +212,7 @@ class Router:
                     print (json.dumps(g, indent=2))
                     edges = edges + g['result_graph']['edge_list']
                     nodes = nodes + g['result_graph']['node_list']
-            result = self.workflow.graph.tools.kgs (nodes = nodes, edges = edges)
+            result = self.workflow.tools.kgs (nodes = nodes, edges = edges)
 
         elif event.body:
             """ Handle POST. May need to tag more explicitly. """

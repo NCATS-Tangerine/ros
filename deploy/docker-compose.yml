@@ -13,6 +13,7 @@ services:
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
     environment:
+      - ALLOW_EMPTY_PASSWORD=yes
       - DISABLE_COMMANDS=FLUSHDB,FLUSHALL,CONFIG
       
   # Generic neo4j graph database.

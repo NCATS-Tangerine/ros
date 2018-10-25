@@ -50,4 +50,4 @@ class Validate (Operator):
                 for n in none_op:
                     assert n not in items, f"Found element {n} which must not appear in items {items}."
                 result['none'] = 'success'
-        return event.context.graph.tools.kgs (nodes=[])
+        return event.context.tools.kgs (nodes=[])

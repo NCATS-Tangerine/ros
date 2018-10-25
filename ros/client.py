@@ -23,7 +23,7 @@ class WorkflowResult:
         self.result = result
     def to_nx (self):
         """ Use Ros graph tools to compose a NetworkX object from the workflowanswer set. """
-        return self.workflow.graph.tools.answer_set_to_nx (self.result)
+        return self.workflow.tools.answer_set_to_nx (self.result)
     
 class Client:
     """ A Ros client to make getting a network from a workflow easier. """
