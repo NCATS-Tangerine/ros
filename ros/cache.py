@@ -47,6 +47,7 @@ class Cache:
             self.redis = None
             #logger.debug (traceback.format_exc ())
             logger.error(f"Failed to connect to redis at {redis_host}:{redis_port}/{redis_db}.")
+            print (f"Failed to connect to redis at {redis_host}:{redis_port}/{redis_db}.")
         self.cache_path = cache_path
         if not os.path.exists (self.cache_path):
             os.makedirs (self.cache_path)

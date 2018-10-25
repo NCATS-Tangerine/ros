@@ -122,13 +122,19 @@ class Router:
                 "args"     : node_copy['args']
             }
             """ Call the operator. """
-            key = f"{job_name}-{op_node['code']}_{op_node['args'].get('op','')}"
+            op_name=op_node['args'].get('op','')
+            key = f"{job_name}-{op_node['code']}"
+            if op_name and len(op_name) > 0:
+                key = f"{key}_{op_name}"
 
             result = self.cache.get (key)
-            if not result:
+            print (self.cache.cache.keys ())
+            if result:
+                result = json.loads (result)
+            else:
                 logger.debug (f"invoking {op} {self.r[op]}")
                 result = self.r[op](**arg_list)
-                self.cache.set (key,result)
+                self.cache.set (key, json.dumps(result, indent=2))
                 
             text = self.short_text (str(result))
             
@@ -221,6 +227,7 @@ class Router:
             else:
                 raise ValueError (response.text)
         else:
+    
             """ Handle GET request. """
             response = requests.get(
                 url = url,
@@ -229,6 +236,11 @@ class Router:
                 })
             if response.status_code == 200 or response.status_code == 202:
                 result = response.json ()
+                if 'bionames' in url:
+                    for n in result:
+                        n['name'] = n['label']
+                        del n['label']
+                print (f"{json.dumps(result,indent=2)}")
             else:
                 raise ValueError (response.text)
 

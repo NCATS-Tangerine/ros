@@ -18,6 +18,7 @@ from ros.util import Resource
 from ros.config import Config
 from ros.kgraph import Neo4JKnowledgeGraph
 from ros.util import JSONKit
+from ros.cache import Cache
 
 logger = logging.getLogger("ros")
 logger.setLevel(logging.WARNING)
@@ -53,11 +54,9 @@ class Workflow:
         self.inputs = inputs
         self.spec = spec
         self.uuid = uuid.uuid4 ()
-        if config == None:
-            local_config = os.path.expanduser("~/.ros.yaml")
-            default_config = os.path.join(os.path.dirname(__file__), "ros.yaml")
-            config = local_config if os.path.exists (local_config) else default_config
         self.config = Config (config)
+        self.cache = Cache (redis_host=self.config['REDIS_HOST'],
+                            redis_port=self.config['REDIS_PORT'])
         db_host = self.config.get('NEO4J_HOST', "localhost")
         self.graph = Neo4JKnowledgeGraph (host=db_host)
         self.errors = []
@@ -328,11 +327,7 @@ class Workflow:
 
         """ Cache. """
         key = self.form_key (job_name)
-        if not os.path.exists ('cache'):
-            os.mkdir ("cache")
-        fname = os.path.join ("cache", key)
-        with open(fname, "w") as stream:
-            json.dump (value, stream, indent=2)
+        self.cache.set (key, json.dumps(value, indent=2))
 
     def get_result (self, job_name):
         """ Get the result graph. We pass the whole graph for every graph. """
@@ -340,14 +335,8 @@ class Workflow:
 
         """ Cache. """
         key = self.form_key (job_name)
-        if not os.path.exists ('cache'):
-            os.mkdir ("cache")
-        fname = os.path.join ("cache", key)
-        if os.path.exists (fname):
-            with open(fname, "r") as stream:
-                result = json.load (stream)
-
-        return result
+        val = self.cache.get (key)
+        return json.loads (val) if val else None
 
     """ Manage variable and query resolution generically. """
     
