@@ -40,10 +40,9 @@ class Client:
         workflow = Workflow (
             spec=workflow,
             inputs=args,
-            libpath=library_path)
+            libpath=library_path,
+            local_connection=False)
 
-        print (workflow.spec)
-        
         """ Execute the workflow remotely and return both the workflow object and the response we got. """
         return WorkflowResult (
             workflow = workflow,
@@ -53,16 +52,7 @@ class Client:
                     "workflow" : workflow.spec,
                     "args"     : args
                 }).json ())
-'''
-def learn_embeddings(walks):
-    """
-    Learn embeddings by optimizing the Skipgram objective using SGD.
-    """
-    walks = [map(str, walk) for walk in walks]
-    model = Word2Vec(walks, size=args.dimensions, window=args.window_size, min_count=0, sg=1, workers=args.workers, iter=args.iter)
-    model.save_word2vec_format(args.output)
-    return
-'''    
+
 def main ():
     
     workflow = 'workflows/workflow_one.ros'

@@ -24,8 +24,6 @@ services:
   # A Ros OpenAPI web service endpoint.
   ros:
     image: greentranslator/ros-api:latest
-#    build:
-#      context: api
     env_file:
       - ./ros.env
     environment:
@@ -42,9 +40,6 @@ services:
     links:
       - neo4j
       - redis
-
-
-
 
 #    deploy:
 #      resources:

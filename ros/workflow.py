@@ -37,7 +37,7 @@ class Workflow:
     * Variables, templates, separate modules, a type system for input and output parameters.
     * An event model for passing context and parameters to graph operators.
     """
-    def __init__(self, spec, inputs={}, config=None, libpath=["."]):
+    def __init__(self, spec, inputs={}, config=None, libpath=["."], local_connection=True):
         assert spec, "Workflow specification is required."
 
         """ If we got a string rather than a dict, load the workflow. """
@@ -58,7 +58,8 @@ class Workflow:
         self.cache = Cache (redis_host=self.config['REDIS_HOST'],
                             redis_port=self.config['REDIS_PORT'])
         db_host = self.config.get('NEO4J_HOST', "localhost")
-        self.graph = Neo4JKnowledgeGraph (host=db_host)
+        if local_connection:
+            self.graph = Neo4JKnowledgeGraph (host=db_host)
         self.errors = []
         self.json = JSONKit ()
 
