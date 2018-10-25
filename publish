@@ -9,6 +9,7 @@ write_setup_config () {
 cat <<EOF > setup.py
 #from distutils.core import setup
 from setuptools import setup
+import os
 
 # read the contents of your README file
 from os import path
@@ -21,20 +22,14 @@ def parse_requirements(filename):
     """ load requirements from a pip requirements file """
     lineiter = (line.strip() for line in open(filename))
     return [line for line in lineiter if line and not line.startswith("#")]
-install_reqs = parse_requirements("ros/requirements.txt") #, session="i")
+
+install_reqs = parse_requirements("ros/requirements.txt")
 requirements = [str(r) for r in install_reqs]
 setup(
     name = 'ros',
     packages = [ 'ros' ], # this must be the same as the name above
-    package_data={ 'ros' : [
-        'requirements.txt',
-        '*.ros',
-        '*.yaml',
-        'bin/*',
-        'lib/*',
-        'workflow/*',
-        'dag/*'
-    ]},
+    package_dir = { 'ros' : 'ros' },
+    package_data={ 'ros' : [ ] },
     version = '${version}',
     description = 'Ros Knowledge Network',
     long_description=long_description,
@@ -61,6 +56,7 @@ publish () {
     git tag
     if [ -z "$( git tag --list $version )" ]; then
 	python setup.py sdist
+
         archive=dist/ros-${version}.tar.gz
 	tar tf $archive
 	twine upload --skip-existing $archive
@@ -70,6 +66,7 @@ publish () {
 	git push origin master	
 	git tag $version -m "publishing version $version"
 	git push --tags origin master
+
     fi
 }
 
