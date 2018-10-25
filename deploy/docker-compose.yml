@@ -2,10 +2,18 @@ version: "3.4"
 services:
 
   # Redis
+#  redis:
+#    image: "redis:alpine"
+#    ports:
+#      - "${REDIS_PORT}:${REDIS_PORT}"
+
+
   redis:
-    image: "redis:alpine"
+    image: 'bitnami/redis:latest'
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
+    environment:
+      - DISABLE_COMMANDS=FLUSHDB,FLUSHALL,CONFIG
       
   # Generic neo4j graph database.
   neo4j:

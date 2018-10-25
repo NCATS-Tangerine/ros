@@ -55,10 +55,10 @@ class Workflow:
         self.spec = spec
         self.uuid = uuid.uuid4 ()
         self.config = Config (config)
-        self.cache = Cache (redis_host=self.config['REDIS_HOST'],
-                            redis_port=self.config['REDIS_PORT'])
-        db_host = self.config.get('NEO4J_HOST', "localhost")
         if local_connection:
+            self.cache = Cache (redis_host=self.config['REDIS_HOST'],
+                                redis_port=self.config['REDIS_PORT'])
+            db_host = self.config.get('NEO4J_HOST', "localhost")
             self.graph = Neo4JKnowledgeGraph (host=db_host)
         self.errors = []
         self.json = JSONKit ()
