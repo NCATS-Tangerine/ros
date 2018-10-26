@@ -315,10 +315,16 @@ Ros can execute workflows remotely and return the resulting knowledge network. T
   
 **Steps:**
 
-These steps install the package, print help text, and execute  workflow one. To run this, you'll need workflow_one.ros and bionames.ros from the repo. The `-l workflows` flag names the directory containing the workflows.
+These steps will
+
+* **install**: Ros and the Translator plugin. 
+* **print**: help text
+* **execute**: workflow one.
+
+To run this, you'll need workflow_one.ros and bionames.ros from the ros-translator [repo](https://github.com/NCATS-Tangerine/ros-translator/tree/master/translator/ros/workflows). The `-l workflows` flag names the directory containing the workflows.
 
 ```
-$ pip install ros
+$ pip install ros ros-translator
 $ ros --help
 $ ros --workflow workflow_one.ros --arg disease_name="diabetes mellitus type 2" -l workflows
 ```
