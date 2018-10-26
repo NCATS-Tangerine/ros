@@ -385,7 +385,7 @@ To save a workflow to NDEx.
 * **Information Architecture**: Develop:
   * **Controlled vocabulary**: Especially regarding what the modules are and how they relate
   * **Input and Output Signatures**: For the modules
-  * **Provenance**: Both in terms of workflow provenance (which user, how long, etc) and metadata about sources (SCEPIO?).
+  * **Provenance**: Both in terms of workflow provenance (which user, how long, etc) and metadata about sources (SEPIO?).
 * **Polymorphism**: It would be really helpful if multiple entities implementing a capability could implement the same OpenAPI interface to enable polymorphic invocation. This would also help with parallelism.
 * **[KGX](https://github.com/NCATS-Tangerine/kgx)**: Maybe KGX should be the shared graph, at least optionally. Just need to design that connection.
 * **Concurrent / Parallel / Distributed**: Ros now supports concurrent task execution via Python async. If this turns out not to be enough, explore running via something capable of parallel and maybe distributed execution.
