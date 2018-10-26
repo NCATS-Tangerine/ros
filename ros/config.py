@@ -1,10 +1,15 @@
 import copy
+import logging
 import json
 import os
 import yaml
 import traceback
 import re
 from ros.util import Resource
+from numbers import Number
+
+logger = logging.getLogger("config")
+logger.setLevel(logging.WARNING)
 
 class Config(dict):
     def __init__(self, config=None, prefix=''):
@@ -42,14 +47,16 @@ class Config(dict):
                 this_key = k
             else:
                 this_key = ""
+
         if isinstance (d, dict):
             for nk, nv in d.items ():
+                logger.debug (f"{base_k}/{k} {nk}==>{nv}")
                 v = self.key_dig (
                     base_k = this_key,
                     k = nk,
                     d = nv,
                     root_d = root_d)
-        elif isinstance(d, str):
+        elif isinstance(d, str) or isinstance(d, Number):
             root_d[this_key] = str(d)
             root_d[this_key.upper()] = str(d)
     
