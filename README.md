@@ -30,12 +30,12 @@ And builds this knowledge graph:
 - [Putting it All Together](#putting-it-all-together)
   * [1. Define A Template](#1-define-a-template)
   * [2. Optionally Model Input and Output Types](#2-optionally-model-input-and-output-types)
-  * [3. Build the Workflow](#3-build-the-workflow)
+  * [3. Example Workflows](#3-example-workflows)
 - [Execution](#execution)
 - [Getting Started](#getting-started)
   * [Docker](#docker)
     + [Requirements](#requirements)
-    + [Start](#start)
+    + [Start the API Containers](#start-the-api-containers)
   * [Usage - Command Line](#usage---command-line)
   * [Usage - Programmatic](#usage---programmatic)
   * [Install](#install)
@@ -242,7 +242,7 @@ types:
     extends: primitive
 ```
 
-### 3. Examples Workflow
+### 3. Example Workflows
 
 To get started with the language, see the [Translator](https://github.com/NCATS-Tangerine/ros-translator/tree/master/translator/ros/workflows) workflows.
 
