@@ -30,12 +30,12 @@ And builds this knowledge graph:
 - [Putting it All Together](#putting-it-all-together)
   * [1. Define A Template](#1-define-a-template)
   * [2. Optionally Model Input and Output Types](#2-optionally-model-input-and-output-types)
-  * [3. Build the Workflow](#3-build-the-workflow)
+  * [3. Example Workflows](#3-example-workflows)
 - [Execution](#execution)
 - [Getting Started](#getting-started)
   * [Docker](#docker)
     + [Requirements](#requirements)
-    + [Start](#start)
+    + [Start the API Containers](#start-the-api-containers)
   * [Usage - Command Line](#usage---command-line)
   * [Usage - Programmatic](#usage---programmatic)
   * [Install](#install)
@@ -58,20 +58,21 @@ Workflows compute a directed acyclic graph (DAG) modeling job dependencies which
 
 Variables passed to the workflow at the command line or via the API can be resolved dynamically. In this example, $disease_name refers to an argument provided by the execution context to this workflow. The provided value will be substituted at runtime. 
 
-In the example below, `disease_identifiers` is the job's name. It produces a graph. The JSON object representing that graph will be stored as the value of the job's name. The graph is also written to the shared graph database. Subsequent jobs can interact with either representation.
+In the example below we use a SQL like syntax to select disease identifiers into the `disease_ids` variable. Subsequent jobs can interact with the list of identifiers by way of the variable.
 
-The `code` tag tells the engine which block of functionality to execute.
+The `code` tag tells the engine to execute the bionames module.
 
 The `args` section lists inputs to this operator.
 
 ```
-  disease_identifiers:
-    doc: |
-      Resolve an English disease name to an ontology identifier.
+  naming:
+    doc: Resolve names to ontology identifiers.
     code: bionames
     args:
-      type: disease
-      input: $disease_name
+      query:
+        - select $disease_name from disease as disease_ids
+        - select $drug_name from drug as drug_ids
+        - select "particulate matter" from chemical_substance as particulate_matter_ids
 ```
 
 ### Operators
@@ -86,13 +87,8 @@ In general, workflow jobs have the following fields:
 
 Ros currently provides the following core operators:
 
-* **get**: Invokes an HTTP GET operation on a specified resource.
+* **requests**: Provides generic HTTP capabilities.
 * **union**: Unions two or more results into one object.
-
-It also includes certain Translator specific modules. In the future, these will be implemented as Ros plugins: 
-* **biothings**: BioThings modules. Currently modules 4 and 5 of workflow 1.
-* **gamma**: Invokes the Gamma reasoner. The example below calls Gamma a few times with different machine questions. It will be updated to use the new Quick API for added flexibility.
-* **xray**: XRay reasoner modules. Currently modules 1 and 2 of workflow 1.
 
 ### Graphs
 
@@ -246,59 +242,9 @@ types:
     extends: primitive
 ```
 
-### 3. Build the Workflow
+### 3. Example Workflows
 
-Next, we import the template above into a workflow definition.
-
-```
-doc: |
-  NCATS Biomedical Translator - Workflow One
-  
-import:
-  - bionames
-  
-workflow:
-
-  disease_identifiers:
-    doc: |
-      Resolve an English disease name to an ontology identifier.
-    code: bionames
-    args:
-      type: disease
-      input: $disease_name
-...
-```
-
-The `disease_identifiers` task instantiates the bionames template. It supplies the required arguments, including resolving the `disease_name` input argument specific to this workflow.
-
-Once this module has executed, subsequent steps can reference the graph it produced via the variable `$disease_identifiers`.
-
-The next step in the workflow makes use of this by referencing the output of our template invocation. The workflow engine sees this reference and makes the new job depend on the referenced job. This is how the job DAG governing execution order is calculated.
-
-```
-  condition_to_drug:
-    doc: |
-      Module 1
-        * What are the defining symptoms / phenotypes of [condition x]?
-        * What conditions present [symptoms]?
-        * Filter [conditions] to only keep ones with defined genetic causes.
-        * What subset of conditions are most representative of [conditions]? (find archetypes)
-      Module 2
-        * What genes are implicated in [condition]?
-        * What subset of genes are most representative of [conditions]?  (find archetypes)
-        * What pathways/processes are [genes] involved in?
-        * What genes are involved in [pathway/process]?
-        * What drugs/compounds target gene products of [gene]?
-      Invoke XRay module 1 and 2 given the disease identifier from bionames.
-      The graph argument references the entire bionames response.
-      The op argument specifies the XRay operation to execute.
-    code: xray
-    args:
-      op: condition_expansion_to_gene_pathway_drug
-      graph: $disease_identifiers
-```
-
-For more details, see the whole [workflow](https://github.com/NCATS-Tangerine/ros/blob/master/ros/workflow_one.ros).
+To get started with the language, see the [Translator](https://github.com/NCATS-Tangerine/ros-translator/tree/master/translator/ros/workflows) workflows.
 
 ## Execution
 
@@ -318,18 +264,20 @@ The API also handles requests asynchronously using [Sanic](https://github.com/hu
 
 #### Requirements
 
-  * Docker
+  * Docker - i.e. the Docker servie is running.
   * Docker Compose (included with Docker on Mac)
   * Git
-  * Ports 7474, 7687, and 5002 available
+  * Ports 7474, 7687, 6379, and 5002 available
+  * Python 3.7.x
 
-#### Start
+#### Start the API Containers
+
+This will run docker compose which, in turn, will start redis, neo4j, and Ros API containers.
 
 ```
 git clone git@github.com:NCATS-Tangerine/ros.git
 cd ros/deploy
-source ros.env
-docker-compose up
+./rosctl up
 ```
 
 ### Usage - Command Line
@@ -358,7 +306,6 @@ Ros can execute workflows remotely and return the resulting knowledge network. T
       print (n)
   ```
 
-
 ### Install
 
 **Requirements:**
@@ -368,10 +315,16 @@ Ros can execute workflows remotely and return the resulting knowledge network. T
   
 **Steps:**
 
-These steps install the package, print help text, and execute  workflow one. To run this, you'll need workflow_one.ros and bionames.ros from the repo. The `-l workflows` flag names the directory containing the workflows.
+These steps will
+
+* **install**: Ros and the Translator plugin. 
+* **print**: help text
+* **execute**: workflow one.
+
+To run this, you'll need workflow_one.ros and bionames.ros from the ros-translator [repo](https://github.com/NCATS-Tangerine/ros-translator/tree/master/translator/ros/workflows). The `-l workflows` flag names the directory containing the workflows.
 
 ```
-$ pip install ros
+$ pip install ros ros-translator
 $ ros --help
 $ ros --workflow workflow_one.ros --arg disease_name="diabetes mellitus type 2" -l workflows
 ```
@@ -432,7 +385,7 @@ To save a workflow to NDEx.
 * **Information Architecture**: Develop:
   * **Controlled vocabulary**: Especially regarding what the modules are and how they relate
   * **Input and Output Signatures**: For the modules
-  * **Provenance**: Both in terms of workflow provenance (which user, how long, etc) and metadata about sources (SCEPIO?).
+  * **Provenance**: Both in terms of workflow provenance (which user, how long, etc) and metadata about sources (SEPIO?).
 * **Polymorphism**: It would be really helpful if multiple entities implementing a capability could implement the same OpenAPI interface to enable polymorphic invocation. This would also help with parallelism.
 * **[KGX](https://github.com/NCATS-Tangerine/kgx)**: Maybe KGX should be the shared graph, at least optionally. Just need to design that connection.
 * **Concurrent / Parallel / Distributed**: Ros now supports concurrent task execution via Python async. If this turns out not to be enough, explore running via something capable of parallel and maybe distributed execution.
