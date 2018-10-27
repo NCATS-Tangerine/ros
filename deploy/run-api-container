@@ -1,0 +1,23 @@
+#!/bin/bash
+
+export HOME=/projects/stars/app/ros/deploy
+cd $HOME
+env=ros-prod.env
+source $env
+cat $env
+
+env | grep -i ros
+
+docker stop ros-api
+docker rm ros-api
+docker run \
+    --name ros-api \
+    --env-file ros-prod.env \
+    -e UPDATE_REPO \
+    -e ROS_PORT \
+    -e NEO4J_HOST=$(cat /projects/stars/app/ros/deploy/neo4jhost) \
+    -e NEO4J_USERNAME -e NEO4J_PASSWORD -e NEO4J_BOLT_PORT \
+    -e REDIS_HOST=$(cat /projects/stars/app/ros/deploy/redishost) \
+    -e REDIS_PORT \
+    -p ${ROS_PORT}:${ROS_PORT} \
+    greentranslator/ros-api:latest
