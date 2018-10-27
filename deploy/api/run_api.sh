@@ -49,10 +49,12 @@ export SANIC_RESPONSE_TIMEOUT=$API_TIMEOUT
 
 echo $API_TIMEOUT
 
+cp $ROS_HOME/etc/ndex__init__.py /usr/local/lib/python3.7/site-packages/ndex2/__init__.py
+
 SCMD="gunicorn ros.api.api:app \
          --bind 0.0.0.0:$API_PORT \
          --timeout $API_TIMEOUT \
-         --workers 4 \
+         --workers $API_WORKERS \
          --worker-class sanic.worker.GunicornWorker"
 
 echo $SCMD

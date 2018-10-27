@@ -14,6 +14,7 @@ ENV LOG_FILE /var/log/ros/ros.log
 ENV PYTHONPATH /ros
 ENV API_TIMEOUT 180
 ENV API_PORT 5002
+ENV API_WORKERS 4
 
 RUN useradd -m -s /bin/bash ros
 RUN apt update
