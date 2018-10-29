@@ -345,7 +345,7 @@ To save a workflow to NDEx.
   * Run the workflow with NDEx output:
 
     ```
-    ros flow --workflow workflow_one.ros --out output.json --ndex wf1
+    ros --workflow workflow_one.ros --out output.json --ndex wf1
     ```
 
 ### Help
