@@ -8,19 +8,13 @@ inputs:
 outputs:
   knowledge_graph:
     type: File
-    outputSource: untar/kg_out
+    outputSource: icees/kg_out
 
 steps:
-  untar:
+  icees:
     run: roscwlapi.cwl
     in:
       inp_disease: inp_disease
       input: inp_kg_path
       output: out_kg_path
     out: [kg_out]
-
-#  compile:
-#    run: arguments.cwl
-#    in:
-#      src: untar/example_out
-#    out: [classfile]
