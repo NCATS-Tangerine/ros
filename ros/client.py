@@ -41,7 +41,7 @@ class Client:
             spec=workflow,
             inputs=args,
             libpath=library_path,
-            local_connection=False)
+            local_db_connection=False)
 
         """ Execute the workflow remotely and return both the workflow object and the response we got. """
         return WorkflowResult (

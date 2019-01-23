@@ -31,6 +31,7 @@ class Execution:
         self.failed = {}
         
 class Workflow:
+    
     """
     Abstracts a directed acyclic graph (DAG) of interdependent jobs modeled in the Ros language.
     Provides a framework including:
@@ -38,7 +39,23 @@ class Workflow:
     * Variables, templates, separate modules, a type system for input and output parameters.
     * An event model for passing context and parameters to graph operators.
     """
-    def __init__(self, spec, inputs={}, config=None, libpath=["."], local_connection=True):
+    
+    def __init__(self, spec, inputs={}, config=None, libpath=["."],
+                 local_db_connection=True, enable_cache=True):
+
+        """
+        Creates a workflow definition with enough context to execute it.
+
+        :spec: A workflow specification.
+               If the value is a string, it will be interpreted as a file to load. 
+               If the value is a dictionary, it will be interpreted as a workflow specification.
+        :inputs: Input arguments to the workflow. Each key will become a variable name accessible in the language.
+        :config: Configuration file path.
+        :libpath: An array of strings where each is a directory in which workflow modules may be found.
+        :local_connection: Attempt to connect to a local graph database. Disabled when used from a workflow service client.
+        :enable_cache: Enable persistent caching.
+        """
+        
         assert spec, "Workflow specification is required."
 
         """ If we got a string rather than a dict, load the workflow. """
@@ -52,14 +69,18 @@ class Workflow:
                 raise ValueError (f"File not found: {spec}")
             
         """ Set inputs, specification, generate a GUID, load configuration, and connect to the graph. """
+        self.enable_cache=enable_cache
         self.inputs = inputs
         self.spec = spec
         self.uuid = uuid.uuid4 ()
         self.config = Config (config)
         self.tools = TranslatorGraphTools ()
-        if local_connection:
-            self.cache = Cache (redis_host=self.config['REDIS_HOST'],
-                                redis_port=self.config['REDIS_PORT'])
+        if local_db_connection:
+            if self.enable_cache:
+                self.cache = Cache (redis_host=self.config['REDIS_HOST'],
+                                    redis_port=self.config['REDIS_PORT'])
+            else:
+                self.mem_cache = {}
             db_host = self.config.get('NEO4J_HOST', "localhost")
             self.graph = Neo4JKnowledgeGraph (host=db_host)
         self.errors = []
@@ -329,16 +350,22 @@ class Workflow:
                 out_graph = self.graph)
 
         """ Cache. """
-        key = self.form_key (job_name)
-        self.cache.set (key, json.dumps(value, indent=2))
-
+        if self.enable_cache:
+            key = self.form_key (job_name)
+            self.cache.set (key, json.dumps(value, indent=2))
+        else:
+            self.mem_cache[key] = json.dumps(value, indent=2)
+            
     def get_result (self, job_name):
         """ Get the result graph. We pass the whole graph for every graph. """
         result = None
-
+        
         """ Cache. """
-        key = self.form_key (job_name)
-        val = self.cache.get (key)
+        if self.enable_cache:
+            key = self.form_key (job_name)
+            val = self.cache.get (key)
+        else:
+            val = self.mem_cache[key]
         return json.loads (val) if val else None
 
     """ Manage variable and query resolution generically. """

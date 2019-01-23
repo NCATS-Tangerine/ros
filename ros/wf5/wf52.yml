@@ -1,0 +1,5 @@
+inp_disease: Asthma
+inp_kg_path:
+  class: File
+  path: kg_question 
+out_kg_path: kg_output

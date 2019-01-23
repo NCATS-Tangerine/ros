@@ -1,0 +1,5 @@
+#!/bin/bash
+
+mkdir -p roscwltool
+PYTHONPATH=/Users/scox/dev/green/argparse2tool/:~/dev/ros/ python ~/dev/ros/ros/roscwlapi.py --generate_cwl_tool -d $PWD --generate_outputs
+

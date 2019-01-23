@@ -3,18 +3,26 @@ services:
 
   # Redis
 #  redis:
-#    image: "redis:alpine"
+#    image: "redis:5.0.0-alpine3.8"
 #    ports:
 #      - "${REDIS_PORT}:${REDIS_PORT}"
-
+#    volumes:
+#      - ./:/usr/local/etc/redis
+#    command: redis-server /usr/local/etc/redis/redis.conf --requirepass \"\"
 
   redis:
-    image: 'bitnami/redis:latest'
+    image: redis
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-      - DISABLE_COMMANDS=FLUSHDB,FLUSHALL,CONFIG
+    command: --port ${REDIS_PORT}
+
+#  redis:
+#    image: 'bitnami/redis:4.0'
+#    ports:
+#      - "${REDIS_PORT}:${REDIS_PORT}"
+#    environment:
+#      - ALLOW_EMPTY_PASSWORD=yes
+#      - DISABLE_COMMANDS=FLUSHDB,FLUSHALL,CONFIG
       
   # Generic neo4j graph database.
   neo4j:
