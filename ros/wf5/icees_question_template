@@ -1,0 +1,29 @@
+{
+  "question_graph" : {
+    "nodes": [
+      {
+        "curie": "MONDO:0004979",
+        "id": "n00",
+        "type": "disease"
+      },
+      {
+        "id": "n01",
+        "type": "chemical_substance"
+      }
+    ],
+    "edges": [  
+      {
+        "id": "e00",
+        "source_id": "n00",
+        "target_id": "n01"
+      }
+    ]
+  },
+  "knowledge_graph" : {
+    "nodes" : [],
+    "edges" : []
+  },
+  "knowledge_maps" : [
+    {}
+  ]
+}

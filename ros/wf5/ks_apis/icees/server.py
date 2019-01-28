@@ -95,12 +95,12 @@ class ICEESQuery(Resource):
         to_validate = specs['definitions']['Message']
         to_validate['definitions'] = specs['definitions']
         to_validate['definitions'].pop('Message', None)
+        print (f"{json.dumps(request.json, indent=2)}")
         try:
             jsonschema.validate(request.json, to_validate)
         except jsonschema.exceptions.ValidationError as error:
+            print (f"ERROR: {str(error)}")
             abort(Response(str(error), 400))
-
-#        print (f"{json.dumps(request.json, indent=2)}")
 
 #        inputs = request.json['knowledge_graph']['nodes']
 #        print (f"inputs: {inputs}")
@@ -124,7 +124,6 @@ class ICEESQuery(Resource):
                 operator=operator,
                 max_p_val=max_p_val,
                 cohort_id=cohort_id)
-            
 
             with open("response.json", "w") as stream:
                 json.dump (correlation, stream, indent=2)
@@ -133,42 +132,17 @@ class ICEESQuery(Resource):
         print (json.dumps (graph, indent=2))
         
         # "TotalEDInpatientVisits","<","2", "0.1")
-
-        knowledge_graph = {
-            "edges": [
-                {
-                    "id": "01234",
-                    "source_id": "MONDO:0005148",
-                    "target_id": "OMIM:607623",
-                    "type": "not particularly related to"
-                },
-                {
-                    "id": "56789",
-                    "source_id": "OMIM:607623",
-                    "target_id": "MONDO:0011871",
-                    "type": "couldn't be less associated with"
-                }
-            ],
-            "nodes": [
-                {
-                    "id": "MONDO:0005148"
-                },
-                {
-                    "id": "OMIM:607623"
-                },
-                {
-                    "id": "MONDO:0011871"
-                }
-            ]
-        }
-        
+        knowledge_graph = graph        
         print (f"kg: {json.dumps(knowledge_graph, indent=2)}")
+        return knowledge_graph
+    '''
         return {
             "question_graph" : {},
             "knowledge_graph" : knowledge_graph,
             "knowledge_mapping" : {}
         }, 200
-
+    '''
+    
 api.add_resource(ICEESQuery, '/ICEESQuery')
 
 if __name__ == "__main__":

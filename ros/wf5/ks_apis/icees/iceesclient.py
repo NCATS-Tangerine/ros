@@ -85,6 +85,9 @@ class ICEES:
                         chem_type = 'chemical_substance'
                         ids = self.bionames.get_ids (feature_name,
                                                      type_name=chem_type)
+                        ''' This is a temporary measure until the ICEES API returns identifiers, and hopefully a biolink-model type 
+                        with the responses to feature association requests. For now, we look up names that look like chemicals and 
+                        and call them chemical substances if we get ids back from bionames. '''
                         if len(ids) > 0:
                             logger.debug (f"Got ids for {feature_name}: {ids}")
                             for v in ids:
@@ -95,7 +98,7 @@ class ICEES:
                                     "type" : "associated_with",
                                     "source_id" : v['id'],
                                     "target_id" : asthma_id,
-                                    "edge_attributes" : {
+                                    "attributes" : {
                                         "p_val" : value['p_value']
                                     }
                                 })

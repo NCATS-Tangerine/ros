@@ -1,7 +1,4 @@
 #!/usr/bin/env cwl-runner
-# This tool description was generated automatically by argparse2tool ver. 0.4.5
-# To generate again: $ roscwlapi.py -go --generate_cwl_tool
-# Help: $ roscwlapi.py  --help_arg2cwl
 
 cwlVersion: v1.0
 
@@ -13,27 +10,53 @@ doc: |
 
 inputs:
   
-  inp_disease:
-    type: ["null", string]
-    default: asthma
-    doc: URL of the remote Ros server to use.
+  service:
+    type: string
+    doc: HTTP endpoint of the service
     inputBinding:
-      prefix: --disease
+      prefix: --service
+      position: 1
+      
+  question:
+    type: File
+    default: ./kg_question
+    doc: path to input
+    inputBinding:
+      prefix: --question
+      position: 2
+      
+  source:
+    type: File
+    default: null
+    doc: path to input from prior step
+    inputBinding:
+      prefix: --source
+      position: 2
 
+  select:
+    type: string
+    default: null
+    doc: jsonpath selector into source object
+    inputBinding:
+      prefix: --select
+      position: 3
+
+  type:
+    type: string
+    default: null
+    doc: biolink-model type to use from previous source.
+    inputBinding:
+      prefix: --type
+      position: 4
+      
   output:
     type: string
     default: ./kg_output
     doc: path to output
     inputBinding:
       prefix: --output
+      position: 5
 
-  input:
-    type: File
-    default: ./kg_question
-    doc: path to input
-    inputBinding:
-      prefix: --input
-      
 outputs:
   kg_out:
     type: File
