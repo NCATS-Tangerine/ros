@@ -219,7 +219,7 @@ class Context:
             "$diseases" : [ "curie:9999", "curie:129191", "curie:234535" ]
         }
     def resolve_arg(self, val):
-        return self.mem.get (val, None) if val.startswith ("$") else val
+        return self.mem.get (val[1:], None) if val.startswith ("$") else val
     def set(self, name, val):
         self.mem[name] = val
         
