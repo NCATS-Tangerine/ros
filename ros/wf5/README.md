@@ -1,13 +1,13 @@
 # Workflow 5 and CWL - Using this toolset to execute workflows with Common Workflow Language (CWL)
 
-#### $git clone git@github.com:NCATS/ros.git
+### $git clone git@github.com:NCATS/ros.git
 
-### Get the ICEES query server running before executing the cwltool workflow:
+#### Get the ICEES query server running before executing the cwltool workflow:
 
 ### $cd ros/ros/wf5/ks_apis
 ### $PYTHONPATH=$PWD python3 icees/server.py
 
-### Ready to run the workflow:
+#### Ready to run the workflow:
 
 ### $cd ../..
 ### $cwltool workflow_5_main.cwl workflow_5_EstResDens.yml
