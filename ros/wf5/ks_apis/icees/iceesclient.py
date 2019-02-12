@@ -46,11 +46,12 @@ class ICEES:
     def __init__(self):
         """ Initalize ICEES API. """
         self.bionames = Bionames ()
-        self.drug_suffix = [ "one", "ide", "ol", "ine", "min", "map" ]
+        self.drug_suffix = [ "one", "ide", "ol", "ine", "min", "map", "ium", "mab" ]
         self.drug_names = [ "Prednisone", "Fluticasone", "Mometasone", "Budesonide", "Beclomethasone",
                             "Ciclesonide", "Flunisolide", "Albuterol", "Metaproterenol", "Diphenhydramine",
                             "Fexofenadine", "Cetirizine", "Ipratropium", "Salmeterol", "Arformoterol",
-                            "Formoterol", "Indacaterol", "Theophylline", "Omalizumab", "Mepolizumab", "Metformin" ]
+                            "Formoterol", "Indacaterol", "Theophylline", "Omalizumab", "Mepolizumab", "Metformin" ] 
+                            #note, "Metformin" is not currently in the ICEES_FeatureVariables_01.24.19.docx documentation for feature variables
         self.def_cohort = DefineCohort ()
         self.all_features = AssociationToAllFeatures ()
         
@@ -79,12 +80,20 @@ class ICEES:
                 logger.debug (f" value {value}")
                 if 'feature_b' in value:
                     feature_name = value['feature_b'].get ('feature_name', None)
+
+                    # print()
+                    # print('feature_name:', feature_name)
+                    # print()
+
                     logger.debug (f"feature_name: {feature_name}")
                     if feature_name and any([
                             v for v in self.drug_suffix if feature_name.endswith (v) ]):
                         chem_type = 'chemical_substance'
                         ids = self.bionames.get_ids (feature_name,
                                                      type_name=chem_type)
+                        # print()
+                        # print('ids:', ids)
+                        # print()
                         ''' This is a temporary measure until the ICEES API returns identifiers, and hopefully a biolink-model type 
                         with the responses to feature association requests. For now, we look up names that look like chemicals and 
                         and call them chemical substances if we get ids back from bionames. '''
