@@ -5,7 +5,7 @@
 #### create a new venv, use the following command if needed, then install requirements:
 
 ### $python3 -m venv YOUR_ENV_NAME_HERE
-
+### $source YOUR_ENV_NAME_HERE/bin/activate
 ### $cd ros/ros/wf5
 
 #### edit the file 'roscwlapi.cwl', line 6, to reflect the absolute path to the file 'roscwlapi.py' in your system. CWL does not easily accept relative paths or ENV variables for baseCommand
@@ -17,9 +17,10 @@
 ### $cd ks_apis
 ### $PYTHONPATH=$PWD python3 icees/server.py
 
-#### Ready to run the workflow:
+#### Ready to run the workflow, in a separate terminal window:
 
-### $cd ../..
+### $source YOUR_ENV_NAME_HERE/bin/activate
+### $cd ros/ros/wf5
 ### $cwltool workflow_5_main.cwl workflow_5_EstResDens.yml
 
 #### The above will run the workflow for clustering about the 'EstResidentialDensity' ICEES feature variable. In the (near-) future, other XYZ.yml files will become available for other ICEES feature variables. 'TotalEDInpatientVisits' is currently in the works.
