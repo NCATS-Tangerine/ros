@@ -1,0 +1,13 @@
+icees_endpoint: http://localhost/ICEESQuery
+icees_question:
+  class: File
+  path: icees_question_template
+icees_response: icees.out.json
+
+gamma_endpoint: http://robokop.renci.org:80/api/simple/quick/
+gamma_question:
+  class: File
+  path: wf5_gamma_question_template
+gamma_response: gamma.out.json
+gamma_select: "$.nodes.[*]"
+gamma_filter_val: chemical_substance
