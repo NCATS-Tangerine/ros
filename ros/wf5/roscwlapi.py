@@ -47,7 +47,7 @@ class LifeCycle:
             if isinstance(path,str):
                 with open(path, "r") as stream:
                     value = json.load (stream)
-                    print (f"loaded {path}")
+                    #print (f"loaded {path}")
             elif isinstance(path, IOBase):
                 value = json.load (path)
             else:
@@ -56,7 +56,7 @@ class LifeCycle:
             if required:
                 raise ValueError (f"Unable to load required file: {path}")
             else:
-                print (f"Unable to load file: {json.dumps(value, indent=2)}")
+                #print (f"Unable to load file: {json.dumps(value, indent=2)}")
                 logger.info (f"Unable to load file: {path}")
         return value
 
@@ -67,17 +67,23 @@ class LifeCycle:
 
             if query:
                 jsonkit = JSONKit ()
-                print (f"=====================> query: {query} {json.dumps(source, indent=2)}, filter: {filter_val}")
-                print (f"=====================> query: {query} {type(source)}, filter: {filter_val}")
+                #print (f"=====================> query: {query} {json.dumps(source, indent=2)}, filter: {filter_val}")
+                #print (f"=====================> query: {query} {type(source)}, filter: {filter_val}")
                 selected = jsonkit.select (query=query,
                                            graph=source,
                                            target=filter_val)
-                print (f"=====================> {json.dumps(selected, indent=2)}")
+                #print (f"=====================> {json.dumps(selected, indent=2)}")
                 for n in selected:
-                    print (f"rendered template: {template.render (n)}")
+                    #print (f"rendered template: {template.render (n)}")
                     questions.append (json.loads(template.render (n)))
 
-        print (f"questions: {json.dumps(questions, indent=2)}")
+                    # print()
+                    # print('questions:', questions)
+                    # print()
+
+
+
+        #print (f"questions: {json.dumps(questions, indent=2)}")
         return questions
     
     def execute (self, question_path, source_path, query, filter_val, service, output):
@@ -93,23 +99,37 @@ class LifeCycle:
                                                  question_template_path=question_path)
         else:
             questions = [ question ]
-            
+        
+        #print(questions)
+        
         op = GraphOp (url = service)
 
         response = {}
 
         for q in questions:
-            print (f"question =====> {json.dumps(q, indent=2)}")
+            #print (f"question =====> {json.dumps(q, indent=2)}")
             response0 = op.call (q)
-            print (f"response0 {json.dumps(response0, indent=2)}")
-            response.update (response0)
+            #print (f"response0 {json.dumps(response0, indent=2)}")
+
+            # print()
+            # print('response0:', response0)
+            # print()
+            # print('length of response0:', len(response0))
+            # print()
+            # print('response0 type:', type(response0))
+            # print()
+            if isinstance(response0, dict):
+                response.update (response0)
+            else:
+                print('skipping this response0, it is of the wrong type!')
+
         
         ''' Record the response. '''
 
-        print (f"output: {output}")
+        #print (f"output: {output}")
         if isinstance(output, TextIOWrapper):
             with open(output.name, "w") as stream:
-                print (f"response: {response} and ")
+                #print (f"response: {response} and ")
                 if response:
                     
                     json.dump (response, stream, indent=2)
