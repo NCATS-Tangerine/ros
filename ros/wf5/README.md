@@ -8,6 +8,8 @@
 
 ### $cd ros/ros/wf5
 
+#### edit the file 'roscwlapi.cwl', line 6, to reflect the absolute path to the file 'roscwlapi.py' in your system. CWL does not easily accept relative paths or ENV variables for baseCommand
+
 ### $pip install -r requirements.txt
 
 #### Get the ICEES query server running before executing the cwltool workflow:
