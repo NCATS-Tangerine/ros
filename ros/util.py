@@ -1,5 +1,6 @@
 import copy
 import logging
+import logging.config
 import json
 import traceback
 import unittest
@@ -218,7 +219,7 @@ class Context:
             "$diseases" : [ "curie:9999", "curie:129191", "curie:234535" ]
         }
     def resolve_arg(self, val):
-        return self.mem.get (val, None) if val.startswith ("$") else val
+        return self.mem.get (val[1:], None) if val.startswith ("$") else val
     def set(self, name, val):
         self.mem[name] = val
         
@@ -226,7 +227,9 @@ class Concept:
     def __init__(self, name):
         self.name = name
         self.nodes = []
-            
+    def __repr__(self):
+        return f"{self.name}:{self.nodes}"
+    
 class MaQ:
     def __init__(self):
         """ Extract values within parantheses someplace in a string. """

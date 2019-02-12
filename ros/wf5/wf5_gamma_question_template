@@ -1,6 +1,6 @@
 {
   "name": "Gamma wf5 template",
-  "natural_question": "Chemical to gene to phenotype association.",
+  "natural_question": "Chemical to gene to biological process to phenotype association.",
   "notes": "",
   "machine_question": {
     "nodes": [
