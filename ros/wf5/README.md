@@ -12,7 +12,7 @@
 
 #### Get the ICEES query server running before executing the cwltool workflow:
 
-### $cd ros/ros/wf5/ks_apis
+### $cd ks_apis
 ### $PYTHONPATH=$PWD python3 icees/server.py
 
 #### Ready to run the workflow:
