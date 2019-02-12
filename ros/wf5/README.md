@@ -2,6 +2,14 @@
 
 ### $git clone git@github.com:NCATS/ros.git
 
+#### create a new venv, use the following command if needed, then install requirements:
+
+### $python3 venv -m YOUR_ENV_NAME_HERE
+
+### $cd ros/ros/wf5
+
+### $pip install -r requirements.txt
+
 #### Get the ICEES query server running before executing the cwltool workflow:
 
 ### $cd ros/ros/wf5/ks_apis
