@@ -20,7 +20,7 @@
 
 ### The former is used to produce the latter through application of the gamma reasoner, ROBOKOP.
 
-### The latter can be copy-pasted into the http://robokopdb2.renci.org/api/simple/view/ endpoint, which will produce a string which looks like: 
+### The latter can be copy-pasted into the http://robokopdb2.renci.org/apidocs/#/simple/post_api_simple_view_ endpoint, which will produce a string which looks like: 
 
 ### "cdfa6222-1e97-4735-abe6-718950cb1e3a"
 
