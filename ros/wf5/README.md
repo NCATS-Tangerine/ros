@@ -1,10 +1,10 @@
 # Workflow 5 and CWL - Using this toolset to execute workflows with Common Workflow Language (CWL)
 
-### $git clone git@github.com:NCATS/ros.git
+### $git clone git@github.com:NCATS-Tangerine/ros.git
 
 #### create a new venv, use the following command if needed, then install requirements:
 
-### $python3 venv -m YOUR_ENV_NAME_HERE
+### $python3 -m venv YOUR_ENV_NAME_HERE
 
 ### $cd ros/ros/wf5
 
