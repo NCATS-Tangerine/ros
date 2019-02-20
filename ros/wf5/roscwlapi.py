@@ -119,37 +119,59 @@ class LifeCycle:
         all_responses = []
         response = {}
 
-        for q in questions:
-            #print (f"question =====> {json.dumps(q, indent=2)}")
-            response0 = op.call (q)
-            #print (f"response0 {json.dumps(response0, indent=2)}")
 
+        for q in questions:
+            print (f"question =====> {json.dumps(q, indent=2)}")
+            response0 = op.call (q)
+            print (f"response0 {json.dumps(response0, indent=2)}")
             if isinstance(response0, dict):
-                #response.update (response0)
-                #response.update(response0)
-                #all_responses.append(response)
-                response.update(response0)
-                print('response0 added to all_responses')
-            else:
-                print('skipping this response0, it is of the wrong type!')
-        #print(json.dumps(all_responses, indent=2))
-        
+                response.update (response0)
+
         ''' Record the response. '''
 
-        #print (f"output: {output}")
-        for response in all_responses:
-        
-            if isinstance(output, TextIOWrapper):
-                with open(output.name, "a") as stream:
-                    #print (f"response: {response} and ")
-                    if response:
-                        
-                        json.dump (response, stream, indent=2)
-            else:
+        print (f"output: {output}")
+        if isinstance(output, TextIOWrapper):
+            with open(output.name, "w") as stream:
+                print (f"response: {response} and ")
                 if response:
-                    json.dump (response, output, indent=2)
-            print(len(response))
-        print('all responses length:', len(all_responses))
+
+                    json.dump (response, stream, indent=2)
+        else:
+            if response:
+                json.dump (response, output, indent=2)
+        #
+        # BELOW is an attempt to have the workflow record multiple responses rather than saving only one.
+        # for q in questions:
+        #     #print (f"question =====> {json.dumps(q, indent=2)}")
+        #     response0 = op.call (q)
+        #     #print (f"response0 {json.dumps(response0, indent=2)}")
+
+        #     if isinstance(response0, dict):
+        #         #response.update (response0)
+        #         #response.update(response0)
+        #         #all_responses.append(response)
+        #         response.update(response0)
+        #         print('response0 added to all_responses')
+        #     else:
+        #         print('skipping this response0, it is of the wrong type!')
+        # #print(json.dumps(all_responses, indent=2))
+        
+        # ''' Record the response. '''
+
+        # #print (f"output: {output}")
+        # for response in all_responses:
+        
+        #     if isinstance(output, TextIOWrapper):
+        #         with open(output.name, "a") as stream:
+        #             #print (f"response: {response} and ")
+        #             if response:
+                        
+        #                 json.dump (response, stream, indent=2)
+        #     else:
+        #         if response:
+        #             json.dump (response, output, indent=2)
+        #     print(len(response))
+        # print('all responses length:', len(all_responses))
         
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser(
