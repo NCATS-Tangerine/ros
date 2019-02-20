@@ -3,7 +3,7 @@
 cwlVersion: v1.0
 
 class: CommandLineTool
-baseCommand: ['INSERT_YOUR_PATH_HERE/ros/ros/wf5/roscwlapi.py']
+baseCommand: ['/Users/colincurtis/Documents/renci/ros/ros/wf5/roscwlapi.py']
 
 doc: |
   Ros CWL API
