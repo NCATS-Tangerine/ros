@@ -118,21 +118,33 @@ class LifeCycle:
 
         all_responses = []
         response = {}
-
+        robokop_url = 'http://robokopdb2.renci.org'
+        view_url = lambda uid: f'{robokop_url}/simple/view/{uid}'
+        view_url_list = []
 
         for q in questions:
-            print (f"question =====> {json.dumps(q, indent=2)}")
+            #print (f"question =====> {json.dumps(q, indent=2)}")
             response0 = op.call (q)
-            print (f"response0 {json.dumps(response0, indent=2)}")
+            #print (f"response0 {json.dumps(response0, indent=2)}")
             if isinstance(response0, dict):
                 response.update (response0)
+            view_post_response = requests.post(f'{robokop_url}/api/simple/view/', json=response)
+            uid = json.loads(view_post_response.text)
+            print()
+            #print(view_url(uid), uid )
+            response_view_url = view_url(uid)
+            view_url_list.append(response_view_url)
+        print()
+        for url in view_url_list:
+            print(url)
+            print()
 
         ''' Record the response. '''
 
-        print (f"output: {output}")
+        #print (f"output: {output}")
         if isinstance(output, TextIOWrapper):
-            with open(output.name, "w") as stream:
-                print (f"response: {response} and ")
+            with open(output.name, "a") as stream:
+                #print (f"response: {response} and ")
                 if response:
 
                     json.dump (response, stream, indent=2)
