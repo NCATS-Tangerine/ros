@@ -4,6 +4,7 @@ import argparse
 import json
 import requests
 import logging
+import webbrowser
 from jinja2 import Template
 import sys
 from io import IOBase
@@ -138,6 +139,7 @@ class LifeCycle:
         for url in view_url_list:
             print(url)
             print()
+            webbrowser.open_new_tab(url)
 
         ''' Record the response. '''
 

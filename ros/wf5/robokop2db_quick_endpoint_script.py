@@ -8,6 +8,7 @@ import requests
 
 import json
 
+import webbrowser as wb
 
 
 robokop_url = 'http://robokopdb2.renci.org'
@@ -143,3 +144,9 @@ uid = json.loads(view_post_response.text)
 print(view_post_response.json())
 
 print(view_url(uid))
+
+launch_url = view_url(uid)
+
+wb.open_new_tab(launch_url)
+
+wb.open_new_tab(launch_url)
