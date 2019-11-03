@@ -70,7 +70,7 @@ rdflib==4.2.2
 rdflib-jsonld==0.4.0
 readme-renderer==22.0
 redis==2.10.6
-requests==2.19.1
+requests==2.20.0
 requests-toolbelt==0.8.0
 ros==0.119
 ruamel.yaml==0.15.77
