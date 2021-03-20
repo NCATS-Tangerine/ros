@@ -31,7 +31,7 @@ idna==2.7
 ijson==2.3
 isodate==0.6.0
 itsdangerous==1.1.0
-Jinja2==2.10
+Jinja2==2.11.3
 jmespath==0.9.3
 joblib==0.12.5
 jsonpath-rw==1.4.0
