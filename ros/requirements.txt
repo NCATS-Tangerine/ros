@@ -39,7 +39,7 @@ pluggy==0.7.1
 ply==3.11
 py==1.7.0
 pycparser==2.19
-Pygments==2.2.0
+Pygments==2.7.4
 pyparsing==2.2.2
 pysolr==3.8.1
 pytest==3.8.2
