@@ -57,7 +57,7 @@ pluggy==0.7.1
 ply==3.11
 prov==1.5.1
 psutil==5.5.0
-py==1.7.0
+py==1.10.0
 pycparser==2.19
 Pygments==2.2.0
 pyparsing==2.2.2
