@@ -51,7 +51,7 @@ redis==2.10.6
 requests==2.19.1
 requests-toolbelt==0.8.0
 s3transfer==0.1.13
-sanic==0.8.3
+sanic==20.12.7
 sanic-openapi==0.4.0
 scipy==1.1.0
 six==1.11.0
