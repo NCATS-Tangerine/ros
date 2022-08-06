@@ -75,7 +75,7 @@ requests-toolbelt==0.8.0
 ros==0.119
 ruamel.yaml==0.15.77
 s3transfer==0.1.13
-sanic==0.8.3
+sanic==20.12.7
 sanic-openapi==0.4.0
 scandir==1.9.0
 schema-salad==3.0.20181206233650
