@@ -33,7 +33,7 @@ isodate==0.6.0
 itsdangerous==1.1.0
 Jinja2==2.10
 jmespath==0.9.3
-joblib==0.12.5
+joblib==1.2.0
 jsonpath-rw==1.4.0
 jsonschema==2.6.0
 lockfile==0.12.2
